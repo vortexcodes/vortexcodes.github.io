@@ -65,7 +65,7 @@ const projects = [
         description: "A large-format SAO host badge supporting 25 SAO connectors simultaneously. Built around SAOv1.69bis standard with dual 18650 batteries, USB charging, and addressable LEDs. Designed, manufactured, and sold at DEF CON.",
         date: "2025",
         mediaType: "image",
-        mediaSrc: "media/saomanysaos/sao-many-saos-badge-final-assembly-v0-56k7kgeqljgf1.webp",
+        mediaSrc: "media/saomanysaos/extra-badges-v0-n7fi99pc3slf1.webp",
         tags: ["PCB Design", "Electronics", "DEF CON", "Hardware", "LEDs", "Badge"],
         fullWriteup: `
             <h2>SAO MANY SAOs — How I Built It</h2>
