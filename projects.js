@@ -27,6 +27,37 @@ const projects = [
 
             <h2>Final Assembly</h2>
             <p>I got a hard hat from my local neighborhood Facebook group for free, and then I used a Dremel to cut out the brim, the sides and some of the other large areas, along with cutting two large rectangles in it so that it could go through the big ear slots. I glued it in using two-part epoxy and epoxy putty, and a lot of clamps, prayers and duct tape.</p>
+
+            <h2>Photo & Video Gallery</h2>
+            <p>Here are more photos and videos of the helmet in action!</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0;">
+                <img src="media/WhatsApp Image 2025-12-18 at 18.16.33.jpeg" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Deadmau5 helmet">
+                <img src="media/WhatsApp Image 2025-12-18 at 18.16.33 (1).jpeg" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Deadmau5 helmet">
+                <img src="media/WhatsApp Image 2025-12-18 at 18.16.33 (2).jpeg" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Deadmau5 helmet">
+                <img src="media/WhatsApp Image 2025-12-18 at 18.16.33 (3).jpeg" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Deadmau5 helmet">
+                <img src="media/WhatsApp Image 2025-12-18 at 18.16.33 (4).jpeg" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Deadmau5 helmet">
+                <img src="media/WhatsApp Image 2025-12-18 at 18.16.33 (5).jpeg" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Deadmau5 helmet">
+                <img src="media/WhatsApp Image 2025-12-18 at 18.16.33 (6).jpeg" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Deadmau5 helmet">
+                <img src="media/ama-about-my-3d-printed-deadmau5-helmet-v0-gvm5k24pnc2g1.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Deadmau5 helmet">
+                <img src="media/ama-about-my-3d-printed-deadmau5-helmet-v0-mi3koo1pnc2g1.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Deadmau5 helmet">
+                <img src="media/ama-about-my-3d-printed-deadmau5-helmet-v0-mnqnxeponc2g1.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Deadmau5 helmet">
+                <img src="media/ama-about-my-3d-printed-deadmau5-helmet-v0-nxibaufonc2g1.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Deadmau5 helmet">
+                <img src="media/ama-about-my-3d-printed-deadmau5-helmet-v0-ur5uyhionc2g1.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Deadmau5 helmet">
+            </div>
+
+            <h3 style="color: #00d4ff; margin-top: 30px; margin-bottom: 15px;">Videos</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin: 20px 0;">
+                <video controls style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;">
+                    <source src="media/WhatsApp Video 2025-12-18 at 18.16.33.mp4" type="video/mp4">
+                </video>
+                <video controls style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;">
+                    <source src="media/WhatsApp Video 2025-12-18 at 18.16.33 (1).mp4" type="video/mp4">
+                </video>
+                <video controls style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;">
+                    <source src="media/WhatsApp Video 2025-12-18 at 18.16.33 (2).mp4" type="video/mp4">
+                </video>
+            </div>
         `
     },
     // Add more projects below - just copy the format above!
