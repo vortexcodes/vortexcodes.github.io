@@ -7,8 +7,10 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     line-height: 1.6;
-    color: #333;
-    background-color: #f5f5f5;
+    color: #e0e0e0;
+    background-color: #0a0a0a;
+    background-image: radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 80%, rgba(255, 0, 102, 0.05) 0%, transparent 50%);
 }
 
 .container {
@@ -18,21 +20,25 @@ body {
 }
 
 header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #00ff88 0%, #ff0066 50%, #00d4ff 100%);
+    color: #0a0a0a;
     padding: 60px 0;
     text-align: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
+    position: relative;
 }
 
 header h1 {
     font-size: 3rem;
     margin-bottom: 10px;
+    font-weight: 800;
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
 .tagline {
     font-size: 1.2rem;
-    opacity: 0.9;
+    opacity: 0.95;
+    font-weight: 500;
 }
 
 main {
@@ -47,16 +53,19 @@ main {
 }
 
 .project-card {
-    background: white;
+    background: #1a1a1a;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid #00ff88;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .project-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    border-color: #ff0066;
+    box-shadow: 0 0 40px rgba(255, 0, 102, 0.6),
+                0 0 60px rgba(0, 255, 136, 0.3);
 }
 
 .project-media {
@@ -81,17 +90,18 @@ main {
 .project-info h3 {
     font-size: 1.5rem;
     margin-bottom: 10px;
-    color: #667eea;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
 }
 
 .project-info p {
-    color: #666;
+    color: #b0b0b0;
     margin-bottom: 15px;
 }
 
 .project-date {
     font-size: 0.9rem;
-    color: #999;
+    color: #808080;
     font-style: italic;
 }
 
@@ -103,19 +113,30 @@ main {
 }
 
 .tag {
-    background: #667eea;
-    color: white;
+    background: transparent;
+    color: #00d4ff;
+    border: 1px solid #00d4ff;
     padding: 5px 12px;
     border-radius: 20px;
     font-size: 0.85rem;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.tag:hover {
+    background: #00d4ff;
+    color: #0a0a0a;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
 }
 
 footer {
-    background: #333;
-    color: white;
+    background: #0f0f0f;
+    color: #808080;
     text-align: center;
     padding: 20px 0;
     margin-top: 60px;
+    border-top: 1px solid #00ff88;
+    box-shadow: 0 -5px 20px rgba(0, 255, 136, 0.1);
 }
 
 @media (max-width: 768px) {

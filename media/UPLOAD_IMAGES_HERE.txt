@@ -1,0 +1,8 @@
+IMPORTANT: Upload your LED helmet image here!
+
+Save one of your helmet photos (preferably the red LED nighttime one) as:
+helmet-red-led.jpg
+
+This will make the project display correctly on your portfolio.
+
+You can also add more images for future projects here.
