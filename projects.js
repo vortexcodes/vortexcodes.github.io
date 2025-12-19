@@ -60,6 +60,63 @@ const projects = [
             </div>
         `
     },
+    {
+        title: "SAO MANY SAOs — DEF CON Badge",
+        description: "A large-format SAO host badge supporting 25 SAO connectors simultaneously. Built around SAOv1.69bis standard with dual 18650 batteries, USB charging, and addressable LEDs. Designed, manufactured, and sold at DEF CON.",
+        date: "2025",
+        mediaType: "image",
+        mediaSrc: "media/saomanysaos/sao-many-saos-badge-final-assembly-v0-56k7kgeqljgf1.webp",
+        tags: ["PCB Design", "Electronics", "DEF CON", "Hardware", "LEDs", "Badge"],
+        fullWriteup: `
+            <h2>SAO MANY SAOs — How I Built It</h2>
+            <p>I built SAO MANY SAOs because I had a simple problem: I'd collected a bunch of SAOs, and there was no good way to power and display them all at once. Most badges support one or two SAOs. I wanted something that could handle all of them—at the same time—without being fragile or just decorative.</p>
+
+            <p>That idea became SAO MANY SAOs, a badge designed to support 25 SAO connectors on a single board.</p>
+
+            <h2>What the Badge Is</h2>
+            <p>SAO MANY SAOs is basically a large-format SAO host badge built around the SAOv1.69bis standard. It has 25 SAO ports laid out so each SAO is visible and usable at the same time. The goal wasn't just to mount SAOs—it was to actually power them reliably and make them feel like part of one system.</p>
+
+            <p>The badge runs on two 18650 batteries, which gives it enough capacity to power many SAOs simultaneously without browning out or acting weird. It can also be powered and charged over USB, with onboard charge management and status LEDs.</p>
+
+            <p>Around the edge, I added addressable LEDs. On their own they're just a visual frame, but when you plug in a SmartAO, they unlock more interesting animations and behavior.</p>
+
+            <h2>How I Built It</h2>
+            <p>When I started, I didn't know how to design a production-ready PCB at this scale. I learned by doing—watching tutorials, asking questions in Discord servers, and iterating quickly. A lot of the early work was just figuring out how to route power safely across a large board and keep signals clean when you have that many connectors.</p>
+
+            <p>The layout was the hardest part. Supporting 25 SAOs meant thinking carefully about spacing, mechanical stress, and how people would physically plug things in without snapping headers. Power distribution was another challenge—SAOs vary a lot in current draw, so I needed a design that could handle worst-case scenarios without failing.</p>
+
+            <p>Once I had a working design, I ordered prototypes and tested them with real SAOs. That meant plugging in combinations of high-draw and low-draw modules, checking voltage stability, and making sure everything behaved consistently. Based on testing and feedback, I made revisions before moving to production.</p>
+
+            <h2>Assembly and Production</h2>
+            <p>For final assembly, I handled most of the process myself, with help soldering and prepping units for distribution. Every board was tested to make sure power, charging, and SAO connections worked correctly before shipping.</p>
+
+            <p>This wasn't mass-manufactured—I was involved in every step, from PCB design to logistics. That includes packaging, pricing, and figuring out how to actually get badges into people's hands at DEF CON.</p>
+
+            <h2>Launch and Community Response</h2>
+            <p>I shared the project on Reddit and in the DEF CON badgelife community. The response was really positive, especially from people who already owned lots of SAOs and had never had a way to display them all at once.</p>
+
+            <p>A lot of people were surprised when they found out I'm 14, but honestly the age wasn't the point. The project worked because it solved a real problem and because I took it seriously as an engineering and logistics challenge.</p>
+
+            <h2>Why I'm Proud of It</h2>
+            <p>SAO MANY SAOs isn't just a novelty. It's a functional, reliable platform for SAOs that didn't exist before. It pushed me to learn PCB design, power management, manufacturing constraints, and how to ship a real hardware product to real users.</p>
+
+            <p>Most importantly, it's something people actually use at DEF CON—and that matters more to me than anything else.</p>
+
+            <h2>Photo Gallery</h2>
+            <p>Here are more photos of the badge development, assembly, and final product!</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0;">
+                <img src="media/saomanysaos/sao-many-saos-badge-final-assembly-v0-56k7kgeqljgf1.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="SAO MANY SAOs Badge">
+                <img src="media/saomanysaos/sao-many-saos-badge-final-assembly-v0-048zlgnpljgf1.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="SAO MANY SAOs Badge">
+                <img src="media/saomanysaos/sao-many-saos-badge-final-assembly-v0-5mdjg32qljgf1.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="SAO MANY SAOs Badge">
+                <img src="media/saomanysaos/sao-many-saos-badge-update-v0-ebm0hce1x58f1.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="SAO MANY SAOs Badge Update">
+                <img src="media/saomanysaos/image_2025-05-27_171646045.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="SAO MANY SAOs Badge">
+                <img src="media/saomanysaos/extra-badges-v0-n7fi99pc3slf1.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="Extra badges">
+                <img src="media/saomanysaos/IMG_3302.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="SAO MANY SAOs">
+                <img src="media/saomanysaos/IMG_3310.webp" style="width: 100%; border-radius: 8px; border: 1px solid #00ff88;" alt="SAO MANY SAOs">
+            </div>
+        `
+    },
     // Add more projects below - just copy the format above!
     // {
     //     title: "Your Project Name",
