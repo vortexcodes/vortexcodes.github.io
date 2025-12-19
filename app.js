@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             modalMediaHTML = `
                 <img src="${project.mediaSrc}" alt="${project.title}"
-                     style="width: 100%; max-height: 400px; object-fit: cover; margin-bottom: 20px; border-radius: 8px;">
+                     style="width: 100%; max-height: 400px; object-fit: cover; object-position: center 20%; margin-bottom: 20px; border-radius: 8px;">
             `;
         }
 
