@@ -1,0 +1,19 @@
+FAVICON SETUP INSTRUCTIONS
+==========================
+
+I've configured the site to use "favicon.png" as the tab icon.
+
+To complete the setup:
+1. Save your JA hexagon logo image as "favicon.png" in the root directory
+2. Recommended size: 512x512 pixels or 256x256 pixels
+3. PNG format with transparent background works best
+
+The HTML files already include:
+<link rel="icon" type="image/png" href="favicon.png">
+
+Once you upload favicon.png to the root directory, it will automatically appear
+as your website's tab icon in browsers.
+
+Alternative formats:
+- You can also use .ico format and rename to "favicon.ico"
+- If using .ico, update the HTML to: <link rel="icon" type="image/x-icon" href="favicon.ico">
