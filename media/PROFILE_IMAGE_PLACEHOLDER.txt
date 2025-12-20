@@ -1,0 +1,13 @@
+IMPORTANT: Replace profile-placeholder.jpg with your actual profile photo!
+
+The bio page (about.html) is looking for an image at:
+media/profile-placeholder.jpg
+
+Recommended specs:
+- Square format (1:1 ratio)
+- At least 600x600 pixels
+- JPG or PNG format
+- Good lighting and professional appearance
+
+Simply upload your photo to the media folder and name it "profile-placeholder.jpg"
+or update the path in about.html to point to your preferred image.
