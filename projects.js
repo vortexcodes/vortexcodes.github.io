@@ -3,6 +3,19 @@
 
 const projects = [
     {
+        title: "Claude Artifact Project",
+        description: "A project shared via a Claude public artifact link.",
+        date: "2026",
+        mediaType: "image",
+        mediaSrc: "https://claude.ai/public/artifacts/6fb2ae85-980f-4e4c-99a8-c07af34b500b",
+        tags: ["Claude", "Artifact", "AI"],
+        fullWriteup: `
+            <h2>Project Overview</h2>
+            <p>This project was shared as a public Claude artifact. View the full artifact here:</p>
+            <p><a href="https://claude.ai/public/artifacts/6fb2ae85-980f-4e4c-99a8-c07af34b500b" target="_blank" rel="noopener noreferrer">Open the artifact</a></p>
+        `
+    },
+    {
         title: "LED Deadmau5 Helmet",
         description: "Custom-built LED helmet featuring WLED addressable RGB strips, sound-reactive lighting, and 3D-printed construction. Powered by a 300W battery with full color control. Sold for $700.",
         date: "2025",
