@@ -9,7 +9,7 @@ const projects = [
         mediaType: "image",
         mediaSrc: "https://claude.ai/public/artifacts/6fb2ae85-980f-4e4c-99a8-c07af34b500b",
         tags: ["Claude", "Artifact", "AI"],
-        fullWriteup: `<!DOCTYPE html>
+        fullWriteup:
 <html lang="en">
 <head>
     <meta charset="UTF-8">
