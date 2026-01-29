@@ -45,6 +45,27 @@ main {
     padding: 40px 0;
 }
 
+.wip-link {
+    display: inline-block;
+    padding: 15px 30px;
+    background: transparent;
+    border: 2px solid #00ff88;
+    border-radius: 30px;
+    color: #00ff88;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+.wip-link:hover {
+    background: #00ff88;
+    color: #0a0a0a;
+    box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+    transform: translateY(-2px);
+}
+
 #projects {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));

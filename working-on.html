@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stuff I'm Working On - Vortex1</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Password overlay */
+        #passwordOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.98);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        #passwordBox {
+            background: #1a1a1a;
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.5),
+                        0 0 80px rgba(255, 0, 102, 0.3);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        #passwordBox h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        #passwordBox p {
+            color: #b0b0b0;
+            margin-bottom: 25px;
+        }
+
+        #passwordInput {
+            width: 100%;
+            padding: 15px;
+            background: #0a0a0a;
+            border: 2px solid #00d4ff;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        #passwordInput:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        #submitPassword {
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            color: #00ff88;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        #submitPassword:hover {
+            background: #00ff88;
+            color: #0a0a0a;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+        }
+
+        #errorMessage {
+            color: #ff0066;
+            margin-top: 15px;
+            text-shadow: 0 0 10px rgba(255, 0, 102, 0.5);
+            display: none;
+        }
+
+        #content {
+            display: none;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #00d4ff;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Password Protection Overlay -->
+    <div id="passwordOverlay">
+        <div id="passwordBox">
+            <h2>🔒 Protected Area</h2>
+            <p>Enter password to view projects in progress</p>
+            <input type="password" id="passwordInput" placeholder="Enter password">
+            <button id="submitPassword">Unlock</button>
+            <p id="errorMessage">Incorrect password. Try again.</p>
+        </div>
+    </div>
+
+    <!-- Main Content (hidden until password is correct) -->
+    <div id="content">
+        <header>
+            <div class="container">
+                <h1>Stuff I'm Working On</h1>
+                <p class="tagline">Current Projects • In Progress • Experiments</p>
+            </div>
+        </header>
+
+        <main class="container">
+            <a href="index.html" class="back-link">← Back to Portfolio</a>
+
+            <section id="wip-projects">
+                <!-- WIP projects will be dynamically loaded here -->
+            </section>
+        </main>
+
+        <!-- Project Detail Modal -->
+        <div id="projectModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <div id="modalBody">
+                    <!-- Project details will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <div class="container">
+                <p>&copy; 2025 Vortex1. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="wip-projects.js"></script>
+    <script src="wip-app.js"></script>
+    <script>
+        // Password protection
+        const correctPassword = 'vortex';
+        const passwordOverlay = document.getElementById('passwordOverlay');
+        const passwordInput = document.getElementById('passwordInput');
+        const submitButton = document.getElementById('submitPassword');
+        const errorMessage = document.getElementById('errorMessage');
+        const content = document.getElementById('content');
+
+        // Check if already unlocked in session
+        if (sessionStorage.getItem('wipUnlocked') === 'true') {
+            unlockPage();
+        }
+
+        function checkPassword() {
+            const enteredPassword = passwordInput.value;
+
+            if (enteredPassword === correctPassword) {
+                sessionStorage.setItem('wipUnlocked', 'true');
+                unlockPage();
+            } else {
+                errorMessage.style.display = 'block';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+
+        function unlockPage() {
+            passwordOverlay.style.display = 'none';
+            content.style.display = 'block';
+        }
+
+        submitButton.addEventListener('click', checkPassword);
+
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+
+        // Focus on password input when page loads
+        passwordInput.focus();
+    </script>
+</body>
+</html>
