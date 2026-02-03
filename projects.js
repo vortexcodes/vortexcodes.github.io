@@ -117,6 +117,53 @@ const projects = [
             </div>
         `
     },
+    {
+        title: "FRC 2026 REBUILT Cheat Sheet",
+        description: "Complete strategy and rules reference for FRC 2026 REBUILT game. Comprehensive 3-page cheat sheet covering game mechanics, robot specifications, and Team 5940 BREAD's competitive strategy.",
+        date: "January 2026",
+        mediaType: "image",
+        mediaSrc: "media/saomanysaos/extra-badges-v0-n7fi99pc3slf1.webp",
+        tags: ["FRC", "Robotics", "Strategy", "Documentation", "Team 5940"],
+        fullWriteup: `
+            <h2>FRC 2026 REBUILT™ - Complete Cheat Sheet</h2>
+            <p>This comprehensive cheat sheet was created for Team 5940 BREAD to document the complete rules, strategy, and specifications for the FRC 2026 REBUILT game season. It covers everything from match structure to robot design recommendations.</p>
+
+            <h3>What's Included</h3>
+            <ul>
+                <li><strong>Game Overview:</strong> Complete match structure breakdown (AUTO, SHIFT phases, END GAME)</li>
+                <li><strong>Scoring System:</strong> Points breakdown for FUEL scoring and TOWER climbing</li>
+                <li><strong>Robot Specifications:</strong> Size constraints, weight limits, bumper rules, and motor regulations</li>
+                <li><strong>Team 5940 Strategy:</strong> Custom analysis based on our team's historical strengths and competition predictions</li>
+                <li><strong>Field Dimensions:</strong> Complete measurements for HUB, TOWER, and field elements</li>
+            </ul>
+
+            <h3>Interactive Cheat Sheet</h3>
+            <p>View the complete interactive cheat sheet below. This document is printer-friendly and designed for quick reference during competition.</p>
+
+            <div style="margin: 20px 0; border: 2px solid #00ff88; border-radius: 8px; overflow: hidden;">
+                <iframe src="media/frc-cheat-sheet/index.html"
+                        style="width: 100%; height: 800px; border: none;"
+                        title="FRC 2026 REBUILT Cheat Sheet"
+                        allowfullscreen>
+                </iframe>
+            </div>
+
+            <h3>Key Game Mechanics</h3>
+            <p><strong>HUB Activation Strategy:</strong> The team that scores more FUEL in autonomous has their HUB go inactive first - a critical strategic consideration that affects the entire match flow.</p>
+
+            <p><strong>Team 5940 Competitive Edge:</strong> Our analysis shows our strengths in autonomous programming, swerve drive systems, and reliable shooter mechanisms position us well for this game.</p>
+
+            <h3>Design Goals</h3>
+            <ul>
+                <li>Target cycle time: 4-6 seconds (intake to score)</li>
+                <li>Auto target: 10-12 FUEL + Level 1 climb</li>
+                <li>End game: Level 2 climb in under 10 seconds</li>
+                <li>Match projection: 40-50 FUEL scored per match</li>
+            </ul>
+
+            <p><a href="media/frc-cheat-sheet/index.html" target="_blank" style="color: #00ff88; text-decoration: none; font-weight: bold;">→ Open Full Cheat Sheet in New Tab</a></p>
+        `
+    },
     // Add more projects below - just copy the format above!
     // {
     //     title: "Your Project Name",
