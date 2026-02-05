@@ -140,8 +140,27 @@ main {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center 20%;
+    object-position: center;
     display: block;
+}
+
+.project-media-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.project-media-placeholder span {
+    color: #00ff88;
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 20px;
+    text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
 }
 
 .project-info {
