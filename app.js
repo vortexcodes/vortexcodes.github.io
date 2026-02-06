@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Create media element (image or video)
         let mediaHTML = '';
-        if (project.mediaType === 'video') {
+        if (project.mediaType === 'video' && project.mediaSrc) {
             mediaHTML = `
                 <div class="project-media">
                     <video controls>
@@ -24,10 +24,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     </video>
                 </div>
             `;
+        } else if (project.mediaSrc) {
+            mediaHTML = `
+                <div class="project-media">
+                    <img src="${project.mediaSrc}" alt="${project.title}"
+                         onerror="this.parentElement.innerHTML='<div class=\'project-media-placeholder\'><span>' + this.alt + '</span></div>'">
+                </div>
+            `;
         } else {
             mediaHTML = `
                 <div class="project-media">
-                    <img src="${project.mediaSrc}" alt="${project.title}">
+                    <div class="project-media-placeholder"><span>${project.title}</span></div>
                 </div>
             `;
         }
@@ -60,17 +67,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function openModal(project) {
         // Create media element for modal
         let modalMediaHTML = '';
-        if (project.mediaType === 'video') {
+        if (project.mediaType === 'video' && project.mediaSrc) {
             modalMediaHTML = `
                 <video controls style="width: 100%; max-height: 400px; margin-bottom: 20px;">
                     <source src="${project.mediaSrc}" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
             `;
-        } else {
+        } else if (project.mediaSrc) {
             modalMediaHTML = `
                 <img src="${project.mediaSrc}" alt="${project.title}"
-                     style="width: 100%; max-height: 400px; object-fit: cover; object-position: center 20%; margin-bottom: 20px; border-radius: 8px;">
+                     style="width: 100%; max-height: 400px; object-fit: cover; object-position: center 20%; margin-bottom: 20px; border-radius: 8px;"
+                     onerror="this.style.display='none'">
             `;
         }
 
