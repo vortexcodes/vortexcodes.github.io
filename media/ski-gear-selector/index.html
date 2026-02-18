@@ -166,6 +166,7 @@ header {
       <button class="nav-btn" onclick="nav('gear',this)">My Gear</button>
     </div>
     <button class="key-btn" id="keyBtn" onclick="toggleKeyPanel()" title="API Key Settings">&#9881;</button>
+    <a id="userBtn" class="key-btn" href="/account.html" title="Account" style="text-decoration:none;font-size:13px;font-weight:700"></a>
   </div>
 </header>
 <div class="key-panel" id="keyPanel">
@@ -285,8 +286,18 @@ header {
     </div>
   </div>
 </div>
+<script src="/accounts.js"></script>
 <script>
-var inv = JSON.parse(localStorage.getItem('ridge3') || 'null') || { tops:[], pants:[], head:[], skis:[], safety:[] };
+// Load gear from account if logged in, otherwise fall back to localStorage
+function loadGear() {
+  var user = Accounts.currentUser();
+  if (user) {
+    var gear = Accounts.getGear(user);
+    if (gear) return gear;
+  }
+  return JSON.parse(localStorage.getItem('ridge3') || 'null') || { tops:[], pants:[], head:[], skis:[], safety:[] };
+}
+var inv = loadGear();
 var pendingGear = null, pendingSection = null;
 var MODEL = 'gpt-4o-mini';
 function getApiKey() { return localStorage.getItem('ridge_apikey') || ''; }
@@ -576,7 +587,13 @@ function renderSec(sec, tagFn) {
   }).join('');
 }
 function del(sec, idx) { inv[sec].splice(idx,1); save(); renderAll(); }
-function save() { localStorage.setItem('ridge3', JSON.stringify(inv)); }
+function save() {
+  localStorage.setItem('ridge3', JSON.stringify(inv));
+  // Also save to account if logged in
+  if (Accounts.currentUser()) {
+    Accounts.saveGear(inv);
+  }
+}
 if (!inv.tops.length && !inv.skis.length) {
   inv = {
     tops: [
@@ -603,6 +620,20 @@ if (!inv.tops.length && !inv.skis.length) {
   };
   save();
 }
+// Show current user in header
+(function() {
+  var btn = document.getElementById('userBtn');
+  var user = Accounts.currentUser();
+  if (user) {
+    btn.textContent = user.charAt(0).toUpperCase();
+    btn.style.borderColor = 'rgba(0,255,136,.4)';
+    btn.style.color = 'var(--green)';
+    btn.title = 'Logged in as ' + user;
+  } else {
+    btn.textContent = '?';
+    btn.title = 'Not logged in - click to create an account';
+  }
+})();
 </script>
 </body>
 </html>
