@@ -9,7 +9,7 @@ const projects = [
         date: "February 2026",
         mediaType: "image",
         mediaSrc: "",
-        tags: ["AI", "Web App", "Claude API", "Ski", "JavaScript", "Backcountry"],
+        tags: ["AI", "Web App", "OpenAI API", "Ski", "JavaScript", "Backcountry"],
         fullWriteup: `
             <h2>RIDGE — Ski Gear Selector</h2>
             <p>A single-file mobile-friendly web app that tells you exactly what to wear skiing today. Enter your conditions, hit a button, and Claude picks the right layering combo from your personal gear inventory.</p>
@@ -24,9 +24,9 @@ const projects = [
             </ul>
 
             <h3>Tech Stack</h3>
-            <p>Single HTML file, no build step, no backend. Claude API (claude-sonnet-4-5) handles all recommendation logic. Gear stored in localStorage. NOAA api.weather.gov for live conditions.</p>
+            <p>Single HTML file, no build step, no backend. OpenAI API (gpt-4o-mini) handles all recommendation logic. Gear stored in localStorage. NOAA api.weather.gov for live conditions.</p>
 
-            <h3 style="color: #00d4ff;">Enter your Anthropic API key via the ⚙ button to use the AI features.</h3>
+            <h3 style="color: #00d4ff;">Enter your OpenAI API key via the ⚙ button to use the AI features.</h3>
 
             <div style="margin: 20px 0; border: 2px solid #00ff88; border-radius: 8px; overflow: hidden; box-shadow: 0 0 20px rgba(0,255,136,0.3);">
                 <iframe src="media/ski-gear-selector/index.html"

@@ -169,7 +169,7 @@ header {
   </div>
 </header>
 <div class="key-panel" id="keyPanel">
-  <input type="password" id="keyInput" placeholder="sk-ant-api03-..." spellcheck="false">
+  <input type="password" id="keyInput" placeholder="sk-..." spellcheck="false">
   <button class="key-save" onclick="saveKey()">SAVE</button>
   <span class="key-hint">Stored locally in your browser only</span>
 </div>
@@ -288,14 +288,12 @@ header {
 <script>
 var inv = JSON.parse(localStorage.getItem('ridge3') || 'null') || { tops:[], pants:[], head:[], skis:[], safety:[] };
 var pendingGear = null, pendingSection = null;
-var MODEL = 'claude-sonnet-4-5-20250929';
+var MODEL = 'gpt-4o-mini';
 function getApiKey() { return localStorage.getItem('ridge_apikey') || ''; }
 function apiHeaders() {
   return {
     'Content-Type': 'application/json',
-    'x-api-key': getApiKey(),
-    'anthropic-version': '2023-06-01',
-    'anthropic-dangerous-direct-browser-access': 'true'
+    'Authorization': 'Bearer ' + getApiKey()
   };
 }
 function toggleKeyPanel() {
@@ -372,20 +370,20 @@ async function getKit() {
   conds.wind_chill_f = Math.round(conds.temp_base_f - conds.wind_mph * 0.7);
   var prompt = 'You are a ski gear expert. Pick the best combination of gear from this person\'s inventory for today\'s conditions.\nCONDITIONS:\n' + JSON.stringify(conds, null, 2) + '\nINVENTORY:\n' + JSON.stringify(inv, null, 2) + '\nPick the exact items to wear. For tops you can select multiple items - give the full layering stack in order from skin out. Same for anything where layering makes sense. Skip layers that aren\'t needed.\nFor skis: pick the best ski from the quiver for today. If there\'s a boot listed separately, include it.\nRespond ONLY with this JSON (no markdown):\n{\n  "tops": [\n    { "model": "exact model from inventory", "role": "base layer | mid layer | shell | etc", "why": "1 short reason" }\n  ],\n  "pants": [\n    { "model": "exact model", "role": "description", "why": "1 short reason" }\n  ],\n  "head": [\n    { "model": "exact model", "role": "helmet | goggles | balaclava | gaiter | etc", "why": "short reason" }\n  ],\n  "skis": [\n    { "model": "exact model", "role": "ski | boot | etc", "why": "why this for today" }\n  ],\n  "safety_note": "if backcountry: note on beacon/probe/shovel status from inventory. null if resort.",\n  "note": "1-2 sentence plain-English callout"\n}\nOnly use models that are ACTUALLY in the inventory. If a category is empty, return [].';
   try {
-    var res = await fetch('https://api.anthropic.com/v1/messages', {
+    var res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: apiHeaders(),
       body: JSON.stringify({ model: MODEL, max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
     });
     var data = await res.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    if (!data.content || !data.content[0] || !data.content[0].text) throw new Error('Unexpected API response: ' + JSON.stringify(data).slice(0, 200));
-    var rawText = data.content[0].text;
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) throw new Error('Unexpected API response: ' + JSON.stringify(data).slice(0, 200));
+    var rawText = data.choices[0].message.content;
     var match = rawText.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('No JSON in response. Raw: ' + rawText.slice(0, 300));
     renderKit(JSON.parse(match[0]), conds);
   } catch(e) {
-    inner.innerHTML = '<div class="kit-loading" style="color:var(--red)">Claude error: ' + e.message + '<br><br><span style="color:var(--muted2)">Check your API key (&#9881;) and make sure you have gear in your inventory.</span></div>';
+    inner.innerHTML = '<div class="kit-loading" style="color:var(--red)">AI error: ' + e.message + '<br><br><span style="color:var(--muted2)">Check your API key (&#9881;) and make sure you have gear in your inventory.</span></div>';
   }
   btn.disabled = false; btn.textContent = "GET TODAY'S KIT";
 }
@@ -421,15 +419,15 @@ async function toggleGap() {
   var prompt = 'Analyze this skier\'s gear inventory for gaps and weaknesses.\nCONDITIONS: ' + JSON.stringify(conds) + '\nINVENTORY:\n' + JSON.stringify(inv, null, 2) + '\nReturn ONLY a valid JSON object. No markdown fences, no explanation, just the JSON.\nSchema:\n{\n  "covered": ["string - what they are well equipped for"],\n  "gaps": [\n    {\n      "issue": "string describing the gap",\n      "serious": true,\n      "suggestion": "specific product name and approx price",\n      "url": "https://www.evo.com/search?text=... or null"\n    }\n  ],\n  "quiver": [\n    {\n      "note": "string observation about skis/boots",\n      "positive": true,\n      "suggestion": "string suggestion if negative, otherwise null"\n    }\n  ]\n}\nFor "serious" use the boolean true or false (not a string).\nFor "positive" use the boolean true or false (not a string).\nFor "url" use a real evo.com or rei.com search URL, or the JSON null value.';
   var rawText = '';
   try {
-    var res = await fetch('https://api.anthropic.com/v1/messages', {
+    var res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: apiHeaders(),
-      body: JSON.stringify({ model: MODEL, max_tokens: 900, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: MODEL, max_tokens: 1800, messages: [{ role: 'user', content: prompt }] })
     });
     var data = await res.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    if (!data.content || !data.content[0] || !data.content[0].text) throw new Error('Unexpected API response: ' + JSON.stringify(data).slice(0, 200));
-    rawText = data.content[0].text;
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) throw new Error('Unexpected API response: ' + JSON.stringify(data).slice(0, 200));
+    rawText = data.choices[0].message.content;
     var jsonMatch = rawText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON found in response. Raw: ' + rawText.slice(0, 300));
     var a = JSON.parse(jsonMatch[0]);
@@ -499,15 +497,15 @@ async function identify() {
   else if (pendingSection==='safety') specLine = '"safety_type": "beacon|probe|shovel|airbag|pack", "key_spec": "string"';
   var prompt = 'Identify this ski gear: "' + name + '"\nSection hint: ' + sectionHints[pendingSection] + '\nReturn ONLY JSON:\n{\n  "identified": true,\n  "gearType": "e.g. Hardshell Jacket",\n  "description": "one sentence: what it\'s best for",\n  "model": "clean name",\n  "section": "' + pendingSection + '",\n  "specs": { ' + specLine + ' }\n}\nOr if not ski gear: { "identified": false, "reason": "..." }';
   try {
-    var res = await fetch('https://api.anthropic.com/v1/messages', {
+    var res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: apiHeaders(),
       body: JSON.stringify({ model: MODEL, max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
     });
     var data = await res.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    if (!data.content || !data.content[0] || !data.content[0].text) throw new Error('Unexpected API response');
-    var rawText = data.content[0].text;
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) throw new Error('Unexpected API response');
+    var rawText = data.choices[0].message.content;
     var match = rawText.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('No JSON in response');
     var result = JSON.parse(match[0]);
