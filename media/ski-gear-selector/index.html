@@ -169,9 +169,9 @@ header {
   </div>
 </header>
 <div class="key-panel" id="keyPanel">
-  <input type="password" id="keyInput" placeholder="sk-... (OpenAI) or sk-ant-... (Claude)" spellcheck="false">
+  <input type="password" id="keyInput" placeholder="sk-ant-api03-..." spellcheck="false">
   <button class="key-save" onclick="saveKey()">SAVE</button>
-  <span class="key-hint" id="keyHint">OpenAI or Anthropic &mdash; stored locally only</span>
+  <span class="key-hint" id="keyHint">Anthropic API key &mdash; stored locally only</span>
 </div>
 <div id="page-today" class="page active wrap">
   <div class="cond-card">
@@ -289,23 +289,15 @@ header {
 var inv = JSON.parse(localStorage.getItem('ridge3') || 'null') || { tops:[], pants:[], head:[], skis:[], safety:[] };
 var pendingGear = null, pendingSection = null;
 function getApiKey() { return localStorage.getItem('ridge_apikey') || ''; }
-function getProvider() { return getApiKey().startsWith('sk-ant-') ? 'anthropic' : 'openai'; }
-function getModel() { return getProvider() === 'anthropic' ? 'claude-sonnet-4-5-20250929' : 'gpt-4o-mini'; }
-function apiUrl() { return getProvider() === 'anthropic' ? 'https://api.anthropic.com/v1/messages' : 'https://api.openai.com/v1/chat/completions'; }
+function getModel() { return 'claude-haiku-4-5-20251001'; }
+function apiUrl() { return 'https://api.anthropic.com/v1/messages'; }
 function apiHeaders() {
-  if (getProvider() === 'anthropic') {
-    return { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
-  }
-  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getApiKey() };
+  return { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
 }
 function extractText(data) {
   if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  if (getProvider() === 'anthropic') {
-    if (!data.content || !data.content[0] || !data.content[0].text) throw new Error('Unexpected API response: ' + JSON.stringify(data).slice(0, 200));
-    return data.content[0].text;
-  }
-  if (!data.choices || !data.choices[0] || !data.choices[0].message) throw new Error('Unexpected API response: ' + JSON.stringify(data).slice(0, 200));
-  return data.choices[0].message.content;
+  if (!data.content || !data.content[0] || !data.content[0].text) throw new Error('Unexpected API response: ' + JSON.stringify(data).slice(0, 200));
+  return data.content[0].text;
 }
 function toggleKeyPanel() {
   var panel = document.getElementById('keyPanel');
@@ -322,9 +314,8 @@ function updateKeyHint() {
   var hint = document.getElementById('keyHint');
   if (!hint) return;
   var key = getApiKey();
-  if (!key) { hint.textContent = 'OpenAI or Anthropic \u2014 stored locally only'; hint.style.color = ''; return; }
-  if (key.startsWith('sk-ant-')) { hint.textContent = '\u2713 Claude (Anthropic) key detected'; hint.style.color = 'var(--green)'; }
-  else { hint.textContent = '\u2713 OpenAI key detected'; hint.style.color = 'var(--accent)'; }
+  if (!key) { hint.textContent = 'Anthropic API key \u2014 stored locally only'; hint.style.color = ''; return; }
+  hint.textContent = '\u2713 Anthropic key saved'; hint.style.color = 'var(--green)';
 }
 function saveKey() {
   var val = document.getElementById('keyInput').value.trim();
@@ -370,7 +361,7 @@ async function fetchNOAA() {
 async function getKit() {
   if (!getApiKey()) {
     document.getElementById('kitCard').classList.add('show');
-    document.getElementById('kitInner').innerHTML = '<div class="kit-loading" style="color:var(--warn)">&#9881; No API key set.<br><br><span style="color:var(--muted2)">Click the &#9881; button in the header to enter your Anthropic API key.</span></div>';
+    document.getElementById('kitInner').innerHTML = '<div class="kit-loading" style="color:var(--warn)">&#9881; No Anthropic API key set.<br><br><span style="color:var(--muted2)">Click the &#9881; button in the header to enter your <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent)">Anthropic API key</a>.</span></div>';
     return;
   }
   var btn = document.getElementById('goBtn');
@@ -426,7 +417,7 @@ async function toggleGap() {
   if (out.classList.contains('show')) { out.classList.remove('show'); return; }
   if (!getApiKey()) {
     out.classList.add('show');
-    out.innerHTML = '<div style="padding:14px;font-family:\'DM Mono\',monospace;font-size:12px;color:var(--warn)">&#9881; No API key &#8212; click the &#9881; button in the header.</div>';
+    out.innerHTML = '<div style="padding:14px;font-family:\'DM Mono\',monospace;font-size:12px;color:var(--warn)">&#9881; No Anthropic API key &#8212; click the &#9881; button in the header.</div>';
     return;
   }
   out.classList.add('show');
@@ -500,7 +491,7 @@ async function identify() {
   if (!getApiKey()) {
     var s = document.getElementById('idStatus');
     s.style.display = 'block'; s.style.color = 'var(--warn)'; s.style.borderColor = 'var(--warn)';
-    s.textContent = 'No API key - click the gear button in the header to set one.';
+    s.textContent = 'No Anthropic API key - click the gear \u2699 button in the header to set one.';
     return;
   }
   var btn = document.getElementById('idBtn');
