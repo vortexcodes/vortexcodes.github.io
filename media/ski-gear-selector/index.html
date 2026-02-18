@@ -171,7 +171,7 @@ header {
 <div class="key-panel" id="keyPanel">
   <input type="password" id="keyInput" placeholder="sk-ant-api03-..." spellcheck="false">
   <button class="key-save" onclick="saveKey()">SAVE</button>
-  <span class="key-hint" id="keyHint">Anthropic API key &mdash; stored locally only</span>
+  <span class="key-hint">Stored locally in your browser only</span>
 </div>
 <div id="page-today" class="page active wrap">
   <div class="cond-card">
@@ -288,16 +288,15 @@ header {
 <script>
 var inv = JSON.parse(localStorage.getItem('ridge3') || 'null') || { tops:[], pants:[], head:[], skis:[], safety:[] };
 var pendingGear = null, pendingSection = null;
+var MODEL = 'claude-sonnet-4-5-20250929';
 function getApiKey() { return localStorage.getItem('ridge_apikey') || ''; }
-function getModel() { return 'claude-haiku-4-5-20251001'; }
-function apiUrl() { return 'https://api.anthropic.com/v1/messages'; }
 function apiHeaders() {
-  return { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
-}
-function extractText(data) {
-  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  if (!data.content || !data.content[0] || !data.content[0].text) throw new Error('Unexpected API response: ' + JSON.stringify(data).slice(0, 200));
-  return data.content[0].text;
+  return {
+    'Content-Type': 'application/json',
+    'x-api-key': getApiKey(),
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true'
+  };
 }
 function toggleKeyPanel() {
   var panel = document.getElementById('keyPanel');
@@ -308,16 +307,6 @@ function toggleKeyPanel() {
     inp.focus();
   }
   updateKeyBtn();
-  updateKeyHint();
-}
-function isValidAnthropicKey(key) { return key && key.startsWith('sk-ant-'); }
-function updateKeyHint() {
-  var hint = document.getElementById('keyHint');
-  if (!hint) return;
-  var key = getApiKey();
-  if (!key) { hint.textContent = 'Anthropic API key \u2014 stored locally only'; hint.style.color = ''; return; }
-  if (!isValidAnthropicKey(key)) { hint.textContent = '\u2718 Not an Anthropic key \u2014 must start with sk-ant-'; hint.style.color = 'var(--red)'; return; }
-  hint.textContent = '\u2713 Anthropic key saved'; hint.style.color = 'var(--green)';
 }
 function saveKey() {
   var val = document.getElementById('keyInput').value.trim();
@@ -325,13 +314,11 @@ function saveKey() {
   else localStorage.removeItem('ridge_apikey');
   document.getElementById('keyPanel').classList.remove('open');
   updateKeyBtn();
-  updateKeyHint();
 }
 function updateKeyBtn() {
   document.getElementById('keyBtn').classList.toggle('has-key', !!getApiKey());
 }
 updateKeyBtn();
-updateKeyHint();
 function nav(page, btn) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -361,9 +348,9 @@ async function fetchNOAA() {
   btn.disabled = false;
 }
 async function getKit() {
-  if (!getApiKey() || !isValidAnthropicKey(getApiKey())) {
+  if (!getApiKey()) {
     document.getElementById('kitCard').classList.add('show');
-    document.getElementById('kitInner').innerHTML = '<div class="kit-loading" style="color:var(--warn)">&#9881; ' + (!getApiKey() ? 'No API key set.' : 'Invalid key \u2014 must be an Anthropic key starting with <code>sk-ant-</code>.') + '<br><br><span style="color:var(--muted2)">Click the &#9881; button in the header to enter your <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent)">Anthropic API key</a>.</span></div>';
+    document.getElementById('kitInner').innerHTML = '<div class="kit-loading" style="color:var(--warn)">&#9881; No API key set.<br><br><span style="color:var(--muted2)">Click the &#9881; button in the header to enter your Anthropic API key.</span></div>';
     return;
   }
   var btn = document.getElementById('goBtn');
@@ -385,19 +372,20 @@ async function getKit() {
   conds.wind_chill_f = Math.round(conds.temp_base_f - conds.wind_mph * 0.7);
   var prompt = 'You are a ski gear expert. Pick the best combination of gear from this person\'s inventory for today\'s conditions.\nCONDITIONS:\n' + JSON.stringify(conds, null, 2) + '\nINVENTORY:\n' + JSON.stringify(inv, null, 2) + '\nPick the exact items to wear. For tops you can select multiple items - give the full layering stack in order from skin out. Same for anything where layering makes sense. Skip layers that aren\'t needed.\nFor skis: pick the best ski from the quiver for today. If there\'s a boot listed separately, include it.\nRespond ONLY with this JSON (no markdown):\n{\n  "tops": [\n    { "model": "exact model from inventory", "role": "base layer | mid layer | shell | etc", "why": "1 short reason" }\n  ],\n  "pants": [\n    { "model": "exact model", "role": "description", "why": "1 short reason" }\n  ],\n  "head": [\n    { "model": "exact model", "role": "helmet | goggles | balaclava | gaiter | etc", "why": "short reason" }\n  ],\n  "skis": [\n    { "model": "exact model", "role": "ski | boot | etc", "why": "why this for today" }\n  ],\n  "safety_note": "if backcountry: note on beacon/probe/shovel status from inventory. null if resort.",\n  "note": "1-2 sentence plain-English callout"\n}\nOnly use models that are ACTUALLY in the inventory. If a category is empty, return [].';
   try {
-    var res = await fetch(apiUrl(), {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: apiHeaders(),
-      body: JSON.stringify({ model: getModel(), max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: MODEL, max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
     });
     var data = await res.json();
-    var rawText = extractText(data);
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    if (!data.content || !data.content[0] || !data.content[0].text) throw new Error('Unexpected API response: ' + JSON.stringify(data).slice(0, 200));
+    var rawText = data.content[0].text;
     var match = rawText.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('No JSON in response. Raw: ' + rawText.slice(0, 300));
     renderKit(JSON.parse(match[0]), conds);
   } catch(e) {
-    var isNetwork = e instanceof TypeError || e.message.toLowerCase().includes('network');
-    inner.innerHTML = '<div class="kit-loading" style="color:var(--red)">' + (isNetwork ? 'Network error \u2014 could not reach Anthropic API.<br><br><span style="color:var(--muted2)">Make sure your Anthropic key (&#9881;) starts with <code>sk-ant-</code>. OpenAI keys will not work.<br>If your key is correct, check your internet connection or try disabling browser extensions.</span>' : 'AI error: ' + e.message + '<br><br><span style="color:var(--muted2)">Check your API key (&#9881;) and make sure you have gear in your inventory.</span>') + '</div>';
+    inner.innerHTML = '<div class="kit-loading" style="color:var(--red)">Claude error: ' + e.message + '<br><br><span style="color:var(--muted2)">Check your API key (&#9881;) and make sure you have gear in your inventory.</span></div>';
   }
   btn.disabled = false; btn.textContent = "GET TODAY'S KIT";
 }
@@ -418,9 +406,9 @@ function renderKit(kit, conds) {
 async function toggleGap() {
   var out = document.getElementById('gapOut');
   if (out.classList.contains('show')) { out.classList.remove('show'); return; }
-  if (!getApiKey() || !isValidAnthropicKey(getApiKey())) {
+  if (!getApiKey()) {
     out.classList.add('show');
-    out.innerHTML = '<div style="padding:14px;font-family:\'DM Mono\',monospace;font-size:12px;color:var(--warn)">&#9881; ' + (!getApiKey() ? 'No Anthropic API key' : 'Invalid key \u2014 must start with sk-ant-') + ' &#8212; click the &#9881; button in the header.</div>';
+    out.innerHTML = '<div style="padding:14px;font-family:\'DM Mono\',monospace;font-size:12px;color:var(--warn)">&#9881; No API key &#8212; click the &#9881; button in the header.</div>';
     return;
   }
   out.classList.add('show');
@@ -433,13 +421,15 @@ async function toggleGap() {
   var prompt = 'Analyze this skier\'s gear inventory for gaps and weaknesses.\nCONDITIONS: ' + JSON.stringify(conds) + '\nINVENTORY:\n' + JSON.stringify(inv, null, 2) + '\nReturn ONLY a valid JSON object. No markdown fences, no explanation, just the JSON.\nSchema:\n{\n  "covered": ["string - what they are well equipped for"],\n  "gaps": [\n    {\n      "issue": "string describing the gap",\n      "serious": true,\n      "suggestion": "specific product name and approx price",\n      "url": "https://www.evo.com/search?text=... or null"\n    }\n  ],\n  "quiver": [\n    {\n      "note": "string observation about skis/boots",\n      "positive": true,\n      "suggestion": "string suggestion if negative, otherwise null"\n    }\n  ]\n}\nFor "serious" use the boolean true or false (not a string).\nFor "positive" use the boolean true or false (not a string).\nFor "url" use a real evo.com or rei.com search URL, or the JSON null value.';
   var rawText = '';
   try {
-    var res = await fetch(apiUrl(), {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: apiHeaders(),
-      body: JSON.stringify({ model: getModel(), max_tokens: 1800, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: MODEL, max_tokens: 1800, messages: [{ role: 'user', content: prompt }] })
     });
     var data = await res.json();
-    rawText = extractText(data);
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    if (!data.content || !data.content[0] || !data.content[0].text) throw new Error('Unexpected API response: ' + JSON.stringify(data).slice(0, 200));
+    rawText = data.content[0].text;
     var jsonMatch = rawText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON found in response. Raw: ' + rawText.slice(0, 300));
     var a = JSON.parse(jsonMatch[0]);
@@ -491,10 +481,10 @@ var sectionHints = {
 async function identify() {
   var name = document.getElementById('modelIn').value.trim();
   if (!name) return;
-  if (!getApiKey() || !isValidAnthropicKey(getApiKey())) {
+  if (!getApiKey()) {
     var s = document.getElementById('idStatus');
     s.style.display = 'block'; s.style.color = 'var(--warn)'; s.style.borderColor = 'var(--warn)';
-    s.textContent = !getApiKey() ? 'No API key \u2014 click \u2699 to set one.' : 'Invalid key \u2014 must be an Anthropic key starting with sk-ant-';
+    s.textContent = 'No API key - click the gear button in the header to set one.';
     return;
   }
   var btn = document.getElementById('idBtn');
@@ -509,13 +499,15 @@ async function identify() {
   else if (pendingSection==='safety') specLine = '"safety_type": "beacon|probe|shovel|airbag|pack", "key_spec": "string"';
   var prompt = 'Identify this ski gear: "' + name + '"\nSection hint: ' + sectionHints[pendingSection] + '\nReturn ONLY JSON:\n{\n  "identified": true,\n  "gearType": "e.g. Hardshell Jacket",\n  "description": "one sentence: what it\'s best for",\n  "model": "clean name",\n  "section": "' + pendingSection + '",\n  "specs": { ' + specLine + ' }\n}\nOr if not ski gear: { "identified": false, "reason": "..." }';
   try {
-    var res = await fetch(apiUrl(), {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: apiHeaders(),
-      body: JSON.stringify({ model: getModel(), max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: MODEL, max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
     });
     var data = await res.json();
-    var rawText = extractText(data);
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    if (!data.content || !data.content[0] || !data.content[0].text) throw new Error('Unexpected API response');
+    var rawText = data.content[0].text;
     var match = rawText.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('No JSON in response');
     var result = JSON.parse(match[0]);
