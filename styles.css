@@ -420,6 +420,340 @@ footer {
     transform: translateY(-2px);
 }
 
+/* Account Page Styles */
+.account-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.auth-box, .profile-box, .community-box {
+    background: #1a1a1a;
+    border: 2px solid #00ff88;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+.community-box {
+    border-color: #00d4ff;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+}
+
+.community-box h3, .profile-gear h3 {
+    color: #00d4ff;
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+}
+
+.community-desc {
+    color: #808080;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #2a2a2a;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 10px;
+    background: none;
+    border: none;
+    color: #808080;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+
+.auth-tab.active {
+    color: #00ff88;
+    border-bottom-color: #00ff88;
+}
+
+.auth-tab:hover {
+    color: #00ff88;
+}
+
+.auth-form .form-group {
+    margin-bottom: 16px;
+}
+
+.auth-form label {
+    display: block;
+    color: #b0b0b0;
+    font-weight: 500;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 10px 14px;
+    background: #0a0a0a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: #00ff88;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+}
+
+.form-hint {
+    display: block;
+    color: #808080;
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
+.auth-error {
+    color: #ff0066;
+    font-size: 0.85rem;
+    min-height: 20px;
+    margin-bottom: 8px;
+}
+
+.auth-submit {
+    width: 100%;
+    padding: 12px;
+    background: #00ff88;
+    color: #0a0a0a;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+}
+
+.auth-submit:hover {
+    background: #00d4ff;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+.user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.user-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.user-card:hover {
+    border-color: #00d4ff;
+}
+
+.user-card.you {
+    border-color: rgba(0, 255, 136, 0.4);
+    background: rgba(0, 255, 136, 0.05);
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00ff88, #00d4ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #0a0a0a;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #e0e0e0;
+    font-size: 0.95rem;
+}
+
+.you-badge {
+    font-size: 0.7rem;
+    color: #00ff88;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+}
+
+.user-gear-count {
+    color: #808080;
+    font-size: 0.8rem;
+}
+
+.no-users {
+    color: #808080;
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Profile styles */
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.profile-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00ff88, #ff0066);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #0a0a0a;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-info h2 {
+    color: #00ff88;
+    font-size: 1.5rem;
+    text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+}
+
+.profile-meta {
+    color: #808080;
+    font-size: 0.85rem;
+}
+
+.logout-btn {
+    padding: 8px 18px;
+    background: none;
+    border: 1px solid #ff0066;
+    color: #ff0066;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.logout-btn:hover {
+    background: #ff0066;
+    color: #0a0a0a;
+    box-shadow: 0 0 15px rgba(255, 0, 102, 0.4);
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+}
+
+.stat-num {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #00ff88;
+    text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #808080;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+.profile-gear {
+    margin-top: 20px;
+}
+
+.gear-cat {
+    margin-bottom: 10px;
+}
+
+.gear-cat-name {
+    display: block;
+    color: #808080;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.gear-item-tag {
+    display: inline-block;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    color: #00d4ff;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    margin: 0 4px 4px 0;
+}
+
+.no-gear {
+    color: #808080;
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 20px;
+}
+
+.gear-link {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 10px 24px;
+    background: transparent;
+    border: 2px solid #00ff88;
+    color: #00ff88;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+}
+
+.gear-link:hover {
+    background: #00ff88;
+    color: #0a0a0a;
+    box-shadow: 0 0 25px rgba(0, 255, 136, 0.6);
+}
+
 @media (max-width: 768px) {
     header h1 {
         font-size: 2rem;
@@ -469,5 +803,17 @@ footer {
 
     .contact-btn {
         text-align: center;
+    }
+
+    .account-section {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .profile-header {
+        flex-wrap: wrap;
     }
 }

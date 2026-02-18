@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - Vortex1</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">Vortex1</a>
+            <div class="nav-links">
+                <a href="index.html">Projects</a>
+                <a href="about.html">About</a>
+                <a href="account.html" class="active">Account</a>
+            </div>
+        </div>
+    </nav>
+
+    <header>
+        <div class="container">
+            <h1 id="page-title">Account</h1>
+            <p class="tagline" id="page-subtitle">Login or create an account to save your gear</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Login/Register form (shown when logged out) -->
+        <section id="auth-section" class="account-section">
+            <div class="auth-box">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+                    <button class="auth-tab" onclick="switchTab('register')">Register</button>
+                </div>
+
+                <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="login-user">Username</label>
+                        <input type="text" id="login-user" placeholder="your username" autocomplete="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-pass">Password</label>
+                        <input type="password" id="login-pass" placeholder="your password" autocomplete="current-password" required>
+                    </div>
+                    <div id="login-error" class="auth-error"></div>
+                    <button type="submit" class="auth-submit">Login</button>
+                </form>
+
+                <form id="register-form" class="auth-form" style="display:none" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="reg-user">Username</label>
+                        <input type="text" id="reg-user" placeholder="pick a username" autocomplete="username" required>
+                        <span class="form-hint">Letters, numbers, underscores only</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-pass">Password</label>
+                        <input type="password" id="reg-pass" placeholder="pick a password" autocomplete="new-password" required>
+                    </div>
+                    <div id="reg-error" class="auth-error"></div>
+                    <button type="submit" class="auth-submit">Create Account</button>
+                </form>
+            </div>
+
+            <div class="community-box">
+                <h3>Community Gear</h3>
+                <p class="community-desc">See what gear other users have added.</p>
+                <div id="user-list" class="user-list">
+                    <!-- populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Profile (shown when logged in) -->
+        <section id="profile-section" class="account-section" style="display:none">
+            <div class="profile-box">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profile-avatar">?</div>
+                    <div class="profile-info">
+                        <h2 id="profile-name"></h2>
+                        <p id="profile-since" class="profile-meta"></p>
+                    </div>
+                    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-card">
+                        <div class="stat-num" id="stat-total">0</div>
+                        <div class="stat-label">Total Gear</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-num" id="stat-tops">0</div>
+                        <div class="stat-label">Tops</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-num" id="stat-pants">0</div>
+                        <div class="stat-label">Pants</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-num" id="stat-head">0</div>
+                        <div class="stat-label">Head</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-num" id="stat-skis">0</div>
+                        <div class="stat-label">Skis</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-num" id="stat-safety">0</div>
+                        <div class="stat-label">Safety</div>
+                    </div>
+                </div>
+
+                <div class="profile-gear">
+                    <h3>Your Gear</h3>
+                    <div id="gear-summary"></div>
+                    <a href="media/ski-gear-selector/index.html" class="gear-link">Open RIDGE to manage your gear</a>
+                </div>
+            </div>
+
+            <div class="community-box">
+                <h3>Community Gear</h3>
+                <p class="community-desc">See what gear other users have added.</p>
+                <div id="user-list-logged" class="user-list">
+                    <!-- populated by JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Vortex1. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="accounts.js"></script>
+    <script>
+    function switchTab(tab) {
+        document.querySelectorAll('.auth-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+        document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+        document.querySelector('.auth-tab:' + (tab === 'login' ? 'first-child' : 'last-child')).classList.add('active');
+        document.getElementById('login-error').textContent = '';
+        document.getElementById('reg-error').textContent = '';
+    }
+
+    function handleLogin(e) {
+        e.preventDefault();
+        var user = document.getElementById('login-user').value;
+        var pass = document.getElementById('login-pass').value;
+        var result = Accounts.login(user, pass);
+        if (result.ok) {
+            renderPage();
+        } else {
+            document.getElementById('login-error').textContent = result.error;
+        }
+    }
+
+    function handleRegister(e) {
+        e.preventDefault();
+        var user = document.getElementById('reg-user').value;
+        var pass = document.getElementById('reg-pass').value;
+        var result = Accounts.register(user, pass);
+        if (result.ok) {
+            renderPage();
+        } else {
+            document.getElementById('reg-error').textContent = result.error;
+        }
+    }
+
+    function handleLogout() {
+        Accounts.logout();
+        renderPage();
+    }
+
+    function renderUserList(containerId) {
+        var users = Accounts.listUsers();
+        var el = document.getElementById(containerId);
+        if (!users.length) {
+            el.innerHTML = '<div class="no-users">No accounts yet. Be the first to register!</div>';
+            return;
+        }
+        var currentUser = Accounts.currentUser();
+        el.innerHTML = users.map(function(u) {
+            var initial = u.username.charAt(0).toUpperCase();
+            var isYou = u.username === currentUser;
+            return '<div class="user-card' + (isYou ? ' you' : '') + '">' +
+                '<div class="user-avatar">' + initial + '</div>' +
+                '<div class="user-info">' +
+                    '<div class="user-name">' + u.username + (isYou ? ' <span class="you-badge">you</span>' : '') + '</div>' +
+                    '<div class="user-gear-count">' + u.gearCount + ' gear item' + (u.gearCount !== 1 ? 's' : '') + '</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function renderProfile() {
+        var profile = Accounts.getProfile();
+        if (!profile) return;
+
+        document.getElementById('profile-name').textContent = profile.username;
+        document.getElementById('profile-avatar').textContent = profile.username.charAt(0).toUpperCase();
+        document.getElementById('profile-since').textContent = 'Member since ' + new Date(profile.created).toLocaleDateString();
+
+        var gear = profile.gear;
+        document.getElementById('stat-total').textContent = profile.gearCount;
+        document.getElementById('stat-tops').textContent = (gear.tops || []).length;
+        document.getElementById('stat-pants').textContent = (gear.pants || []).length;
+        document.getElementById('stat-head').textContent = (gear.head || []).length;
+        document.getElementById('stat-skis').textContent = (gear.skis || []).length;
+        document.getElementById('stat-safety').textContent = (gear.safety || []).length;
+
+        var summary = document.getElementById('gear-summary');
+        if (profile.gearCount === 0) {
+            summary.innerHTML = '<p class="no-gear">No gear saved yet. Open RIDGE to start adding your gear!</p>';
+        } else {
+            var html = '';
+            ['tops', 'pants', 'head', 'skis', 'safety'].forEach(function(cat) {
+                var items = gear[cat] || [];
+                if (items.length) {
+                    html += '<div class="gear-cat"><span class="gear-cat-name">' + cat.toUpperCase() + '</span>';
+                    html += items.map(function(item) {
+                        return '<span class="gear-item-tag">' + item.model + '</span>';
+                    }).join('');
+                    html += '</div>';
+                }
+            });
+            summary.innerHTML = html;
+        }
+    }
+
+    function renderPage() {
+        var user = Accounts.currentUser();
+        if (user) {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('profile-section').style.display = 'block';
+            document.getElementById('page-title').textContent = user;
+            document.getElementById('page-subtitle').textContent = 'Your account and gear overview';
+            renderProfile();
+            renderUserList('user-list-logged');
+        } else {
+            document.getElementById('auth-section').style.display = '';
+            document.getElementById('profile-section').style.display = 'none';
+            document.getElementById('page-title').textContent = 'Account';
+            document.getElementById('page-subtitle').textContent = 'Login or create an account to save your gear';
+            renderUserList('user-list');
+        }
+    }
+
+    renderPage();
+    </script>
+</body>
+</html>
