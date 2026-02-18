@@ -422,7 +422,7 @@ async function toggleGap() {
     var res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: apiHeaders(),
-      body: JSON.stringify({ model: MODEL, max_tokens: 900, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: MODEL, max_tokens: 1800, messages: [{ role: 'user', content: prompt }] })
     });
     var data = await res.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
