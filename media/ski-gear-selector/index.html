@@ -310,11 +310,13 @@ function toggleKeyPanel() {
   updateKeyBtn();
   updateKeyHint();
 }
+function isValidAnthropicKey(key) { return key && key.startsWith('sk-ant-'); }
 function updateKeyHint() {
   var hint = document.getElementById('keyHint');
   if (!hint) return;
   var key = getApiKey();
   if (!key) { hint.textContent = 'Anthropic API key \u2014 stored locally only'; hint.style.color = ''; return; }
+  if (!isValidAnthropicKey(key)) { hint.textContent = '\u2718 Not an Anthropic key \u2014 must start with sk-ant-'; hint.style.color = 'var(--red)'; return; }
   hint.textContent = '\u2713 Anthropic key saved'; hint.style.color = 'var(--green)';
 }
 function saveKey() {
@@ -359,9 +361,9 @@ async function fetchNOAA() {
   btn.disabled = false;
 }
 async function getKit() {
-  if (!getApiKey()) {
+  if (!getApiKey() || !isValidAnthropicKey(getApiKey())) {
     document.getElementById('kitCard').classList.add('show');
-    document.getElementById('kitInner').innerHTML = '<div class="kit-loading" style="color:var(--warn)">&#9881; No Anthropic API key set.<br><br><span style="color:var(--muted2)">Click the &#9881; button in the header to enter your <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent)">Anthropic API key</a>.</span></div>';
+    document.getElementById('kitInner').innerHTML = '<div class="kit-loading" style="color:var(--warn)">&#9881; ' + (!getApiKey() ? 'No API key set.' : 'Invalid key \u2014 must be an Anthropic key starting with <code>sk-ant-</code>.') + '<br><br><span style="color:var(--muted2)">Click the &#9881; button in the header to enter your <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent)">Anthropic API key</a>.</span></div>';
     return;
   }
   var btn = document.getElementById('goBtn');
@@ -394,7 +396,8 @@ async function getKit() {
     if (!match) throw new Error('No JSON in response. Raw: ' + rawText.slice(0, 300));
     renderKit(JSON.parse(match[0]), conds);
   } catch(e) {
-    inner.innerHTML = '<div class="kit-loading" style="color:var(--red)">AI error: ' + e.message + '<br><br><span style="color:var(--muted2)">Check your API key (&#9881;) and make sure you have gear in your inventory.</span></div>';
+    var isNetwork = e instanceof TypeError || e.message.toLowerCase().includes('network');
+    inner.innerHTML = '<div class="kit-loading" style="color:var(--red)">' + (isNetwork ? 'Network error \u2014 could not reach Anthropic API.<br><br><span style="color:var(--muted2)">Make sure your Anthropic key (&#9881;) starts with <code>sk-ant-</code>. OpenAI keys will not work.<br>If your key is correct, check your internet connection or try disabling browser extensions.</span>' : 'AI error: ' + e.message + '<br><br><span style="color:var(--muted2)">Check your API key (&#9881;) and make sure you have gear in your inventory.</span>') + '</div>';
   }
   btn.disabled = false; btn.textContent = "GET TODAY'S KIT";
 }
@@ -415,9 +418,9 @@ function renderKit(kit, conds) {
 async function toggleGap() {
   var out = document.getElementById('gapOut');
   if (out.classList.contains('show')) { out.classList.remove('show'); return; }
-  if (!getApiKey()) {
+  if (!getApiKey() || !isValidAnthropicKey(getApiKey())) {
     out.classList.add('show');
-    out.innerHTML = '<div style="padding:14px;font-family:\'DM Mono\',monospace;font-size:12px;color:var(--warn)">&#9881; No Anthropic API key &#8212; click the &#9881; button in the header.</div>';
+    out.innerHTML = '<div style="padding:14px;font-family:\'DM Mono\',monospace;font-size:12px;color:var(--warn)">&#9881; ' + (!getApiKey() ? 'No Anthropic API key' : 'Invalid key \u2014 must start with sk-ant-') + ' &#8212; click the &#9881; button in the header.</div>';
     return;
   }
   out.classList.add('show');
@@ -488,10 +491,10 @@ var sectionHints = {
 async function identify() {
   var name = document.getElementById('modelIn').value.trim();
   if (!name) return;
-  if (!getApiKey()) {
+  if (!getApiKey() || !isValidAnthropicKey(getApiKey())) {
     var s = document.getElementById('idStatus');
     s.style.display = 'block'; s.style.color = 'var(--warn)'; s.style.borderColor = 'var(--warn)';
-    s.textContent = 'No Anthropic API key - click the gear \u2699 button in the header to set one.';
+    s.textContent = !getApiKey() ? 'No API key \u2014 click \u2699 to set one.' : 'Invalid key \u2014 must be an Anthropic key starting with sk-ant-';
     return;
   }
   var btn = document.getElementById('idBtn');
