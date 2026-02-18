@@ -3,6 +3,7 @@
 
 const projects = [
     {
+        slug: "ski-gear-selector",
         title: "RIDGE — Ski Gear Selector",
         description: "AI-powered ski gear recommender. Enter today's conditions at Sugar Bowl, hit a button, and Claude picks your exact layering kit from your personal inventory — not generic advice, your actual gear.",
         date: "February 2026",
@@ -39,6 +40,7 @@ const projects = [
         `
     },
     {
+        slug: "deadmau5-helmet",
         title: "LED Deadmau5 Helmet",
         description: "Custom-built LED helmet featuring WLED addressable RGB strips, sound-reactive lighting, and 3D-printed construction. Powered by a 300W battery with full color control. Sold for $700.",
         date: "2025",
@@ -97,6 +99,7 @@ const projects = [
         `
     },
     {
+        slug: "sao-many-saos",
         title: "SAO MANY SAOs — DEF CON Badge",
         description: "A large-format SAO host badge supporting 25 SAO connectors simultaneously. Built around SAOv1.69bis standard with dual 18650 batteries, USB charging, and addressable LEDs. Designed, manufactured, and sold at DEF CON.",
         date: "2025",
@@ -154,6 +157,7 @@ const projects = [
         `
     },
     {
+        slug: "frc-cheat-sheet",
         title: "FRC 2026 REBUILT Cheat Sheet",
         description: "Complete strategy and rules reference for FRC 2026 REBUILT game. Comprehensive 3-page cheat sheet covering game mechanics, robot specifications, and Team 5940 BREAD's competitive strategy.",
         date: "January 2026",
@@ -202,6 +206,7 @@ const projects = [
     },
     // Add more projects below - just copy the format above!
     // {
+    //     slug: "your-project-name", // URL-friendly name (used for vortex1.dev/your-project-name)
     //     title: "Your Project Name",
     //     description: "Brief description shown on card",
     //     date: "Month Year",

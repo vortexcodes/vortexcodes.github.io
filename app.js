@@ -64,7 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Function to open modal with project details
-    function openModal(project) {
+    // skipPush: don't update URL (used when opening from URL routing)
+    function openModal(project, skipPush) {
         // Create media element for modal
         let modalMediaHTML = '';
         if (project.mediaType === 'video' && project.mediaSrc) {
@@ -102,12 +103,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; // Prevent scrolling
+
+        // Update URL to project path
+        if (project.slug && !skipPush) {
+            history.pushState({ project: project.slug }, '', '/' + project.slug);
+        }
     }
 
     // Function to close modal
     function closeModal() {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto'; // Re-enable scrolling
+
+        // Restore URL to homepage
+        if (location.pathname !== '/') {
+            history.pushState({}, '', '/');
+        }
     }
 
     // Close button event
@@ -126,4 +137,35 @@ document.addEventListener('DOMContentLoaded', function() {
             closeModal();
         }
     });
+
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', (e) => {
+        if (e.state && e.state.project) {
+            const project = projects.find(p => p.slug === e.state.project);
+            if (project) {
+                openModal(project, true);
+                return;
+            }
+        }
+        // Close modal if navigating back to homepage
+        if (modal.style.display === 'flex') {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    });
+
+    // Check for redirect from 404.html (direct project URL visit)
+    const redirectPath = sessionStorage.getItem('redirect-path');
+    if (redirectPath) {
+        sessionStorage.removeItem('redirect-path');
+        const slug = redirectPath.replace(/^\//, '').replace(/\/$/, '');
+        if (slug) {
+            const project = projects.find(p => p.slug === slug);
+            if (project) {
+                // Use replaceState to restore the clean project URL after the 404 redirect
+                history.replaceState({ project: project.slug }, '', '/' + project.slug);
+                openModal(project, true);
+            }
+        }
+    }
 });

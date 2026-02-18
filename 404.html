@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // GitHub Pages SPA redirect trick
+        // Saves the path so index.html can open the right project
+        sessionStorage.setItem('redirect-path', location.pathname);
+        location.replace('/');
+    </script>
+</head>
+<body></body>
+</html>
