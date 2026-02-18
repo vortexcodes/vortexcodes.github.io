@@ -3,6 +3,42 @@
 
 const projects = [
     {
+        title: "RIDGE — Ski Gear Selector",
+        description: "AI-powered ski gear recommender. Enter today's conditions at Sugar Bowl, hit a button, and Claude picks your exact layering kit from your personal inventory — not generic advice, your actual gear.",
+        date: "February 2026",
+        mediaType: "image",
+        mediaSrc: "",
+        tags: ["AI", "Web App", "Claude API", "Ski", "JavaScript", "Backcountry"],
+        fullWriteup: `
+            <h2>RIDGE — Ski Gear Selector</h2>
+            <p>A single-file mobile-friendly web app that tells you exactly what to wear skiing today. Enter your conditions, hit a button, and Claude picks the right layering combo from your personal gear inventory.</p>
+
+            <h3>How It Works</h3>
+            <ul>
+                <li><strong>Auto-fetch conditions</strong> from NOAA (Donner Summit grid point) — temp, wind, precip</li>
+                <li><strong>Set avalanche danger</strong> manually from the Sierra Avalanche Center forecast</li>
+                <li><strong>Claude picks your kit</strong> — full layering stack (base → mid → shell) in wear order, best ski from your quiver, head gear combo</li>
+                <li><strong>Gear gap analysis</strong> — on-demand Claude call identifies what's missing, with specific product suggestions and links</li>
+                <li><strong>AI gear identification</strong> — type any model name, Claude identifies the type and fills in all specs automatically</li>
+            </ul>
+
+            <h3>Tech Stack</h3>
+            <p>Single HTML file, no build step, no backend. Claude API (claude-sonnet-4-5) handles all recommendation logic. Gear stored in localStorage. NOAA api.weather.gov for live conditions.</p>
+
+            <h3 style="color: #00d4ff;">Enter your Anthropic API key via the ⚙ button to use the AI features.</h3>
+
+            <div style="margin: 20px 0; border: 2px solid #00ff88; border-radius: 8px; overflow: hidden; box-shadow: 0 0 20px rgba(0,255,136,0.3);">
+                <iframe src="media/ski-gear-selector/index.html"
+                        style="width: 100%; height: 780px; border: none;"
+                        title="RIDGE Ski Gear Selector"
+                        allowfullscreen>
+                </iframe>
+            </div>
+
+            <p><a href="media/ski-gear-selector/index.html" target="_blank" style="color: #00ff88; text-decoration: none; font-weight: bold;">→ Open Full App in New Tab</a></p>
+        `
+    },
+    {
         title: "LED Deadmau5 Helmet",
         description: "Custom-built LED helmet featuring WLED addressable RGB strips, sound-reactive lighting, and 3D-printed construction. Powered by a 300W battery with full color control. Sold for $700.",
         date: "2025",

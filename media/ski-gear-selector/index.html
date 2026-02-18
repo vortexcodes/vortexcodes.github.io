@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RIDGE — Ski Gear</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --s1: #111111;
+  --s2: #1a1a1a;
+  --s3: #222222;
+  --border: #2a2a2a;
+  --accent: #00d4ff;
+  --green: #00ff88;
+  --pink: #ff0066;
+  --warn: #ffcc00;
+  --orange: #ff7a35;
+  --red: #ff3b3b;
+  --text: #e0e0e0;
+  --muted: #808080;
+  --muted2: #b0b0b0;
+  --r: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; min-height: 100vh; }
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; height: 56px;
+  border-bottom: 2px solid var(--green);
+  box-shadow: 0 2px 20px rgba(0,255,136,0.3);
+  position: sticky; top: 0; background: #0f0f0f; z-index: 50;
+}
+.logo { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 5px; color: var(--green); text-shadow: 0 0 10px rgba(0,255,136,0.5); }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.nav { display: flex; gap: 6px; }
+.nav-btn { padding: 5px 14px; border-radius: var(--r); border: 1px solid var(--border); background: none; color: var(--muted2); cursor: pointer; font-size: 13px; transition: all .15s; }
+.nav-btn.active, .nav-btn:hover { color: var(--green); border-color: var(--green); background: rgba(0,255,136,.07); }
+.key-btn { width: 32px; height: 32px; border-radius: var(--r); border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.key-btn:hover { border-color: var(--accent); color: var(--accent); }
+.key-btn.has-key { border-color: rgba(0,255,136,.4); color: var(--green); }
+.key-panel { display: none; background: var(--s1); border-bottom: 1px solid var(--border); padding: 12px 20px; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+.key-panel.open { display: flex; }
+.key-panel input { flex: 1; background: var(--s2); border: 1px solid var(--border); color: var(--text); border-radius: 5px; padding: 6px 10px; font-family: 'DM Mono', monospace; font-size: 12px; }
+.key-panel input:focus { outline: none; border-color: var(--green); }
+.key-save { padding: 6px 14px; background: var(--green); color: #0a0a0a; border: none; border-radius: 5px; cursor: pointer; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; transition: all .15s; }
+.key-save:hover { background: var(--accent); }
+.key-hint { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px 80px; }
+.page { display: none; }
+.page.active { display: block; }
+.cond-card { background: var(--s1); border: 2px solid var(--green); box-shadow: 0 0 20px rgba(0,255,136,0.2); border-radius: var(--r); padding: 16px 18px; margin-bottom: 16px; transition: border-color .2s, box-shadow .2s; }
+.cond-card:hover { border-color: var(--pink); box-shadow: 0 0 30px rgba(255,0,102,0.35), 0 0 50px rgba(0,255,136,0.15); }
+.cond-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.cond-label { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 3px; color: var(--muted2); }
+.fetch-btn { display: flex; align-items: center; gap: 6px; padding: 5px 13px; background: rgba(0,255,136,.08); border: 1px solid var(--green); color: var(--green); border-radius: var(--r); cursor: pointer; font-family: 'DM Mono', monospace; font-size: 11px; transition: all .15s; }
+.fetch-btn:hover { background: rgba(0,255,136,.18); }
+.fetch-btn:disabled { opacity: .5; pointer-events: none; }
+.spin { display: inline-block; width: 11px; height: 11px; border: 2px solid rgba(0,255,136,.25); border-top-color: var(--green); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.cond-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.cf { display: flex; flex-direction: column; gap: 4px; }
+.cl { font-size: 10px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.ci { background: var(--s2); border: 1px solid var(--border); color: var(--text); border-radius: 5px; padding: 5px 8px; font-family: 'DM Mono', monospace; font-size: 13px; width: 100%; }
+.ci:focus { outline: none; border-color: var(--green); }
+.src { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 10px; }
+.src a { color: var(--accent); text-decoration: none; }
+.src a:hover { color: var(--green); }
+.go-btn { width: 100%; padding: 16px; background: var(--green); color: #0a0a0a; border: none; border-radius: var(--r); font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 4px; cursor: pointer; transition: all .15s; margin-bottom: 18px; box-shadow: 0 0 20px rgba(0,255,136,0.4); }
+.go-btn:hover { background: var(--accent); box-shadow: 0 0 25px rgba(0,212,255,0.5); }
+.go-btn:disabled { opacity: .5; pointer-events: none; }
+.kit-card { background: var(--s1); border: 2px solid var(--green); box-shadow: 0 0 20px rgba(0,255,136,0.2); border-radius: var(--r); overflow: hidden; display: none; }
+.kit-card.show { display: block; }
+.kit-head { background: var(--s2); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+.kit-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 3px; color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,0.4); }
+.kit-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+.avi-bar { display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+.avi-num { font-family: 'Bebas Neue', sans-serif; font-size: 40px; line-height: 1; }
+.avi-d1 { color: var(--green); } .avi-d2 { color: #90ee90; } .avi-d3 { color: var(--warn); } .avi-d4 { color: var(--orange); } .avi-d5 { color: var(--red); }
+.avi-bg1 { background: rgba(0,255,136,.06); } .avi-bg2 { background: rgba(144,238,144,.06); } .avi-bg3 { background: rgba(255,204,0,.07); } .avi-bg4 { background: rgba(255,122,53,.09); } .avi-bg5 { background: rgba(255,59,59,.11); }
+.avi-txt { flex: 1; }
+.avi-name { font-size: 15px; font-weight: 600; }
+.avi-sub { font-size: 11px; color: var(--muted2); margin-top: 2px; }
+.avi-link { font-size: 11px; color: var(--accent); text-decoration: none; margin-top: 4px; display: block; }
+.avi-link:hover { color: var(--green); }
+.kit-sections { padding: 14px 18px; display: flex; flex-direction: column; gap: 16px; }
+.kit-section-label { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 2px; color: var(--muted); margin-bottom: 8px; }
+.kit-layers { display: flex; flex-direction: column; gap: 6px; }
+.kit-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; background: var(--s2); border-radius: 6px; border-left: 3px solid var(--border); }
+.kit-item.must { border-left-color: var(--green); }
+.kit-item.warn { border-left-color: var(--warn); }
+.kit-item.crit { border-left-color: var(--red); }
+.ki-num { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--muted); width: 18px; flex-shrink: 0; line-height: 1.4; }
+.ki-body { flex: 1; }
+.ki-gear { font-size: 14px; font-weight: 500; }
+.ki-role { font-size: 12px; color: var(--accent); font-family: 'DM Mono', monospace; margin-top: 1px; text-transform: uppercase; letter-spacing: .5px; }
+.ki-why { font-size: 12px; color: var(--muted2); margin-top: 3px; }
+.ki-order { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted); background: var(--s3); display: inline-block; padding: 2px 7px; border-radius: 3px; margin-top: 4px; }
+.ai-note { padding: 12px 18px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted2); font-style: italic; line-height: 1.65; }
+.kit-loading { padding: 40px; text-align: center; color: var(--muted2); font-family: 'DM Mono', monospace; font-size: 12px; }
+.big-spin { width: 32px; height: 32px; border: 3px solid rgba(0,255,136,.15); border-top-color: var(--green); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 14px; }
+.gap-btn { width: 100%; padding: 9px; background: none; border: 1px dashed var(--border); color: var(--muted); border-radius: var(--r); cursor: pointer; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px; transition: all .15s; margin-top: 14px; }
+.gap-btn:hover { border-color: var(--pink); color: var(--pink); box-shadow: 0 0 10px rgba(255,0,102,0.2); }
+.gap-output { display: none; background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); margin-top: 10px; overflow: hidden; }
+.gap-output.show { display: block; }
+.gap-sec { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.gap-sec:last-child { border-bottom: none; }
+.gap-sec-title { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 2px; margin-bottom: 8px; }
+.gap-sec-title.ok { color: var(--green); } .gap-sec-title.warn { color: var(--warn); } .gap-sec-title.info { color: var(--accent); }
+.gap-item { padding: 6px 0; font-size: 13px; }
+.gap-item + .gap-item { border-top: 1px solid var(--border); }
+.gap-row { display: flex; gap: 8px; }
+.gap-sug { font-size: 11px; color: var(--accent); margin-top: 3px; padding-left: 20px; }
+.gap-sug a { color: var(--accent); text-decoration: none; }
+.gap-sug a:hover { color: var(--green); }
+.sec-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 3px; color: var(--muted2); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.inv-section { margin-bottom: 28px; }
+.inv-list { display: flex; flex-direction: column; gap: 7px; }
+.inv-item { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 14px; transition: border-color .15s, box-shadow .15s; }
+.inv-item:hover { border-color: rgba(0,255,136,.35); box-shadow: 0 0 12px rgba(0,255,136,0.1); }
+.inv-model { font-weight: 500; font-size: 13px; }
+.inv-type { font-size: 11px; color: var(--accent); font-family: 'DM Mono', monospace; margin-top: 2px; }
+.inv-desc { font-size: 11px; color: var(--muted2); margin-top: 2px; }
+.inv-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.tag { padding: 2px 7px; background: transparent; border: 1px solid var(--accent); border-radius: 4px; font-size: 10px; font-family: 'DM Mono', monospace; color: var(--accent); box-shadow: 0 0 6px rgba(0,212,255,0.2); }
+.del-btn { width: 26px; height: 26px; background: none; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; margin-top: 2px; }
+.del-btn:hover { border-color: var(--red); color: var(--red); }
+.add-btn { display: flex; align-items: center; gap: 7px; padding: 8px 14px; background: none; border: 1px dashed var(--border); color: var(--muted); border-radius: var(--r); cursor: pointer; font-family: 'DM Mono', monospace; font-size: 11px; transition: all .15s; margin-top: 8px; }
+.add-btn:hover { border-color: var(--green); color: var(--green); }
+.empty-state { text-align: center; padding: 28px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; border: 1px dashed var(--border); border-radius: var(--r); }
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 200; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
+.overlay.open { display: flex; }
+.modal { background: var(--s1); border: 2px solid var(--green); box-shadow: 0 0 40px rgba(0,255,136,0.4), 0 0 80px rgba(255,0,102,0.2); border-radius: var(--r); padding: 22px; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; }
+.modal::-webkit-scrollbar { width: 6px; }
+.modal::-webkit-scrollbar-track { background: var(--bg); border-radius: 3px; }
+.modal::-webkit-scrollbar-thumb { background: var(--green); border-radius: 3px; box-shadow: 0 0 6px rgba(0,255,136,0.5); }
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 3px; color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,0.4); margin-bottom: 18px; }
+.form-row { margin-bottom: 13px; }
+.fl { font-size: 10px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 5px; display: block; }
+.fi { width: 100%; background: var(--s2); border: 1px solid var(--border); color: var(--text); border-radius: 5px; padding: 7px 10px; font-family: 'DM Sans', sans-serif; font-size: 13px; }
+.fi:focus { outline: none; border-color: var(--green); }
+.fi option { background: var(--s1); }
+.fi-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+.btn-pri { flex: 1; padding: 10px; background: var(--green); color: #0a0a0a; border: none; border-radius: var(--r); cursor: pointer; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px; transition: all .15s; box-shadow: 0 0 12px rgba(0,255,136,0.35); }
+.btn-pri:hover { background: var(--accent); box-shadow: 0 0 16px rgba(0,212,255,0.4); }
+.btn-sec { padding: 10px 16px; background: none; border: 1px solid var(--border); color: var(--muted2); border-radius: var(--r); cursor: pointer; font-size: 13px; transition: all .15s; }
+.btn-sec:hover { border-color: var(--muted2); color: var(--text); }
+.status-box { padding: 10px 12px; border-radius: 6px; margin-top: 8px; font-family: 'DM Mono', monospace; font-size: 12px; display: none; background: var(--s2); border: 1px solid var(--border); color: var(--muted); }
+.id-card { background: var(--s2); border: 1px solid var(--border); border-radius: 7px; padding: 13px; margin-bottom: 14px; }
+.id-hint { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-bottom: 10px; }
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--green); border-radius: 4px; box-shadow: 0 0 8px rgba(0,255,136,0.4); }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+@media (max-width: 600px) { .cond-grid { grid-template-columns: repeat(2, 1fr); } .fi-row2 { grid-template-columns: 1fr; } .key-panel { flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">RIDGE</div>
+  <div class="header-right">
+    <div class="nav">
+      <button class="nav-btn active" onclick="nav('today',this)">Today</button>
+      <button class="nav-btn" onclick="nav('gear',this)">My Gear</button>
+    </div>
+    <button class="key-btn" id="keyBtn" onclick="toggleKeyPanel()" title="API Key Settings">&#9881;</button>
+  </div>
+</header>
+<div class="key-panel" id="keyPanel">
+  <input type="password" id="keyInput" placeholder="sk-ant-api03-..." spellcheck="false">
+  <button class="key-save" onclick="saveKey()">SAVE</button>
+  <span class="key-hint">Stored locally in your browser only</span>
+</div>
+<div id="page-today" class="page active wrap">
+  <div class="cond-card">
+    <div class="cond-top">
+      <span class="cond-label">Conditions &middot; Sugar Bowl</span>
+      <button class="fetch-btn" id="fetchBtn" onclick="fetchNOAA()">
+        <span class="spin" id="fspin" style="display:none"></span>
+        <span id="ftxt">&#9889; NOAA</span>
+      </button>
+    </div>
+    <div class="cond-grid">
+      <div class="cf"><span class="cl">Temp Base</span><input class="ci" id="c-tb" type="number" placeholder="&deg;F"></div>
+      <div class="cf"><span class="cl">Temp Summit</span><input class="ci" id="c-ts" type="number" placeholder="&deg;F"></div>
+      <div class="cf"><span class="cl">Wind mph</span><input class="ci" id="c-wind" type="number" placeholder="mph"></div>
+      <div class="cf"><span class="cl">New Snow</span><input class="ci" id="c-snow" type="number" placeholder="inches"></div>
+      <div class="cf"><span class="cl">Precip</span>
+        <select class="ci" id="c-precip">
+          <option value="none">None / Clear</option>
+          <option value="snow">Snowing</option>
+          <option value="rain">Raining</option>
+          <option value="mixed">Mixed</option>
+        </select>
+      </div>
+      <div class="cf"><span class="cl">Surface</span>
+        <select class="ci" id="c-surface">
+          <option value="powder">Fresh Powder</option>
+          <option value="packed">Packed Powder</option>
+          <option value="hardpack">Hardpack / Ice</option>
+          <option value="crud">Wind Crust / Crud</option>
+          <option value="spring">Spring Corn</option>
+        </select>
+      </div>
+      <div class="cf"><span class="cl">Mode</span>
+        <select class="ci" id="c-mode">
+          <option value="resort">Resort</option>
+          <option value="bc">Backcountry</option>
+        </select>
+      </div>
+      <div class="cf"><span class="cl">Avi Danger</span>
+        <select class="ci" id="c-avi">
+          <option value="1">1 &mdash; Low</option>
+          <option value="2">2 &mdash; Moderate</option>
+          <option value="3" selected>3 &mdash; Considerable</option>
+          <option value="4">4 &mdash; High</option>
+          <option value="5">5 &mdash; Extreme</option>
+        </select>
+      </div>
+    </div>
+    <div class="src">NOAA Donner Summit &middot; <a href="https://www.sierraavalanchecenter.org/forecasts" target="_blank">SAC forecast &#8599;</a> &middot; <a href="https://www.sugarbowl.com/conditions" target="_blank">Sugar Bowl &#8599;</a></div>
+  </div>
+  <button class="go-btn" id="goBtn" onclick="getKit()">GET TODAY'S KIT</button>
+  <div class="kit-card" id="kitCard">
+    <div id="kitInner"></div>
+    <div style="padding: 0 18px;">
+      <button class="gap-btn" onclick="toggleGap()">&#128202; ANALYZE MY GEAR GAPS</button>
+      <div class="gap-output" id="gapOut"></div>
+    </div>
+    <div style="height:18px"></div>
+  </div>
+</div>
+<div id="page-gear" class="page wrap">
+  <div class="inv-section">
+    <div class="sec-title">TOPS</div>
+    <div class="inv-list" id="inv-tops"></div>
+    <button class="add-btn" onclick="openModal('tops')">+ ADD TOP</button>
+  </div>
+  <div class="inv-section">
+    <div class="sec-title">PANTS</div>
+    <div class="inv-list" id="inv-pants"></div>
+    <button class="add-btn" onclick="openModal('pants')">+ ADD PANTS</button>
+  </div>
+  <div class="inv-section">
+    <div class="sec-title">HEAD</div>
+    <div class="inv-list" id="inv-head"></div>
+    <button class="add-btn" onclick="openModal('head')">+ ADD HEAD GEAR</button>
+  </div>
+  <div class="inv-section">
+    <div class="sec-title">SKIS &amp; SETUPS</div>
+    <div class="inv-list" id="inv-skis"></div>
+    <button class="add-btn" onclick="openModal('skis')">+ ADD SKIS</button>
+  </div>
+  <div class="inv-section">
+    <div class="sec-title">SAFETY</div>
+    <div class="inv-list" id="inv-safety"></div>
+    <button class="add-btn" onclick="openModal('safety')">+ ADD SAFETY GEAR</button>
+  </div>
+</div>
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-title">ADD GEAR</div>
+    <div id="step1">
+      <div class="form-row">
+        <label class="fl">Model Name</label>
+        <div style="display:flex;gap:7px">
+          <input class="fi" id="modelIn" placeholder="e.g. Arc'teryx Beta AR, K2 Mindbender..." style="flex:1" onkeydown="if(event.key==='Enter')identify()">
+          <button class="btn-pri" id="idBtn" onclick="identify()" style="flex:0;padding:0 16px;font-size:14px">ID</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:'DM Mono',monospace">AI identifies the gear and fills in specs automatically</div>
+      </div>
+      <div class="status-box" id="idStatus"></div>
+    </div>
+    <div id="step2" style="display:none">
+      <div class="id-card" id="idCard"></div>
+      <div class="id-hint">EDIT IF NEEDED:</div>
+      <div id="editFields"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-pri" id="saveBtn" style="display:none" onclick="saveGear()">SAVE</button>
+      <button class="btn-sec" onclick="closeModal()">Cancel</button>
+      <button class="btn-sec" id="backBtn" style="display:none" onclick="resetModal()">&larr; Back</button>
+    </div>
+  </div>
+</div>
+<script>
+var inv = JSON.parse(localStorage.getItem('ridge3') || 'null') || { tops:[], pants:[], head:[], skis:[], safety:[] };
+var pendingGear = null, pendingSection = null;
+var MODEL = 'claude-sonnet-4-5-20250929';
+function getApiKey() { return localStorage.getItem('ridge_apikey') || ''; }
+function apiHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'x-api-key': getApiKey(),
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true'
+  };
+}
+function toggleKeyPanel() {
+  var panel = document.getElementById('keyPanel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    var inp = document.getElementById('keyInput');
+    inp.value = getApiKey();
+    inp.focus();
+  }
+  updateKeyBtn();
+}
+function saveKey() {
+  var val = document.getElementById('keyInput').value.trim();
+  if (val) localStorage.setItem('ridge_apikey', val);
+  else localStorage.removeItem('ridge_apikey');
+  document.getElementById('keyPanel').classList.remove('open');
+  updateKeyBtn();
+}
+function updateKeyBtn() {
+  document.getElementById('keyBtn').classList.toggle('has-key', !!getApiKey());
+}
+updateKeyBtn();
+function nav(page, btn) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('page-' + page).classList.add('active');
+  btn.classList.add('active');
+  if (page === 'gear') renderAll();
+}
+async function fetchNOAA() {
+  var btn = document.getElementById('fetchBtn');
+  document.getElementById('fspin').style.display = 'inline-block';
+  document.getElementById('ftxt').style.display = 'none';
+  btn.disabled = true;
+  try {
+    var r = await fetch('https://api.weather.gov/gridpoints/STO/87,93/forecast');
+    var d = await r.json();
+    var p = d.properties.periods[0];
+    document.getElementById('c-tb').value = p.temperature;
+    document.getElementById('c-ts').value = Math.round(p.temperature - 18);
+    var wm = p.windSpeed.match(/(\d+)/);
+    if (wm) document.getElementById('c-wind').value = wm[1];
+    var fc = p.shortForecast.toLowerCase();
+    document.getElementById('c-precip').value = fc.includes('snow') ? 'snow' : fc.includes('rain') ? 'rain' : 'none';
+    if (fc.includes('snow')) document.getElementById('c-surface').value = 'powder';
+  } catch(e) { alert('NOAA fetch failed — fill in manually.\n' + e.message); }
+  document.getElementById('fspin').style.display = 'none';
+  document.getElementById('ftxt').style.display = 'inline';
+  btn.disabled = false;
+}
+async function getKit() {
+  if (!getApiKey()) {
+    document.getElementById('kitCard').classList.add('show');
+    document.getElementById('kitInner').innerHTML = '<div class="kit-loading" style="color:var(--warn)">&#9881; No API key set.<br><br><span style="color:var(--muted2)">Click the &#9881; button in the header to enter your Anthropic API key.</span></div>';
+    return;
+  }
+  var btn = document.getElementById('goBtn');
+  var inner = document.getElementById('kitInner');
+  btn.disabled = true; btn.textContent = 'ASKING CLAUDE...';
+  document.getElementById('kitCard').classList.add('show');
+  inner.innerHTML = '<div class="kit-loading"><div class="big-spin"></div>Building your kit...</div>';
+  document.getElementById('gapOut').classList.remove('show');
+  var conds = {
+    temp_base_f: +document.getElementById('c-tb').value || 32,
+    temp_summit_f: +document.getElementById('c-ts').value || 20,
+    wind_mph: +document.getElementById('c-wind').value || 0,
+    new_snow_24hr_in: +document.getElementById('c-snow').value || 0,
+    precip: document.getElementById('c-precip').value,
+    surface: document.getElementById('c-surface').value,
+    mode: document.getElementById('c-mode').value,
+    avi_danger: +document.getElementById('c-avi').value
+  };
+  conds.wind_chill_f = Math.round(conds.temp_base_f - conds.wind_mph * 0.7);
+  var prompt = 'You are a ski gear expert. Pick the best combination of gear from this person\'s inventory for today\'s conditions.\nCONDITIONS:\n' + JSON.stringify(conds, null, 2) + '\nINVENTORY:\n' + JSON.stringify(inv, null, 2) + '\nPick the exact items to wear. For tops you can select multiple items - give the full layering stack in order from skin out. Same for anything where layering makes sense. Skip layers that aren\'t needed.\nFor skis: pick the best ski from the quiver for today. If there\'s a boot listed separately, include it.\nRespond ONLY with this JSON (no markdown):\n{\n  "tops": [\n    { "model": "exact model from inventory", "role": "base layer | mid layer | shell | etc", "why": "1 short reason" }\n  ],\n  "pants": [\n    { "model": "exact model", "role": "description", "why": "1 short reason" }\n  ],\n  "head": [\n    { "model": "exact model", "role": "helmet | goggles | balaclava | gaiter | etc", "why": "short reason" }\n  ],\n  "skis": [\n    { "model": "exact model", "role": "ski | boot | etc", "why": "why this for today" }\n  ],\n  "safety_note": "if backcountry: note on beacon/probe/shovel status from inventory. null if resort.",\n  "note": "1-2 sentence plain-English callout"\n}\nOnly use models that are ACTUALLY in the inventory. If a category is empty, return [].';
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({ model: MODEL, max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    if (!data.content || !data.content[0] || !data.content[0].text) throw new Error('Unexpected API response: ' + JSON.stringify(data).slice(0, 200));
+    var rawText = data.content[0].text;
+    var match = rawText.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON in response. Raw: ' + rawText.slice(0, 300));
+    renderKit(JSON.parse(match[0]), conds);
+  } catch(e) {
+    inner.innerHTML = '<div class="kit-loading" style="color:var(--red)">Claude error: ' + e.message + '<br><br><span style="color:var(--muted2)">Check your API key (&#9881;) and make sure you have gear in your inventory.</span></div>';
+  }
+  btn.disabled = false; btn.textContent = "GET TODAY'S KIT";
+}
+function renderKit(kit, conds) {
+  var inner = document.getElementById('kitInner');
+  var aviNames = ['','LOW','MODERATE','CONSIDERABLE','HIGH','EXTREME'];
+  var avi = conds.avi_danger;
+  function section(key, label, icon) {
+    var items = kit[key];
+    if (!items || !items.length) return '';
+    var layered = items.length > 1;
+    return '<div><div class="kit-section-label">' + icon + ' ' + label + (layered ? ' <span style="font-size:10px;color:var(--muted)">&#8212; ' + items.length + ' LAYERS</span>' : '') + '</div><div class="kit-layers">' + items.map(function(item, i) {
+      return '<div class="kit-item must">' + (layered ? '<div class="ki-num">' + (i+1) + '</div>' : '<div class="ki-num" style="color:var(--green)">&#9658;</div>') + '<div class="ki-body"><div class="ki-gear">' + item.model + '</div><div class="ki-role">' + item.role + '</div><div class="ki-why">' + item.why + '</div>' + (layered ? '<span class="ki-order">' + (i===0?'next to skin':i===items.length-1?'outermost':'middle') + '</span>' : '') + '</div></div>';
+    }).join('') + '</div></div>';
+  }
+  inner.innerHTML = '<div class="kit-head"><div class="kit-title">' + (conds.mode==='bc'?'&#127956; BC KIT':'&#127935; KIT') + ' &#8212; SUGAR BOWL</div><div class="kit-date">' + new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase() + '</div></div><div class="avi-bar avi-bg' + avi + '"><div class="avi-num avi-d' + avi + '">' + avi + '</div><div class="avi-txt"><div class="avi-name">' + aviNames[avi] + ' AVALANCHE DANGER</div><div class="avi-sub">' + conds.temp_base_f + '&deg;F base &middot; wind chill ' + conds.wind_chill_f + '&deg;F &middot; ' + (conds.precip==='none'?'clear':conds.precip) + ' &middot; ' + conds.surface + '</div><a class="avi-link" href="https://www.sierraavalanchecenter.org/forecasts" target="_blank">Full SAC forecast &#8599;</a></div></div><div class="kit-sections">' + section('tops','TOPS','&#129405;') + section('pants','PANTS','&#129657;') + section('head','HEAD','&#9937;&#65039;') + section('skis','SKIS','&#127935;') + (kit.safety_note ? '<div><div class="kit-section-label">&#128308; SAFETY</div><div class="kit-layers"><div class="kit-item crit"><div class="ki-num" style="color:var(--red)">!</div><div class="ki-body"><div class="ki-why">' + kit.safety_note + '</div></div></div></div></div>' : '') + '</div>' + (kit.note ? '<div class="ai-note">' + kit.note + '</div>' : '');
+}
+async function toggleGap() {
+  var out = document.getElementById('gapOut');
+  if (out.classList.contains('show')) { out.classList.remove('show'); return; }
+  if (!getApiKey()) {
+    out.classList.add('show');
+    out.innerHTML = '<div style="padding:14px;font-family:\'DM Mono\',monospace;font-size:12px;color:var(--warn)">&#9881; No API key &#8212; click the &#9881; button in the header.</div>';
+    return;
+  }
+  out.classList.add('show');
+  out.innerHTML = '<div style="padding:24px;text-align:center;font-family:\'DM Mono\',monospace;font-size:12px;color:var(--muted2)"><div class="big-spin" style="width:24px;height:24px;border-width:2px;margin-bottom:10px"></div>Analyzing your kit...</div>';
+  var conds = {
+    mode: document.getElementById('c-mode').value,
+    temp_base_f: +document.getElementById('c-tb').value || 32,
+    wind_mph: +document.getElementById('c-wind').value || 0
+  };
+  var prompt = 'Analyze this skier\'s gear inventory for gaps and weaknesses.\nCONDITIONS: ' + JSON.stringify(conds) + '\nINVENTORY:\n' + JSON.stringify(inv, null, 2) + '\nReturn ONLY a valid JSON object. No markdown fences, no explanation, just the JSON.\nSchema:\n{\n  "covered": ["string - what they are well equipped for"],\n  "gaps": [\n    {\n      "issue": "string describing the gap",\n      "serious": true,\n      "suggestion": "specific product name and approx price",\n      "url": "https://www.evo.com/search?text=... or null"\n    }\n  ],\n  "quiver": [\n    {\n      "note": "string observation about skis/boots",\n      "positive": true,\n      "suggestion": "string suggestion if negative, otherwise null"\n    }\n  ]\n}\nFor "serious" use the boolean true or false (not a string).\nFor "positive" use the boolean true or false (not a string).\nFor "url" use a real evo.com or rei.com search URL, or the JSON null value.';
+  var rawText = '';
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({ model: MODEL, max_tokens: 900, messages: [{ role: 'user', content: prompt }] })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    if (!data.content || !data.content[0] || !data.content[0].text) throw new Error('Unexpected API response: ' + JSON.stringify(data).slice(0, 200));
+    rawText = data.content[0].text;
+    var jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON found in response. Raw: ' + rawText.slice(0, 300));
+    var a = JSON.parse(jsonMatch[0]);
+    var html = '';
+    if (a.covered && a.covered.length) {
+      html += '<div class="gap-sec"><div class="gap-sec-title ok">&#9989; COVERED</div>';
+      html += a.covered.map(function(c) { return '<div class="gap-item"><div class="gap-row"><span>&#10003;</span><span>' + c + '</span></div></div>'; }).join('');
+      html += '</div>';
+    }
+    if (a.gaps && a.gaps.length) {
+      html += '<div class="gap-sec"><div class="gap-sec-title warn">&#9888;&#65039; GAPS</div>';
+      html += a.gaps.map(function(g) { return '<div class="gap-item"><div class="gap-row"><span>' + (g.serious ? '&#128680;' : '&middot;') + '</span><span>' + g.issue + '</span></div>' + (g.suggestion ? '<div class="gap-sug">&#8594; ' + (g.url && g.url !== 'null' ? '<a href="' + g.url + '" target="_blank">' + g.suggestion + '</a>' : g.suggestion) + '</div>' : '') + '</div>'; }).join('');
+      html += '</div>';
+    }
+    if (a.quiver && a.quiver.length) {
+      html += '<div class="gap-sec"><div class="gap-sec-title info">&#127935; QUIVER</div>';
+      html += a.quiver.map(function(q) { return '<div class="gap-item"><div class="gap-row"><span>' + (q.positive ? '&#10003;' : '&middot;') + '</span><span>' + q.note + '</span></div>' + (q.suggestion && q.suggestion !== 'null' ? '<div class="gap-sug">&#8594; ' + q.suggestion + '</div>' : '') + '</div>'; }).join('');
+      html += '</div>';
+    }
+    out.innerHTML = html || '<div style="padding:16px;color:var(--muted2);font-size:12px;font-family:\'DM Mono\',monospace">No significant gaps found.</div>';
+  } catch(e) {
+    out.innerHTML = '<div style="padding:16px;font-size:12px;font-family:\'DM Mono\',monospace"><div style="color:var(--red);margin-bottom:8px">&#9888; Gap analysis failed</div><div style="color:var(--muted2)">' + e.message + '</div>' + (rawText ? '<details style="margin-top:10px"><summary style="color:var(--muted);cursor:pointer">Raw response</summary><pre style="color:var(--muted);font-size:10px;margin-top:6px;white-space:pre-wrap">' + rawText.slice(0,500) + '</pre></details>' : '') + '</div>';
+  }
+}
+function openModal(section) {
+  pendingSection = section;
+  resetModal();
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(function() { document.getElementById('modelIn').focus(); }, 80);
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); pendingGear = null; pendingSection = null; }
+function resetModal() {
+  document.getElementById('step1').style.display = 'block';
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('saveBtn').style.display = 'none';
+  document.getElementById('backBtn').style.display = 'none';
+  document.getElementById('modelIn').value = '';
+  var s = document.getElementById('idStatus');
+  s.style.display = 'none'; s.style.cssText = '';
+  pendingGear = null;
+}
+var sectionHints = {
+  tops: 'jacket, fleece, base layer, or other upper body ski layer',
+  pants: 'ski pants, bibs, or base layer bottom',
+  head: 'ski helmet, goggles, balaclava, buff, or neck gaiter',
+  skis: 'ski, ski boot, or binding',
+  safety: 'avalanche beacon, probe, shovel, or airbag pack'
+};
+async function identify() {
+  var name = document.getElementById('modelIn').value.trim();
+  if (!name) return;
+  if (!getApiKey()) {
+    var s = document.getElementById('idStatus');
+    s.style.display = 'block'; s.style.color = 'var(--warn)'; s.style.borderColor = 'var(--warn)';
+    s.textContent = 'No API key - click the gear button in the header to set one.';
+    return;
+  }
+  var btn = document.getElementById('idBtn');
+  var status = document.getElementById('idStatus');
+  btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
+  status.style.display = 'block'; status.textContent = 'Identifying...';
+  var specLine = '';
+  if (pendingSection==='tops') specLine = '"warmth": 1-5, "waterproof": bool, "layer_type": "base|mid|shell|insulated"';
+  else if (pendingSection==='pants') specLine = '"warmth": 1-5, "waterproof": bool, "pants_type": "shell|insulated|bibs|base"';
+  else if (pendingSection==='head') specLine = '"head_type": "helmet|goggles|balaclava|gaiter|other"';
+  else if (pendingSection==='skis') specLine = '"waist_mm": number, "ski_type": "All-Mountain|Powder|Carver|Touring|Park", "mount": "Alpine|AT|Telemark", "is_boot": bool';
+  else if (pendingSection==='safety') specLine = '"safety_type": "beacon|probe|shovel|airbag|pack", "key_spec": "string"';
+  var prompt = 'Identify this ski gear: "' + name + '"\nSection hint: ' + sectionHints[pendingSection] + '\nReturn ONLY JSON:\n{\n  "identified": true,\n  "gearType": "e.g. Hardshell Jacket",\n  "description": "one sentence: what it\'s best for",\n  "model": "clean name",\n  "section": "' + pendingSection + '",\n  "specs": { ' + specLine + ' }\n}\nOr if not ski gear: { "identified": false, "reason": "..." }';
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({ model: MODEL, max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    if (!data.content || !data.content[0] || !data.content[0].text) throw new Error('Unexpected API response');
+    var rawText = data.content[0].text;
+    var match = rawText.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON in response');
+    var result = JSON.parse(match[0]);
+    if (!result.identified) {
+      status.style.color = 'var(--red)'; status.style.borderColor = 'var(--red)';
+      status.textContent = 'Not recognized: ' + (result.reason || 'Not ski gear');
+      btn.textContent = 'ID'; btn.disabled = false;
+      return;
+    }
+    pendingGear = result;
+    document.getElementById('idCard').innerHTML = '<div style="font-size:10px;font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:5px">&#10003; IDENTIFIED</div><div style="font-size:17px;font-weight:600;margin-bottom:3px">' + result.model + '</div><div style="font-size:13px;color:var(--accent);font-weight:500;margin-bottom:5px">' + result.gearType + '</div><div style="font-size:12px;color:var(--muted2)">' + result.description + '</div>';
+    document.getElementById('editFields').innerHTML = buildEditFields(result);
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+    document.getElementById('saveBtn').style.display = 'flex';
+    document.getElementById('backBtn').style.display = 'block';
+  } catch(e) {
+    status.style.color = 'var(--red)'; status.style.borderColor = 'var(--red)';
+    status.textContent = 'Error: ' + e.message;
+  }
+  btn.textContent = 'ID'; btn.disabled = false;
+}
+function sel(id, val, opts) {
+  return '<select class="fi" id="ef-' + id + '">' + opts.map(function(o) { return '<option value="' + (o.v !== undefined ? o.v : o) + '"' + ((o.v !== undefined ? o.v : o) == val ? ' selected' : '') + '>' + (o.l || o) + '</option>'; }).join('') + '</select>';
+}
+function inp(id, val, ph, type) {
+  type = type || 'text';
+  return '<input class="fi" id="ef-' + id + '" value="' + (val || '') + '" placeholder="' + ph + '" type="' + type + '">';
+}
+function buildEditFields(r) {
+  var s = r.specs || {};
+  var wOpts = [{v:1,l:'1 - Ultralight'},{v:2,l:'2 - Light'},{v:3,l:'3 - Medium'},{v:4,l:'4 - Warm'},{v:5,l:'5 - Expedition'}];
+  var wp = [{v:'true',l:'Yes'},{v:'false',l:'No'}];
+  function row(lbl, el) { return '<div class="form-row"><label class="fl">' + lbl + '</label>' + el + '</div>'; }
+  function row2(pairs) { return '<div class="fi-row2">' + pairs.map(function(p) { return '<div class="form-row"><label class="fl">' + p[0] + '</label>' + p[1] + '</div>'; }).join('') + '</div>'; }
+  if (r.section==='tops') return row2([['Warmth (1-5)', sel('warmth',s.warmth||3,wOpts)],['Waterproof?', sel('waterproof',String(!!s.waterproof),wp)]]) + row('Layer Type', sel('layer_type',s.layer_type||'shell',[{v:'base',l:'Base Layer'},{v:'mid',l:'Mid Layer'},{v:'shell',l:'Shell / Hardshell'},{v:'insulated',l:'Insulated Jacket'}]));
+  if (r.section==='pants') return row2([['Warmth (1-5)', sel('warmth',s.warmth||3,wOpts)],['Waterproof?', sel('waterproof',String(!!s.waterproof),wp)]]) + row('Type', sel('pants_type',s.pants_type||'shell',[{v:'shell',l:'Shell Pants'},{v:'insulated',l:'Insulated Pants'},{v:'bibs',l:'Bibs'},{v:'base',l:'Base Layer Bottom'}]));
+  if (r.section==='head') return row('Type', sel('head_type',s.head_type||'helmet',[{v:'helmet',l:'Helmet'},{v:'goggles',l:'Goggles'},{v:'balaclava',l:'Balaclava'},{v:'gaiter',l:'Neck Gaiter / Buff'},{v:'other',l:'Other'}]));
+  if (r.section==='skis') return row2([['Waist (mm)', inp('waist_mm',s.waist_mm,'106','number')],['Type', sel('ski_type',s.ski_type||'All-Mountain',['All-Mountain','Powder','Carver','Touring','Park'])]]) + row2([['Mount', sel('mount',s.mount||'Alpine',['Alpine','AT','Telemark'])],['This is a...', sel('is_boot',String(!!s.is_boot),[{v:'false',l:'Ski'},{v:'true',l:'Boot'}])]]) + row('Binding (optional)', inp('binding','','e.g. Marker Kingpin 13'));
+  if (r.section==='safety') return row('Type', sel('safety_type',s.safety_type||'beacon',[{v:'beacon',l:'Beacon'},{v:'probe',l:'Probe'},{v:'shovel',l:'Shovel'},{v:'airbag',l:'Airbag Pack'},{v:'pack',l:'BC Pack'}])) + row('Key Spec', inp('key_spec',s.key_spec||'','e.g. 3-antenna, 240cm, 35L'));
+  return '';
+}
+function gv(id) { var el = document.getElementById('ef-'+id); return el ? el.value : null; }
+function saveGear() {
+  if (!pendingGear) return;
+  var r = pendingGear;
+  var item = { model: r.model, gearType: r.gearType, description: r.description };
+  if (r.section==='tops') { item.warmth=parseInt(gv('warmth'))||3; item.waterproof=gv('waterproof')==='true'; item.layer_type=gv('layer_type')||'shell'; }
+  else if (r.section==='pants') { item.warmth=parseInt(gv('warmth'))||3; item.waterproof=gv('waterproof')==='true'; item.pants_type=gv('pants_type')||'shell'; }
+  else if (r.section==='head') { item.head_type=gv('head_type')||'helmet'; }
+  else if (r.section==='skis') { item.waist_mm=parseInt(gv('waist_mm'))||null; item.ski_type=gv('ski_type')||'All-Mountain'; item.mount=gv('mount')||'Alpine'; item.is_boot=gv('is_boot')==='true'; item.binding=gv('binding')||''; }
+  else if (r.section==='safety') { item.safety_type=gv('safety_type')||'beacon'; item.key_spec=gv('key_spec')||''; }
+  inv[r.section].push(item);
+  save(); closeModal(); renderAll();
+}
+function renderAll() {
+  renderSec('tops', function(i) { return [i.layer_type, i.warmth?'warmth '+i.warmth:null, i.waterproof?'waterproof':null]; });
+  renderSec('pants', function(i) { return [i.pants_type, i.warmth?'warmth '+i.warmth:null, i.waterproof?'waterproof':null]; });
+  renderSec('head', function(i) { return [i.head_type]; });
+  renderSec('skis', function(i) { return [i.is_boot?'boot':'ski', i.ski_type, i.mount, i.waist_mm?i.waist_mm+'mm':null, i.binding||null]; });
+  renderSec('safety', function(i) { return [i.safety_type, i.key_spec||null]; });
+}
+function renderSec(sec, tagFn) {
+  var el = document.getElementById('inv-'+sec);
+  if (!inv[sec].length) { el.innerHTML = '<div class="empty-state">Nothing added yet</div>'; return; }
+  el.innerHTML = inv[sec].map(function(item, idx) {
+    return '<div class="inv-item"><div><div class="inv-model">' + item.model + '</div>' + (item.gearType ? '<div class="inv-type">' + item.gearType + '</div>' : '') + (item.description ? '<div class="inv-desc">' + item.description + '</div>' : '') + '<div class="inv-tags">' + tagFn(item).filter(Boolean).map(function(t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div></div><button class="del-btn" onclick="del(\'' + sec + '\',' + idx + ')">&#10005;</button></div>';
+  }).join('');
+}
+function del(sec, idx) { inv[sec].splice(idx,1); save(); renderAll(); }
+function save() { localStorage.setItem('ridge3', JSON.stringify(inv)); }
+if (!inv.tops.length && !inv.skis.length) {
+  inv = {
+    tops: [
+      { model:'Smartwool 250 Crew', gearType:'Merino Base Layer', description:'Heavy merino - warm and odor-resistant', warmth:4, waterproof:false, layer_type:'base' },
+      { model:'Patagonia R2 Fleece', gearType:'Fleece Mid Layer', description:'Grid fleece midlayer, excellent breathability', warmth:3, waterproof:false, layer_type:'mid' },
+      { model:"Arc'teryx Beta AR Jacket", gearType:'Hardshell Jacket', description:'3L GORE-TEX Pro shell, best-in-class waterproofing', warmth:1, waterproof:true, layer_type:'shell' }
+    ],
+    pants: [
+      { model:"Arc'teryx Sabre Pants", gearType:'Hardshell Ski Pants', description:'GORE-TEX shell pants, all-mountain', warmth:2, waterproof:true, pants_type:'shell' }
+    ],
+    head: [
+      { model:'Smith Vantage MIPS', gearType:'Ski Helmet', description:'Ventilated freeride helmet with MIPS', head_type:'helmet' },
+      { model:'Smith I/O MAG Chromapop', gearType:'Ski Goggles', description:'Magnetic lens swap, excellent low-light', head_type:'goggles' }
+    ],
+    skis: [
+      { model:'K2 Mindbender 108Ti', gearType:'All-Mountain Ski', description:'Wide all-mountain, great for Sierra pow and crud', waist_mm:108, ski_type:'All-Mountain', mount:'Alpine', is_boot:false, binding:'Marker Griffon 13' },
+      { model:'Scarpa Maestrale RS', gearType:'AT Ski Boot', description:'High-performance touring boot, stiff and precise', is_boot:true, mount:'AT', ski_type:'Touring' }
+    ],
+    safety: [
+      { model:'Mammut Barryvox S', gearType:'Avalanche Beacon', description:'3-antenna with advanced search', safety_type:'beacon', key_spec:'3-antenna' },
+      { model:'BCA Stealth 240', gearType:'Avalanche Probe', description:'240cm carbon probe', safety_type:'probe', key_spec:'240cm carbon' },
+      { model:'BCA T3 Rescue', gearType:'Avalanche Shovel', description:'Full-size aluminum blade', safety_type:'shovel', key_spec:'full-size blade' }
+    ]
+  };
+  save();
+}
+</script>
+</body>
+</html>
