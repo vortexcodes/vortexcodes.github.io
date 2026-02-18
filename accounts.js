@@ -19,6 +19,7 @@ var Accounts = (function() {
 
   function register(username, password) {
     username = username.trim().toLowerCase();
+    password = password.trim();
     if (!username || !password) return { ok: false, error: 'Username and password required' };
     if (username.length < 2) return { ok: false, error: 'Username must be at least 2 characters' };
     if (password.length < 3) return { ok: false, error: 'Password must be at least 3 characters' };
@@ -39,6 +40,7 @@ var Accounts = (function() {
 
   function login(username, password) {
     username = username.trim().toLowerCase();
+    password = password.trim();
     if (!username || !password) return { ok: false, error: 'Username and password required' };
 
     var accounts = getAll();
