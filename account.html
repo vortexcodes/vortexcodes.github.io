@@ -235,7 +235,7 @@
         var user = Accounts.currentUser();
         if (user) {
             document.getElementById('auth-section').style.display = 'none';
-            document.getElementById('profile-section').style.display = 'block';
+            document.getElementById('profile-section').style.display = '';
             document.getElementById('page-title').textContent = user;
             document.getElementById('page-subtitle').textContent = 'Your account and gear overview';
             renderProfile();
@@ -245,6 +245,7 @@
             document.getElementById('profile-section').style.display = 'none';
             document.getElementById('page-title').textContent = 'Account';
             document.getElementById('page-subtitle').textContent = 'Login or create an account to save your gear';
+            switchTab('login');
             renderUserList('user-list');
         }
     }
