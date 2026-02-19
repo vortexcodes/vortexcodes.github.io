@@ -110,6 +110,10 @@
                         <div class="stat-num" id="stat-safety">0</div>
                         <div class="stat-label">Safety</div>
                     </div>
+                    <div class="stat-card">
+                        <div class="stat-num" id="stat-misc">0</div>
+                        <div class="stat-label">Misc</div>
+                    </div>
                 </div>
 
                 <div class="profile-gear">
@@ -175,6 +179,46 @@
         renderPage();
     }
 
+    function toggleUserGear(cardEl) {
+        var detail = cardEl.querySelector('.user-gear-detail');
+        if (detail) {
+            cardEl.classList.toggle('expanded');
+            detail.classList.toggle('open');
+        }
+    }
+
+    function handleConnect(e, username) {
+        e.stopPropagation();
+        var connections = Accounts.getConnections();
+        if (connections.indexOf(username) >= 0) {
+            Accounts.removeConnection(username);
+        } else {
+            Accounts.addConnection(username);
+        }
+        renderPage();
+    }
+
+    function buildGearDetail(username) {
+        var gear = Accounts.getGear(username);
+        if (!gear) return '<div class="user-gear-empty">No gear data</div>';
+        var cats = ['tops', 'pants', 'head', 'skis', 'safety', 'misc'];
+        var totalItems = 0;
+        cats.forEach(function(c) { totalItems += (gear[c] || []).length; });
+        if (totalItems === 0) return '<div class="user-gear-empty">No gear added yet</div>';
+        var html = '';
+        cats.forEach(function(cat) {
+            var items = gear[cat] || [];
+            if (items.length) {
+                html += '<div class="user-gear-cat"><span class="user-gear-cat-name">' + cat + '</span>';
+                html += items.map(function(item) {
+                    return '<span class="user-gear-tag">' + item.model + '</span>';
+                }).join('');
+                html += '</div>';
+            }
+        });
+        return html;
+    }
+
     function renderUserList(containerId) {
         var users = Accounts.listUsers();
         var el = document.getElementById(containerId);
@@ -183,15 +227,32 @@
             return;
         }
         var currentUser = Accounts.currentUser();
+        var connections = currentUser ? Accounts.getConnections() : [];
         el.innerHTML = users.map(function(u) {
             var initial = u.username.charAt(0).toUpperCase();
             var isYou = u.username === currentUser;
-            return '<div class="user-card' + (isYou ? ' you' : '') + '">' +
-                '<div class="user-avatar">' + initial + '</div>' +
-                '<div class="user-info">' +
-                    '<div class="user-name">' + u.username + (isYou ? ' <span class="you-badge">you</span>' : '') + '</div>' +
-                    '<div class="user-gear-count">' + u.gearCount + ' gear item' + (u.gearCount !== 1 ? 's' : '') + '</div>' +
+            var isConnected = connections.indexOf(u.username) >= 0;
+            var connectBtn = '';
+            if (currentUser && !isYou) {
+                connectBtn = '<div class="user-card-actions">' +
+                    '<button class="connect-btn' + (isConnected ? ' connected' : '') + '" onclick="handleConnect(event,\'' + u.username + '\')">' +
+                    (isConnected ? 'Connected' : 'Connect') +
+                    '</button></div>';
+            }
+            return '<div class="user-card' + (isYou ? ' you' : '') + '" onclick="toggleUserGear(this)">' +
+                '<div class="user-card-header">' +
+                    '<div class="user-avatar">' + initial + '</div>' +
+                    '<div class="user-info">' +
+                        '<div class="user-name">' + u.username +
+                            (isYou ? ' <span class="you-badge">you</span>' : '') +
+                            (isConnected ? ' <span class="connected-badge">connected</span>' : '') +
+                        '</div>' +
+                        '<div class="user-gear-count">' + u.gearCount + ' gear item' + (u.gearCount !== 1 ? 's' : '') + '</div>' +
+                    '</div>' +
+                    '<span class="expand-arrow">&#9654;</span>' +
                 '</div>' +
+                connectBtn +
+                '<div class="user-gear-detail">' + buildGearDetail(u.username) + '</div>' +
             '</div>';
         }).join('');
     }
@@ -204,6 +265,10 @@
         document.getElementById('profile-avatar').textContent = profile.username.charAt(0).toUpperCase();
         document.getElementById('profile-since').textContent = 'Member since ' + new Date(profile.created).toLocaleDateString();
 
+        var connections = Accounts.getConnections();
+        var connText = connections.length ? ' | ' + connections.length + ' connection' + (connections.length !== 1 ? 's' : '') : '';
+        document.getElementById('profile-since').textContent += connText;
+
         var gear = profile.gear;
         document.getElementById('stat-total').textContent = profile.gearCount;
         document.getElementById('stat-tops').textContent = (gear.tops || []).length;
@@ -211,13 +276,14 @@
         document.getElementById('stat-head').textContent = (gear.head || []).length;
         document.getElementById('stat-skis').textContent = (gear.skis || []).length;
         document.getElementById('stat-safety').textContent = (gear.safety || []).length;
+        document.getElementById('stat-misc').textContent = (gear.misc || []).length;
 
         var summary = document.getElementById('gear-summary');
         if (profile.gearCount === 0) {
             summary.innerHTML = '<p class="no-gear">No gear saved yet. Open RIDGE to start adding your gear!</p>';
         } else {
             var html = '';
-            ['tops', 'pants', 'head', 'skis', 'safety'].forEach(function(cat) {
+            ['tops', 'pants', 'head', 'skis', 'safety', 'misc'].forEach(function(cat) {
                 var items = gear[cat] || [];
                 if (items.length) {
                     html += '<div class="gear-cat"><span class="gear-cat-name">' + cat.toUpperCase() + '</span>';

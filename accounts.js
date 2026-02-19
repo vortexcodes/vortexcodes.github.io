@@ -29,7 +29,7 @@ var Accounts = (function() {
 
     accounts[username] = {
       password: password,
-      gear: { tops: [], pants: [], head: [], skis: [], safety: [] },
+      gear: { tops: [], pants: [], head: [], skis: [], safety: [], misc: [] },
       created: new Date().toISOString()
     };
     saveAll(accounts);
@@ -79,7 +79,7 @@ var Accounts = (function() {
     var acct = accounts[username];
     var gearCount = 0;
     var gear = acct.gear || {};
-    ['tops', 'pants', 'head', 'skis', 'safety'].forEach(function(k) {
+    ['tops', 'pants', 'head', 'skis', 'safety', 'misc'].forEach(function(k) {
       gearCount += (gear[k] || []).length;
     });
     return {
@@ -96,11 +96,67 @@ var Accounts = (function() {
       var acct = accounts[username];
       var gear = acct.gear || {};
       var gearCount = 0;
-      ['tops', 'pants', 'head', 'skis', 'safety'].forEach(function(k) {
+      ['tops', 'pants', 'head', 'skis', 'safety', 'misc'].forEach(function(k) {
         gearCount += (gear[k] || []).length;
       });
       return { username: username, gearCount: gearCount, created: acct.created };
     });
+  }
+
+  function getConnections(username) {
+    username = username || currentUser();
+    if (!username) return [];
+    var accounts = getAll();
+    if (!accounts[username]) return [];
+    return accounts[username].connections || [];
+  }
+
+  function addConnection(targetUser) {
+    var user = currentUser();
+    if (!user || !targetUser) return { ok: false, error: 'Must be logged in' };
+    if (user === targetUser) return { ok: false, error: 'Cannot connect with yourself' };
+    var accounts = getAll();
+    if (!accounts[user]) return { ok: false, error: 'Account not found' };
+    if (!accounts[targetUser]) return { ok: false, error: 'Target account not found' };
+    if (!accounts[user].connections) accounts[user].connections = [];
+    if (!accounts[targetUser].connections) accounts[targetUser].connections = [];
+    if (accounts[user].connections.indexOf(targetUser) >= 0) return { ok: false, error: 'Already connected' };
+    accounts[user].connections.push(targetUser);
+    accounts[targetUser].connections.push(user);
+    saveAll(accounts);
+    return { ok: true };
+  }
+
+  function removeConnection(targetUser) {
+    var user = currentUser();
+    if (!user) return false;
+    var accounts = getAll();
+    if (!accounts[user]) return false;
+    if (!accounts[user].connections) return false;
+    accounts[user].connections = accounts[user].connections.filter(function(c) { return c !== targetUser; });
+    if (accounts[targetUser] && accounts[targetUser].connections) {
+      accounts[targetUser].connections = accounts[targetUser].connections.filter(function(c) { return c !== user; });
+    }
+    saveAll(accounts);
+    return true;
+  }
+
+  function getConnectionGear() {
+    var user = currentUser();
+    if (!user) return [];
+    var accounts = getAll();
+    if (!accounts[user]) return [];
+    var connections = accounts[user].connections || [];
+    var result = [];
+    connections.forEach(function(connUser) {
+      if (accounts[connUser]) {
+        result.push({
+          username: connUser,
+          gear: accounts[connUser].gear || { tops: [], pants: [], head: [], skis: [], safety: [], misc: [] }
+        });
+      }
+    });
+    return result;
   }
 
   return {
@@ -111,6 +167,10 @@ var Accounts = (function() {
     getGear: getGear,
     saveGear: saveGear,
     getProfile: getProfile,
-    listUsers: listUsers
+    listUsers: listUsers,
+    getConnections: getConnections,
+    addConnection: addConnection,
+    removeConnection: removeConnection,
+    getConnectionGear: getConnectionGear
   };
 })();
