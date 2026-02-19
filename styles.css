@@ -817,3 +817,60 @@ footer {
         flex-wrap: wrap;
     }
 }
+
+/* Changelog Page Styles */
+.changelog-section {
+    padding: 20px 0;
+}
+
+.changelog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.changelog-entry {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    padding: 14px 20px;
+    border-left: 2px solid #00ff88;
+    transition: all 0.2s ease;
+}
+
+.changelog-entry:hover {
+    background: rgba(0, 255, 136, 0.05);
+    border-left-color: #00d4ff;
+}
+
+.changelog-date {
+    font-family: 'Courier New', Courier, monospace;
+    color: #00ff88;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+    min-width: 150px;
+}
+
+.changelog-text {
+    color: #b0b0b0;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .changelog-entry {
+        flex-direction: column;
+        gap: 4px;
+        padding: 12px 16px;
+    }
+
+    .changelog-date {
+        font-size: 0.8rem;
+        min-width: auto;
+    }
+
+    .changelog-text {
+        font-size: 0.9rem;
+    }
+}
