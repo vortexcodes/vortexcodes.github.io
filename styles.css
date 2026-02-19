@@ -613,6 +613,115 @@ footer {
     padding: 20px;
 }
 
+.user-card {
+    cursor: pointer;
+    flex-wrap: wrap;
+}
+
+.user-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.user-card-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.connect-btn {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid #00ff88;
+    background: transparent;
+    color: #00ff88;
+}
+
+.connect-btn:hover {
+    background: #00ff88;
+    color: #0a0a0a;
+}
+
+.connect-btn.connected {
+    border-color: #00d4ff;
+    color: #00d4ff;
+}
+
+.connect-btn.connected:hover {
+    background: rgba(255, 0, 102, 0.1);
+    border-color: #ff0066;
+    color: #ff0066;
+}
+
+.connected-badge {
+    font-size: 0.65rem;
+    color: #00d4ff;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+}
+
+.user-gear-detail {
+    width: 100%;
+    padding: 10px 0 4px 48px;
+    display: none;
+}
+
+.user-gear-detail.open {
+    display: block;
+}
+
+.user-gear-cat {
+    margin-bottom: 6px;
+}
+
+.user-gear-cat-name {
+    display: block;
+    color: #808080;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+.user-gear-tag {
+    display: inline-block;
+    background: rgba(0, 212, 255, 0.08);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    color: #00d4ff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    margin: 0 3px 3px 0;
+}
+
+.user-gear-empty {
+    color: #555;
+    font-size: 0.75rem;
+    font-style: italic;
+    padding: 4px 0;
+}
+
+.expand-arrow {
+    color: #808080;
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+    margin-left: auto;
+}
+
+.user-card.expanded .expand-arrow {
+    transform: rotate(90deg);
+}
+
 /* Profile styles */
 .profile-header {
     display: flex;

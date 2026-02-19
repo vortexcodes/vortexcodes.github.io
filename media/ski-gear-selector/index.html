@@ -259,6 +259,11 @@ header {
     <div class="inv-list" id="inv-safety"></div>
     <button class="add-btn" onclick="openModal('safety')">+ ADD SAFETY GEAR</button>
   </div>
+  <div class="inv-section">
+    <div class="sec-title">MISC</div>
+    <div class="inv-list" id="inv-misc"></div>
+    <button class="add-btn" onclick="openModal('misc')">+ ADD MISC ITEM</button>
+  </div>
 </div>
 <div class="overlay" id="overlay">
   <div class="modal">
@@ -295,7 +300,7 @@ function loadGear() {
     var gear = Accounts.getGear(user);
     if (gear) return gear;
   }
-  return JSON.parse(localStorage.getItem('ridge3') || 'null') || { tops:[], pants:[], head:[], skis:[], safety:[] };
+  return JSON.parse(localStorage.getItem('ridge3') || 'null') || { tops:[], pants:[], head:[], skis:[], safety:[], misc:[] };
 }
 var inv = loadGear();
 var pendingGear = null, pendingSection = null;
@@ -381,12 +386,24 @@ async function getKit() {
     avi_danger: +document.getElementById('c-avi').value
   };
   conds.wind_chill_f = Math.round(conds.temp_base_f - conds.wind_mph * 0.7);
-  var prompt = 'You are a ski gear expert. Pick the best combination of gear from this person\'s inventory for today\'s conditions.\nCONDITIONS:\n' + JSON.stringify(conds, null, 2) + '\nINVENTORY:\n' + JSON.stringify(inv, null, 2) + '\nPick the exact items to wear. For tops you can select multiple items - give the full layering stack in order from skin out. Same for anything where layering makes sense. Skip layers that aren\'t needed.\nFor skis: pick the best ski from the quiver for today. If there\'s a boot listed separately, include it.\nRespond ONLY with this JSON (no markdown):\n{\n  "tops": [\n    { "model": "exact model from inventory", "role": "base layer | mid layer | shell | etc", "why": "1 short reason" }\n  ],\n  "pants": [\n    { "model": "exact model", "role": "description", "why": "1 short reason" }\n  ],\n  "head": [\n    { "model": "exact model", "role": "helmet | goggles | balaclava | gaiter | etc", "why": "short reason" }\n  ],\n  "skis": [\n    { "model": "exact model", "role": "ski | boot | etc", "why": "why this for today" }\n  ],\n  "safety_note": "if backcountry: note on beacon/probe/shovel status from inventory. null if resort.",\n  "note": "1-2 sentence plain-English callout"\n}\nOnly use models that are ACTUALLY in the inventory. If a category is empty, return [].';
+  // Gather connected users' gear for sharing recommendations
+  var connGearInfo = '';
+  if (Accounts.currentUser()) {
+    var connGear = Accounts.getConnectionGear();
+    if (connGear.length) {
+      connGearInfo = '\nCONNECTED FRIENDS\' GEAR (they may lend items):\n';
+      connGear.forEach(function(cg) {
+        connGearInfo += cg.username + '\'s gear: ' + JSON.stringify(cg.gear, null, 2) + '\n';
+      });
+      connGearInfo += '\nIf you notice a connected friend has gear that would be ideal for today\'s conditions and the user is missing that type of item, include a "friend_suggestions" array in your response with recommendations to borrow.\n';
+    }
+  }
+  var prompt = 'You are a ski gear expert. Pick the best combination of gear from this person\'s inventory for today\'s conditions.\nCONDITIONS:\n' + JSON.stringify(conds, null, 2) + '\nINVENTORY:\n' + JSON.stringify(inv, null, 2) + connGearInfo + '\nIMPORTANT ASSUMPTIONS:\n- Assume the skier owns basic essentials even if not listed: ski socks, thin glove liners, basic balaclava/neck gaiter, hand warmers, sunscreen, lip balm, boot warmers, etc.\n- Only recommend items from the misc category if they are explicitly in the inventory, but you may MENTION essentials they should bring in the note even if not listed.\n- If weather conditions suggest the temperature will change significantly during the day (e.g. cold morning warming up later), recommend extra items to bring along and note what can be shed later. For example: "Bring extra mid-layer for cold morning; you can stash it at lunch when it warms up."\n- Think about the FULL day, not just current conditions.\nPick the exact items to wear. For tops you can select multiple items - give the full layering stack in order from skin out. Same for anything where layering makes sense. Skip layers that aren\'t needed.\nFor skis: pick the best ski from the quiver for today. If there\'s a boot listed separately, include it.\nRespond ONLY with this JSON (no markdown):\n{\n  "tops": [\n    { "model": "exact model from inventory", "role": "base layer | mid layer | shell | etc", "why": "1 short reason" }\n  ],\n  "pants": [\n    { "model": "exact model", "role": "description", "why": "1 short reason" }\n  ],\n  "head": [\n    { "model": "exact model", "role": "helmet | goggles | balaclava | gaiter | etc", "why": "short reason" }\n  ],\n  "skis": [\n    { "model": "exact model", "role": "ski | boot | etc", "why": "why this for today" }\n  ],\n  "misc": [\n    { "model": "exact model from inventory misc section", "role": "what it is for", "why": "short reason" }\n  ],\n  "extras": ["things to bring that aren\'t gear items - e.g. hand warmers, sunscreen, extra layer for weather changes"],\n  "friend_suggestions": [\n    { "friend": "username", "model": "gear model name", "why": "reason this would help today" }\n  ],\n  "safety_note": "if backcountry: note on beacon/probe/shovel status from inventory. null if resort.",\n  "note": "1-2 sentence plain-English callout about the day. Mention if weather is expected to change and what to prepare for."\n}\nOnly use models that are ACTUALLY in the inventory for tops/pants/head/skis/misc. If a category is empty, return [].\nFor "extras", list essentials and things to bring for weather changes even if not in inventory.\nFor "friend_suggestions", only include if connected friends\' gear was provided AND they have something useful the user is missing. Otherwise return [] or omit.';
   try {
     var res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: apiHeaders(),
-      body: JSON.stringify({ model: MODEL, max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: MODEL, max_tokens: 1500, messages: [{ role: 'user', content: prompt }] })
     });
     var data = await res.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
@@ -412,7 +429,19 @@ function renderKit(kit, conds) {
       return '<div class="kit-item must">' + (layered ? '<div class="ki-num">' + (i+1) + '</div>' : '<div class="ki-num" style="color:var(--green)">&#9658;</div>') + '<div class="ki-body"><div class="ki-gear">' + item.model + '</div><div class="ki-role">' + item.role + '</div><div class="ki-why">' + item.why + '</div>' + (layered ? '<span class="ki-order">' + (i===0?'next to skin':i===items.length-1?'outermost':'middle') + '</span>' : '') + '</div></div>';
     }).join('') + '</div></div>';
   }
-  inner.innerHTML = '<div class="kit-head"><div class="kit-title">' + (conds.mode==='bc'?'&#127956; BC KIT':'&#127935; KIT') + ' &#8212; SUGAR BOWL</div><div class="kit-date">' + new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase() + '</div></div><div class="avi-bar avi-bg' + avi + '"><div class="avi-num avi-d' + avi + '">' + avi + '</div><div class="avi-txt"><div class="avi-name">' + aviNames[avi] + ' AVALANCHE DANGER</div><div class="avi-sub">' + conds.temp_base_f + '&deg;F base &middot; wind chill ' + conds.wind_chill_f + '&deg;F &middot; ' + (conds.precip==='none'?'clear':conds.precip) + ' &middot; ' + conds.surface + '</div><a class="avi-link" href="https://www.sierraavalanchecenter.org/forecasts" target="_blank">Full SAC forecast &#8599;</a></div></div><div class="kit-sections">' + section('tops','TOPS','&#129405;') + section('pants','PANTS','&#129657;') + section('head','HEAD','&#9937;&#65039;') + section('skis','SKIS','&#127935;') + (kit.safety_note ? '<div><div class="kit-section-label">&#128308; SAFETY</div><div class="kit-layers"><div class="kit-item crit"><div class="ki-num" style="color:var(--red)">!</div><div class="ki-body"><div class="ki-why">' + kit.safety_note + '</div></div></div></div></div>' : '') + '</div>' + (kit.note ? '<div class="ai-note">' + kit.note + '</div>' : '');
+  var extrasHtml = '';
+  if (kit.extras && kit.extras.length) {
+    extrasHtml = '<div><div class="kit-section-label">&#127890; ALSO BRING</div><div class="kit-layers">' + kit.extras.map(function(e) {
+      return '<div class="kit-item warn"><div class="ki-num" style="color:var(--warn)">+</div><div class="ki-body"><div class="ki-gear">' + e + '</div></div></div>';
+    }).join('') + '</div></div>';
+  }
+  var friendHtml = '';
+  if (kit.friend_suggestions && kit.friend_suggestions.length) {
+    friendHtml = '<div><div class="kit-section-label">&#129309; BORROW FROM FRIENDS</div><div class="kit-layers">' + kit.friend_suggestions.map(function(f) {
+      return '<div class="kit-item" style="border-left-color:var(--accent)"><div class="ki-num" style="color:var(--accent)">&#8594;</div><div class="ki-body"><div class="ki-gear">' + f.model + '</div><div class="ki-role">Ask ' + f.friend + '</div><div class="ki-why">' + f.why + '</div></div></div>';
+    }).join('') + '</div></div>';
+  }
+  inner.innerHTML = '<div class="kit-head"><div class="kit-title">' + (conds.mode==='bc'?'&#127956; BC KIT':'&#127935; KIT') + ' &#8212; SUGAR BOWL</div><div class="kit-date">' + new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase() + '</div></div><div class="avi-bar avi-bg' + avi + '"><div class="avi-num avi-d' + avi + '">' + avi + '</div><div class="avi-txt"><div class="avi-name">' + aviNames[avi] + ' AVALANCHE DANGER</div><div class="avi-sub">' + conds.temp_base_f + '&deg;F base &middot; wind chill ' + conds.wind_chill_f + '&deg;F &middot; ' + (conds.precip==='none'?'clear':conds.precip) + ' &middot; ' + conds.surface + '</div><a class="avi-link" href="https://www.sierraavalanchecenter.org/forecasts" target="_blank">Full SAC forecast &#8599;</a></div></div><div class="kit-sections">' + section('tops','TOPS','&#129405;') + section('pants','PANTS','&#129657;') + section('head','HEAD','&#9937;&#65039;') + section('skis','SKIS','&#127935;') + section('misc','MISC','&#127890;') + (kit.safety_note ? '<div><div class="kit-section-label">&#128308; SAFETY</div><div class="kit-layers"><div class="kit-item crit"><div class="ki-num" style="color:var(--red)">!</div><div class="ki-body"><div class="ki-why">' + kit.safety_note + '</div></div></div></div></div>' : '') + extrasHtml + friendHtml + '</div>' + (kit.note ? '<div class="ai-note">' + kit.note + '</div>' : '');
 }
 async function toggleGap() {
   var out = document.getElementById('gapOut');
@@ -429,7 +458,7 @@ async function toggleGap() {
     temp_base_f: +document.getElementById('c-tb').value || 32,
     wind_mph: +document.getElementById('c-wind').value || 0
   };
-  var prompt = 'Analyze this skier\'s gear inventory for gaps and weaknesses.\nCONDITIONS: ' + JSON.stringify(conds) + '\nINVENTORY:\n' + JSON.stringify(inv, null, 2) + '\nReturn ONLY a valid JSON object. No markdown fences, no explanation, just the JSON.\nSchema:\n{\n  "covered": ["string - what they are well equipped for"],\n  "gaps": [\n    {\n      "issue": "string describing the gap",\n      "serious": true,\n      "suggestion": "specific product name and approx price",\n      "url": "https://www.evo.com/search?text=... or null"\n    }\n  ],\n  "quiver": [\n    {\n      "note": "string observation about skis/boots",\n      "positive": true,\n      "suggestion": "string suggestion if negative, otherwise null"\n    }\n  ]\n}\nFor "serious" use the boolean true or false (not a string).\nFor "positive" use the boolean true or false (not a string).\nFor "url" use a real evo.com or rei.com search URL, or the JSON null value.';
+  var prompt = 'Analyze this skier\'s gear inventory for gaps and weaknesses.\nCONDITIONS: ' + JSON.stringify(conds) + '\nINVENTORY:\n' + JSON.stringify(inv, null, 2) + '\nIMPORTANT: Assume the skier already owns basic essentials like ski socks, thin glove liners, a basic balaclava/neck gaiter, hand warmers, sunscreen, and lip balm. Do NOT flag these as gaps unless the inventory specifically suggests they are missing something unusual.\nFocus gaps on meaningful missing items like: missing waterproof layer, no mid-layer for cold days, no goggles, no safety gear for backcountry, etc.\nAlso consider whether the skier is prepared for changing weather throughout the day (cold mornings that warm up, or vice versa).\nReturn ONLY a valid JSON object. No markdown fences, no explanation, just the JSON.\nSchema:\n{\n  "covered": ["string - what they are well equipped for"],\n  "gaps": [\n    {\n      "issue": "string describing the gap",\n      "serious": true,\n      "suggestion": "specific product name and approx price",\n      "url": "https://www.evo.com/search?text=... or null"\n    }\n  ],\n  "quiver": [\n    {\n      "note": "string observation about skis/boots",\n      "positive": true,\n      "suggestion": "string suggestion if negative, otherwise null"\n    }\n  ]\n}\nFor "serious" use the boolean true or false (not a string).\nFor "positive" use the boolean true or false (not a string).\nFor "url" use a real evo.com or rei.com search URL, or the JSON null value.';
   var rawText = '';
   try {
     var res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -487,7 +516,8 @@ var sectionHints = {
   pants: 'ski pants, bibs, or base layer bottom',
   head: 'ski helmet, goggles, balaclava, buff, or neck gaiter',
   skis: 'ski, ski boot, or binding',
-  safety: 'avalanche beacon, probe, shovel, or airbag pack'
+  safety: 'avalanche beacon, probe, shovel, or airbag pack',
+  misc: 'socks, gloves, hand warmers, radio, backpack, or other miscellaneous ski gear and accessories'
 };
 async function identify() {
   var name = document.getElementById('modelIn').value.trim();
@@ -508,6 +538,7 @@ async function identify() {
   else if (pendingSection==='head') specLine = '"head_type": "helmet|goggles|balaclava|gaiter|other"';
   else if (pendingSection==='skis') specLine = '"waist_mm": number, "ski_type": "All-Mountain|Powder|Carver|Touring|Park", "mount": "Alpine|AT|Telemark", "is_boot": bool';
   else if (pendingSection==='safety') specLine = '"safety_type": "beacon|probe|shovel|airbag|pack", "key_spec": "string"';
+  else if (pendingSection==='misc') specLine = '"misc_type": "socks|gloves|radio|backpack|hand_warmers|other", "key_spec": "string"';
   var prompt = 'Identify this ski gear: "' + name + '"\nSection hint: ' + sectionHints[pendingSection] + '\nReturn ONLY JSON:\n{\n  "identified": true,\n  "gearType": "e.g. Hardshell Jacket",\n  "description": "one sentence: what it\'s best for",\n  "model": "clean name",\n  "section": "' + pendingSection + '",\n  "specs": { ' + specLine + ' }\n}\nOr if not ski gear: { "identified": false, "reason": "..." }';
   try {
     var res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -559,6 +590,7 @@ function buildEditFields(r) {
   if (r.section==='head') return row('Type', sel('head_type',s.head_type||'helmet',[{v:'helmet',l:'Helmet'},{v:'goggles',l:'Goggles'},{v:'balaclava',l:'Balaclava'},{v:'gaiter',l:'Neck Gaiter / Buff'},{v:'other',l:'Other'}]));
   if (r.section==='skis') return row2([['Waist (mm)', inp('waist_mm',s.waist_mm,'106','number')],['Type', sel('ski_type',s.ski_type||'All-Mountain',['All-Mountain','Powder','Carver','Touring','Park'])]]) + row2([['Mount', sel('mount',s.mount||'Alpine',['Alpine','AT','Telemark'])],['This is a...', sel('is_boot',String(!!s.is_boot),[{v:'false',l:'Ski'},{v:'true',l:'Boot'}])]]) + row('Binding (optional)', inp('binding','','e.g. Marker Kingpin 13'));
   if (r.section==='safety') return row('Type', sel('safety_type',s.safety_type||'beacon',[{v:'beacon',l:'Beacon'},{v:'probe',l:'Probe'},{v:'shovel',l:'Shovel'},{v:'airbag',l:'Airbag Pack'},{v:'pack',l:'BC Pack'}])) + row('Key Spec', inp('key_spec',s.key_spec||'','e.g. 3-antenna, 240cm, 35L'));
+  if (r.section==='misc') return row('Type', sel('misc_type',s.misc_type||'other',[{v:'socks',l:'Socks'},{v:'gloves',l:'Gloves'},{v:'radio',l:'Radio'},{v:'backpack',l:'Backpack'},{v:'hand_warmers',l:'Hand Warmers'},{v:'other',l:'Other'}])) + row('Key Spec', inp('key_spec',s.key_spec||'','e.g. merino wool, waterproof, rechargeable'));
   return '';
 }
 function gv(id) { var el = document.getElementById('ef-'+id); return el ? el.value : null; }
@@ -571,6 +603,7 @@ function saveGear() {
   else if (r.section==='head') { item.head_type=gv('head_type')||'helmet'; }
   else if (r.section==='skis') { item.waist_mm=parseInt(gv('waist_mm'))||null; item.ski_type=gv('ski_type')||'All-Mountain'; item.mount=gv('mount')||'Alpine'; item.is_boot=gv('is_boot')==='true'; item.binding=gv('binding')||''; }
   else if (r.section==='safety') { item.safety_type=gv('safety_type')||'beacon'; item.key_spec=gv('key_spec')||''; }
+  else if (r.section==='misc') { item.misc_type=gv('misc_type')||'other'; item.key_spec=gv('key_spec')||''; }
   inv[r.section].push(item);
   save(); closeModal(); renderAll();
 }
@@ -580,6 +613,7 @@ function renderAll() {
   renderSec('head', function(i) { return [i.head_type]; });
   renderSec('skis', function(i) { return [i.is_boot?'boot':'ski', i.ski_type, i.mount, i.waist_mm?i.waist_mm+'mm':null, i.binding||null]; });
   renderSec('safety', function(i) { return [i.safety_type, i.key_spec||null]; });
+  renderSec('misc', function(i) { return [i.misc_type, i.key_spec||null]; });
 }
 function renderSec(sec, tagFn) {
   var el = document.getElementById('inv-'+sec);
@@ -596,6 +630,8 @@ function save() {
     Accounts.saveGear(inv);
   }
 }
+// Migrate old inventories that don't have misc
+if (!inv.misc) inv.misc = [];
 if (!inv.tops.length && !inv.skis.length) {
   inv = {
     tops: [
@@ -618,7 +654,8 @@ if (!inv.tops.length && !inv.skis.length) {
       { model:'Mammut Barryvox S', gearType:'Avalanche Beacon', description:'3-antenna with advanced search', safety_type:'beacon', key_spec:'3-antenna' },
       { model:'BCA Stealth 240', gearType:'Avalanche Probe', description:'240cm carbon probe', safety_type:'probe', key_spec:'240cm carbon' },
       { model:'BCA T3 Rescue', gearType:'Avalanche Shovel', description:'Full-size aluminum blade', safety_type:'shovel', key_spec:'full-size blade' }
-    ]
+    ],
+    misc: []
   };
   save();
 }
