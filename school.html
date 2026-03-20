@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Projects - Vortex1 Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="media/favicon.png">
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">Vortex1</a>
+            <div class="nav-links">
+                <a href="index.html">Projects</a>
+                <a href="school.html" class="active">School</a>
+                <a href="about.html">About</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="account.html">Account</a>
+            </div>
+        </div>
+    </nav>
+
+    <header>
+        <div class="container">
+            <h1>School Projects</h1>
+            <p class="tagline">Assignments & Academic Work</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="school-section">
+            <div class="school-grid" id="schoolGrid">
+
+                <div class="school-card" onclick="openSchoolProject('little-pink-house')">
+                    <div class="school-card-header">
+                        <span class="school-card-subject">Government / Civics</span>
+                        <span class="school-card-date">March 2026</span>
+                    </div>
+                    <h3 class="school-card-title">The Little Pink House</h3>
+                    <p class="school-card-desc">Interactive branching flowchart exploring eminent domain through a choose-your-own-adventure story. 8 possible endings based on your legal and political choices.</p>
+                    <div class="school-card-tags">
+                        <span class="tag">Eminent Domain</span>
+                        <span class="tag">Interactive</span>
+                        <span class="tag">Flowchart</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- School Project Modal -->
+    <div id="schoolModal" class="modal">
+        <div class="modal-content" style="max-width: 1100px; padding: 20px;">
+            <span class="close-button" onclick="closeSchoolModal()">&times;</span>
+            <div id="schoolModalBody"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Vortex1. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const schoolProjects = {
+            'little-pink-house': {
+                title: 'The Little Pink House',
+                subject: 'Government / Civics',
+                date: 'March 2026',
+                src: 'media/little-pink-house/index.html',
+                description: 'An interactive branching flowchart that puts you in the shoes of a homeowner fighting eminent domain. Explore different legal strategies, political choices, and their consequences across 8 possible endings.'
+            }
+        };
+
+        function openSchoolProject(slug) {
+            const project = schoolProjects[slug];
+            if (!project) return;
+
+            const modalBody = document.getElementById('schoolModalBody');
+            modalBody.innerHTML = `
+                <h1 style="color: #00ff88; margin-bottom: 4px; font-size: 1.6rem;">${project.title}</h1>
+                <p style="color: #808080; font-size: 0.9rem; margin-bottom: 16px;">${project.subject} &mdash; ${project.date}</p>
+                <div style="margin-bottom: 16px; border: 2px solid #00ff88; border-radius: 8px; overflow: hidden;">
+                    <iframe src="${project.src}"
+                            style="width: 100%; height: 75vh; border: none;"
+                            title="${project.title}"
+                            allowfullscreen>
+                    </iframe>
+                </div>
+                <p><a href="${project.src}" target="_blank" style="color: #00ff88; text-decoration: none; font-weight: bold;">→ Open Full Project in New Tab</a></p>
+            `;
+
+            document.getElementById('schoolModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSchoolModal() {
+            document.getElementById('schoolModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close on backdrop click
+        document.getElementById('schoolModal').addEventListener('click', function(e) {
+            if (e.target === this) closeSchoolModal();
+        });
+
+        // Close on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('schoolModal').style.display === 'flex') {
+                closeSchoolModal();
+            }
+        });
+    </script>
+</body>
+</html>
