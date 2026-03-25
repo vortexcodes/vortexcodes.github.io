@@ -42,7 +42,11 @@ svg.lines path{fill:none;stroke-width:1.5;transition:stroke .5s,opacity .5s}
 .node.chosen{opacity:1;transform:scale(1);border:1px solid var(--pink);background:var(--pink-bg)}
 .node.completed{opacity:.55;transform:scale(1);border:1px solid var(--border-h)}
 .node.dimmed{opacity:.08;transform:scale(.9);pointer-events:none}
-.node-inner{padding:12px 14px}
+.node-inner{padding:12px 14px;overflow-y:auto;max-height:100%}
+.node-inner::-webkit-scrollbar{width:4px}
+.node-inner::-webkit-scrollbar-track{background:transparent}
+.node-inner::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:2px}
+.node-inner::-webkit-scrollbar-thumb:hover{background:var(--pink)}
 .node-step{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:3px}
 .node.active .node-step,.node.chosen .node-step{color:var(--pink)}
 .node-title{font-size:12px;font-weight:600;font-family:var(--sans);line-height:1.3;margin-bottom:4px}
@@ -92,7 +96,7 @@ svg.lines path{fill:none;stroke-width:1.5;transition:stroke .5s,opacity .5s}
 <button class="restart-float" id="restartBtn" onclick="restart()">&#x21BB; Start over</button>
 <div class="path-count" id="pathCount"></div>
 <script>
-const NODE_W=155,GAP_X=14,LEVEL_H=145,PAD=40;
+const NODE_W=175,GAP_X=14,LEVEL_H=200,PAD=40;
 const tree={
 id:'start',step:'Start',title:'Eminent domain notice arrives',
 text:'The government plans to seize your little pink house for a private development project. What do you do?',
@@ -220,9 +224,9 @@ left+=k.subtreeWidth+GAP_X;
 });
 }
 function getNodeHeight(n){
-if(n.ending) return 120;
+if(n.ending) return 180;
 if(n.childIds.length===0) return 65;
-return n.text.length>100?95:80;
+return n.text.length>100?100:85;
 }
 function render(){
 flat=[];lines=[];
