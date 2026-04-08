@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Water Names — Map of Desires</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;overflow:hidden;}
+  body{background:#080810;font-family:'Crimson Pro',serif;color:#c0d0e0;}
+  #gc{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;outline:none;}
+
+  /* ── START SCREEN ── */
+  #ss{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at 50% 40%,rgba(12,18,35,0.92),rgba(3,3,8,0.99));display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1s;}
+  #ss.hide{opacity:0;pointer-events:none;}
+  #ss h1{font-family:'Press Start 2P',monospace;font-size:clamp(1rem,4vw,1.8rem);color:#c8d8e8;margin-bottom:0.3em;text-shadow:0 0 30px rgba(80,140,200,0.3),0 3px 0 #1a2a3a;}
+  .sub{font-family:'Press Start 2P',monospace;font-size:clamp(0.3rem,1.2vw,0.48rem);color:#4a6a7a;letter-spacing:0.3em;margin-bottom:0.5em;}
+  .auth{font-size:0.85rem;color:#3a5a6a;font-style:italic;margin-bottom:0.6em;}
+  .intro{max-width:460px;font-size:0.85rem;color:#5a7888;line-height:1.65;text-align:center;margin-bottom:1.6em;font-style:italic;padding:0 16px;}
+  .chars{display:flex;gap:clamp(8px,2vw,14px);margin-bottom:1.4em;flex-wrap:wrap;justify-content:center;padding:0 10px;}
+  .cp{background:rgba(50,100,150,0.06);border:2px solid rgba(50,100,150,0.16);border-radius:8px;padding:10px 16px;cursor:pointer;text-align:center;transition:all 0.25s;}
+  .cp:hover,.cp.sel{background:rgba(50,100,150,0.14);border-color:rgba(70,130,190,0.5);transform:translateY(-3px);}
+  .cp .cn{font-family:'Press Start 2P',monospace;font-size:0.45rem;color:#88a8c0;display:block;margin-bottom:3px;}
+  .cp .cd{font-size:0.68rem;color:#4a6878;font-style:italic;}
+  .inst{font-family:'Press Start 2P',monospace;font-size:clamp(0.28rem,0.9vw,0.36rem);color:#3a5868;line-height:2.4;text-align:center;margin-bottom:0.2em;}
+  .k{display:inline-block;background:rgba(50,100,150,0.08);border:1px solid rgba(50,100,150,0.18);border-radius:3px;padding:1px 7px;margin:0 1px;color:#6088a0;}
+  #go{font-family:'Press Start 2P',monospace;font-size:0.52rem;padding:11px 32px;background:rgba(50,100,150,0.06);border:2px solid rgba(50,100,150,0.24);border-radius:5px;color:#78a0b8;cursor:pointer;transition:all 0.3s;margin-top:0.7em;letter-spacing:0.06em;}
+  #go:hover{background:rgba(50,100,150,0.16);border-color:rgba(70,130,190,0.5);color:#a8d0e8;transform:translateY(-2px);}
+
+  /* ── ZONE BANNER ── */
+  #zb{position:fixed;top:0;left:0;right:0;z-index:55;text-align:center;padding:14px 20px 18px;background:linear-gradient(to bottom,rgba(4,6,16,0.96) 60%,rgba(4,6,16,0));opacity:0;transition:opacity 0.7s;pointer-events:none;}
+  #zb.vis{opacity:1;}
+  #zb .zt{font-family:'Press Start 2P',monospace;font-size:0.5rem;color:#b8c8d8;letter-spacing:0.1em;margin-bottom:5px;}
+  #zb .zs{font-size:0.8rem;color:#6888a0;font-style:italic;max-width:480px;margin:0 auto 5px;line-height:1.45;}
+  #zb .zq{font-size:0.78rem;color:#8098a8;font-style:italic;max-width:440px;margin:0 auto;}
+  #zb .zp{font-size:0.65rem;color:#384858;margin-top:2px;}
+
+  /* ── QUOTE BOX ── */
+  #qb{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:60;max-width:540px;width:90%;background:rgba(4,6,16,0.97);border:1px solid rgba(50,100,150,0.2);border-radius:6px;padding:14px 18px 12px;opacity:0;pointer-events:none;transition:opacity 0.3s;box-shadow:0 6px 28px rgba(0,0,0,0.5);}
+  #qb.vis{opacity:1;pointer-events:auto;}
+  #qb .ln{font-family:'Press Start 2P',monospace;font-size:0.42rem;color:#88b0c8;margin-bottom:5px;letter-spacing:0.04em;}
+  #qb .lf{font-size:0.82rem;color:#6888a0;margin-bottom:7px;line-height:1.45;}
+  #qb .lq{font-size:0.92rem;color:#d0dce8;font-style:italic;line-height:1.6;margin-bottom:3px;}
+  #qb .lp{font-size:0.68rem;color:#384858;margin-bottom:5px;}
+  #qb .lc{font-size:0.78rem;color:#5878888;line-height:1.45;}
+  .xb{position:absolute;top:5px;right:9px;background:none;border:none;color:#385060;font-size:1rem;cursor:pointer;padding:4px;transition:color 0.2s;}
+  .xb:hover{color:#88a8c0;}
+
+  /* ── LEGEND PANEL ── */
+  #lp{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:70;width:min(400px,92vw);background:rgba(4,6,16,0.98);border:1px solid rgba(50,100,150,0.22);border-radius:6px;padding:18px 22px;opacity:0;pointer-events:none;transition:opacity 0.3s;max-height:85vh;overflow-y:auto;box-shadow:0 8px 36px rgba(0,0,0,0.6);}
+  #lp.vis{opacity:1;pointer-events:auto;}
+  #lp h2{font-family:'Press Start 2P',monospace;font-size:0.45rem;color:#88b0c8;margin-bottom:14px;text-align:center;letter-spacing:0.15em;}
+  .ls{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(50,100,150,0.08);}
+  .ls:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .ls canvas{flex-shrink:0;image-rendering:pixelated;}
+  .ls .lt{font-family:'Press Start 2P',monospace;font-size:0.34rem;color:#78a0b8;margin-bottom:3px;}
+  .ls .ld{font-size:0.78rem;color:#5878888;line-height:1.45;}
+  .ls .lq2{font-size:0.72rem;color:#486070;font-style:italic;margin-top:3px;}
+
+  /* ── CARTOGRAPHER STATEMENT ── */
+  #cs{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:70;width:min(560px,94vw);max-height:88vh;overflow-y:auto;background:rgba(4,6,16,0.98);border:1px solid rgba(50,100,150,0.2);border-radius:6px;padding:22px 26px;opacity:0;pointer-events:none;transition:opacity 0.3s;box-shadow:0 8px 36px rgba(0,0,0,0.6);}
+  #cs.vis{opacity:1;pointer-events:auto;}
+  #cs h2{font-family:'Press Start 2P',monospace;font-size:0.42rem;color:#88b0c8;margin-bottom:14px;text-align:center;letter-spacing:0.12em;}
+  #cs h3{font-family:'Press Start 2P',monospace;font-size:0.34rem;color:#6888a0;margin:14px 0 8px;letter-spacing:0.08em;}
+  #cs p{font-size:0.82rem;color:#7898a8;line-height:1.65;margin-bottom:8px;text-indent:1.5em;}
+  #cs p:first-of-type{text-indent:0;}
+  #cs em{color:#90a8b8;}
+  #cs strong{color:#a0b8c8;font-weight:600;}
+
+  /* ── HUD ELEMENTS ── */
+  #pr{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);z-index:50;pointer-events:none;font-family:'Press Start 2P',monospace;font-size:0.34rem;color:#6088a0;background:rgba(4,6,16,0.7);padding:5px 12px;border-radius:3px;opacity:0;transition:opacity 0.3s;border:1px solid rgba(50,100,150,0.1);}
+  #pr.vis{opacity:1;}
+
+  .hud-btn{position:fixed;z-index:50;font-family:'Press Start 2P',monospace;font-size:0.32rem;color:#3a5868;background:rgba(4,6,16,0.65);padding:5px 9px;border-radius:3px;border:1px solid rgba(50,100,150,0.12);cursor:pointer;display:none;transition:all 0.2s;}
+  .hud-btn:hover{color:#88a8c0;border-color:rgba(50,100,150,0.3);}
+  #lb{top:14px;left:14px;}
+  #cb{top:36px;left:14px;}
+  #mb{top:58px;left:14px;}
+  #dc{position:fixed;bottom:14px;left:14px;z-index:50;font-family:'Press Start 2P',monospace;font-size:0.28rem;color:#2a4050;display:none;}
+</style>
+</head>
+<body>
+
+<div id="ss">
+  <h1>WATER NAMES</h1>
+  <div class="sub">地图 · MAP OF DESIRES</div>
+  <div class="auth">from Lan Samantha Chang's <em>Hunger</em></div>
+  <div class="intro">Three sisters sit on a porch in the American prairie, listening to their grandmother tell a twelve-hundred-year-old story about a fisherman's daughter who was seduced by the river — and never came back.</div>
+  <div class="chars">
+    <div class="cp sel" data-c="0"><span class="cn">NARRATOR</span><span class="cd">youngest sister</span></div>
+    <div class="cp" data-c="1"><span class="cn">LILY</span><span class="cd">keeper of the cache</span></div>
+    <div class="cp" data-c="2"><span class="cn">INGRID</span><span class="cd">the oldest</span></div>
+  </div>
+  <div class="inst"><span class="k">WASD</span> MOVE · <span class="k">E</span> INTERACT · <span class="k">L</span> LEGEND · <span class="k">C</span> STATEMENT · <span class="k">M</span> MAP</div>
+  <button id="go">▶ ENTER THE WORLD</button>
+</div>
+
+<canvas id="gc" tabindex="1"></canvas>
+
+<div id="zb"><div class="zt" id="zn2"></div><div class="zs" id="zs2"></div><div class="zq" id="zq2"></div><div class="zp" id="zp2"></div></div>
+<div id="qb"><button class="xb" id="qx">✕</button><div class="ln" id="qln"></div><div class="lf" id="qlf"></div><div class="lq" id="qlq"></div><div class="lp" id="qlp"></div><div class="lc" id="qlc"></div></div>
+<div id="pr">PRESS E TO READ</div>
+<button class="hud-btn" id="lb">L · LEGEND</button>
+<button class="hud-btn" id="cb">C · STATEMENT</button>
+<button class="hud-btn" id="mb">M · MAP</button>
+<div id="dc">LANDMARKS: <span id="dcc">0</span>/11</div>
+
+<!-- LEGEND -->
+<div id="lp">
+  <button class="xb" id="lx">✕</button>
+  <h2>— THE LEGEND —</h2>
+  <div class="ls"><canvas width="24" height="24" id="s0"></canvas><div><div class="lt">🔴 THE RED DOT</div><div class="ld">Represents storytelling and the passing of memory. Waipuo's cigarette tip is the only light on the porch — a tiny flame keeping centuries of stories alive.</div><div class="lq2">"The red dot flickered and danced, making ghostly shapes" (p. 116)</div></div></div>
+  <div class="ls"><canvas width="24" height="24" id="s1"></canvas><div><div class="lt">💎 THE PEARL</div><div class="ld">Represents desire, temptation, and the pull toward the unknown. The pearl ring found inside the fish is what starts the daughter's obsession — a gift from a world she can see but never reach.</div><div class="lq2">"The river had put a spell on her heart" (p. 118)</div></div></div>
+  <div class="ls"><canvas width="24" height="24" id="s2"></canvas><div><div class="lt">💧 THE WATER DROP</div><div class="ld">Represents ancestral power — the force that both sustains and destroys. The family survives because they carry the river inside them, but the river is also what takes the daughter away.</div><div class="lq2">"We have the spirit of the river in us" (p. 116)</div></div></div>
+</div>
+
+<!-- CARTOGRAPHER STATEMENT -->
+<div id="cs">
+  <button class="xb" id="cx">✕</button>
+  <h2>— CARTOGRAPHER STATEMENT —</h2>
+  <p>Lan Samantha Chang's "Water Names" follows three Chinese American sisters listening to their grandmother Waipuo tell a story about an ancestor's daughter who was lured by the river and disappeared during a flood. The story explores oral tradition, desire, and the distance between generations in an immigrant family.</p>
+  <h3>MAP ELEMENTS</h3>
+  <p>The map is divided into four symbolic terrains. <strong>The Dried Lake</strong> is a cracked lakebed where layers of sediment represent layers of memory, corresponding to storytelling and cultural preservation, anchored by the quote <em>"The red dot flickered and danced, making ghostly shapes as she moved her hands like a magician in the dark"</em> (p. 116), which shows that Waipuo's storytelling is not casual but an act of keeping centuries alive. <strong>The Glowing Lake</strong> represents desire and temptation, a beautiful surface hiding danger. The quote <em>"Or perhaps she lost her mind to desiring"</em> (p. 119) is placed here because Chang deliberately leaves the daughter's fate ambiguous — the word "perhaps" refuses to judge whether desire is madness or courage. <strong>The Bridge Between Worlds</strong> represents the generational gap. The quote <em>"We had only known blue swimming pools"</em> (p. 117) captures the divide: the granddaughters' safe, chlorinated experience of water versus the wild Yangtze their family came from.</p>
+  <h3>LEGEND SYMBOLS</h3>
+  <p><strong>The Red Dot</strong> (Waipuo's cigarette tip) marks places tied to storytelling — it appears at Waipuo's Stone Chair and The Unanswered Question because both involve the act of passing down or withholding narrative. <strong>The Pearl</strong> marks desire, appearing where characters are pulled toward something they cannot have, including Lily's Buried Cache, where old-world treasures that <em>"would be only a bauble"</em> (p. 118) in America echo the pearl ring's lost value. <strong>The Water Drop</strong> marks ancestral power, placed at The Broken Dam and The Mosquito Lanterns because even on an American porch, the family carries <em>"the spirit of the river"</em> (p. 116) inside them — water is not a place but an identity that travels across generations.</p>
+</div>
+
+<script>
+const T=16,MW=80,MH=80,SC=3;
+const COLS=[
+  {skin:'#e8b8a8',hair:'#3a2020',shirt:'#c85868',shoe:'#3a2028'},
+  {skin:'#d8c8b8',hair:'#1a2a3a',shirt:'#4888a8',shoe:'#1a2030'},
+  {skin:'#e0d0b8',hair:'#2a2a18',shirt:'#78a040',shoe:'#2a2818'}
+];
+const E=0,DT=1,CK=2,GR=3,DG=4,GW=6,ST=7,BW=8,SN=9,RK=10,TR=11,RP=13,PT=14,FL=15;
+
+const ZONES=[
+  {name:'THE DRIED LAKE',desc:'A cracked lakebed where stories settle like sediment — each layer a generation of voices.',quote:'\u201C...just to keep up your Chinese,\u201D she said, and the red dot flickered and danced.',page:'p. 116',cx:20,cy:20,key:'dried',col:'#d4a574'},
+  {name:'THE GLOWING LAKE',desc:'A luminous body of water that promises beauty but hides a kingdom no one returns from.',quote:'\u201CShe went to join the kingdom of her beloved.\u201D',page:'p. 119',cx:58,cy:20,key:'glow',col:'#40d8d0'},
+  {name:'THE RIVER RAPIDS',desc:'A torrent that has shaped this family for a thousand years — carrying them forward, wearing down everything.',quote:'\u201CWe have survived countless floods and seasons of ill-fortune because we have the spirit of the river in us.\u201D',page:'p. 116',cx:60,cy:60,key:'rapids',col:'#4a8aaa'},
+  {name:'THE BRIDGE BETWEEN WORLDS',desc:'A crossing between the American present and the Chinese past — the porch where three sisters sit, caught between two worlds.',quote:'\u201CWe had only known blue swimming pools.\u201D',page:'p. 117',cx:20,cy:60,key:'bridge',col:'#e0c060'}
+];
+
+const LMS=[
+  {name:"Waipuo\u2019s Stone Chair",tx:15,ty:18,z:'dried',sp:0,sym:0,folk:'They say an old woman still sits here at dusk, and if you listen carefully, you can hear her voice rising from the cracks in the stone.',q:'\u201CThe red dot flickered and danced, making ghostly shapes as she moved her hands like a magician in the dark.\u201D',p:'p. 116',c:'Waipuo is a magician \u2014 her cigarette tip is the only light, and with it she conjures a world the girls have never seen. Storytelling is her power.'},
+  {name:"The Cormorant Perch",tx:25,ty:12,z:'dried',sp:1,sym:0,folk:'A petrified branch where a black bird once sat. The fishermen say the bird still dives at night, hunting stories instead of fish.',q:'\u201CWhen I was young, my own grandmother once told me the story of Wen Zhiqing\u2019s daughter.\u201D',p:'p. 117',c:'The story passes grandmother to grandmother, each voice carrying the last. The perch represents how stories survive \u2014 by being retold.'},
+  {name:"The Sediment Shelf",tx:20,ty:25,z:'dried',sp:2,sym:0,folk:'If you dig through the layers here, each one holds a different century. The deepest layers still smell like the Yangtze.',q:'\u201COur ancestors have lived near the mouth of this river, the ever-changing delta, near a city called Nanjing, for more than a thousand years.\u201D',p:'p. 116',c:'A thousand years of family compressed into layers of earth \u2014 memory isn\u2019t just remembered, it\u2019s geological.'},
+  {name:"The Pearl",tx:55,ty:18,z:'glow',sp:3,sym:1,folk:'A single pearl glows at the center of the lake. Everyone can see it. No one who reaches for it comes back the same.',q:'\u201CThe river had put a spell on her heart.\u201D',p:'p. 118',c:'The pearl is the entry point of desire \u2014 one beautiful object pulled from the water, and suddenly the daughter can\u2019t stop wanting more.'},
+  {name:"The Daughter\u2019s Shore",tx:63,ty:25,z:'glow',sp:4,sym:1,folk:'Footprints worn deep into stone by someone who came back every night, staring at her own reflection until she saw someone else staring back.',q:'\u201CAnd her yearning for him filled her heart with sorrow and fear.\u201D',p:'p. 118',c:'The daughter\u2019s desire is so strong it becomes a physical mark on the world.'},
+  {name:"The Mirage Island",tx:52,ty:12,z:'glow',sp:5,sym:1,folk:'An island that shimmers in the distance. Travelers swear it\u2019s real, but it dissolves when you get close.',q:'\u201COr perhaps she lost her mind to desiring.\u201D',p:'p. 119',c:'Waipuo never says whether the daughter was brave or foolish. The mirage is the ambiguity itself.'},
+  {name:"The Broken Dam",tx:62,ty:55,z:'rapids',sp:6,sym:2,folk:'The locals built this dam three times. Three times the river tore it down. Now they leave the stones as a reminder.',q:'\u201CWe have survived countless floods and seasons of ill-fortune because we have the spirit of the river in us.\u201D',p:'p. 116',c:'The family doesn\u2019t fight the river \u2014 they become it. Their survival is to be as unstoppable as water.'},
+  {name:"The Flood Mark",tx:55,ty:63,z:'rapids',sp:7,sym:2,folk:'A tall stone scored with a blue line showing how high the water rose the night the daughter disappeared.',q:'\u201CUnlike mountains, we cannot be powdered down or broken apart. Instead, we run together, like raindrops.\u201D',p:'p. 116',c:'Chang\u2019s central metaphor \u2014 this family is water, not stone. They survive by merging and outlasting.'},
+  {name:"The Mosquito Lanterns",tx:25,ty:55,z:'bridge',sp:8,sym:2,folk:'Three paper lanterns that attract every mosquito for miles. The sisters fight over who sits closest, and who sits farthest.',q:'\u201CWe had only known blue swimming pools, but we tried to imagine the sudden shock of cold and the plunge, deep into water.\u201D',p:'p. 117',c:'The granddaughters\u2019 entire experience of water is chlorinated and safe. They have to imagine the Yangtze.'},
+  {name:"Lily\u2019s Buried Cache",tx:15,ty:63,z:'bridge',sp:9,sym:1,folk:'Under the bridge, someone buried a chest of old treasures \u2014 silk purses, bracelets, a gold pin. Things that meant everything in one world and nothing in another.',q:'\u201CA world where such a beautiful ring would be only a bauble!\u201D',p:'p. 118',c:'The pearl ring is priceless in China but meaningless in America. Lily\u2019s hidden cache mirrors this.'},
+  {name:"The Unanswered Question",tx:20,ty:69,z:'bridge',sp:10,sym:0,folk:'A stone carved with a single question mark. No one has ever answered it. Some say the question is the answer.',q:'\u201CWho knows?\u201D',p:'p. 119',c:'Waipuo\u2019s final word. She refuses to explain the story\u2019s ending, leaving the girls suspended in uncertainty.'}
+];
+const NS={name:'\u2605 THE NORTH STAR \u2014 THE ULTIMATE HUNGER',tx:40,ty:3,sp:11,sym:-1,
+  folk:'The brightest point above the prairie. The girls looked up after Waipuo went inside, breathing their dreams in the lingering smoke.',
+  q:'\u201CTheir brilliant pinpoints mapped the heavens. They glittered over us, over Waipuo in her room, the house, and the small city we lived in, the great waves of grass that ran for miles around us, the ground beneath as dry and hard as bone.\u201D',
+  p:'p. 119',c:'The Ultimate Hunger: the desire to belong \u2014 to the river, to the family, to a story that never ends.'};
+
+const SYMS=[{x:18,y:20,s:0},{x:22,y:14,s:0},{x:20,y:38,s:0},{x:40,y:8,s:0},{x:19,y:67,s:0},{x:28,y:18,s:0},{x:58,y:22,s:1},{x:50,y:15,s:1},{x:60,y:28,s:1},{x:17,y:60,s:1},{x:55,y:20,s:1},{x:60,y:58,s:2},{x:57,y:50,s:2},{x:65,y:62,s:2},{x:23,y:58,s:2},{x:42,y:55,s:2}];
+
+let canvas,ctx,map=[];
+let px,py,pdir=0,pfr=0,pa=0,ci=0;
+let keys={},started=false,showQ=false,showL=false,showC=false,showM=false,nearLM=null;
+let camX=0,camY=0,time=0,sW,sH,lastT=0;
+let parts=[];
+let curZone=null,zFade=0;
+let disc=new Set();
+
+canvas=document.getElementById('gc');ctx=canvas.getContext('2d');
+function resize(){sW=innerWidth;sH=innerHeight;canvas.width=sW;canvas.height=sH;ctx.imageSmoothingEnabled=false;}
+resize();addEventListener('resize',resize);
+
+// MAP
+(function(){
+  for(let y=0;y<MH;y++){map[y]=[];for(let x=0;x<MW;x++){
+    let t=E;const nw=x<40&&y<40,ne=x>=40&&y<40,se=x>=40&&y>=40,sw=x<40&&y>=40;
+    if(nw){const d=Math.hypot(x-20,y-20);t=d<9?CK:d<13?SN:DT;if(d>7&&d<26&&Math.random()<.02)t=RK;if(d>14&&Math.random()<.012)t=TR;}
+    else if(ne){const d=Math.hypot(x-58,y-20);t=d<7?GW:d<10?SN:DG;if(d>9&&Math.random()<.03)t=TR;}
+    else if(se){const rd=Math.abs((x-40)-(y-40))/1.41;t=rd<2.5?RP:rd<4?SN:GR;if(rd>4.5&&Math.random()<.035)t=TR;if(rd>3.5&&Math.random()<.015)t=RK;}
+    else if(sw){t=DG;if(x>=19&&x<=21)t=PT;if(x>=19&&x<=21&&y>=48&&y<=52)t=BW;if(t===DG&&Math.random()<.02)t=TR;}
+    if(x===0||y===0||x===MW-1||y===MH-1)t=RK;
+    if(y<6&&x>35&&x<45)t=ST;
+    if(t===GR&&Math.random()<.05)t=FL;if(t===DG&&Math.random()<.035)t=FL;
+    map[y][x]=t;
+  }}
+  for(let i=2;i<MW-2;i++){for(let w=-1;w<=1;w++){if(40+w>0&&40+w<MH-1)map[40+w][i]=PT;if(40+w>0&&40+w<MW-1)map[i][40+w]=PT;}}
+  for(let y=2;y<40;y++)for(let w=-1;w<=1;w++)if(40+w>0&&40+w<MW-1)map[y][40+w]=PT;
+  for(let i=8;i<35;i++){map[20][i]=PT;map[21][i]=PT;}
+  for(let i=42;i<70;i++){map[20][i]=PT;map[21][i]=PT;}
+  for(let i=42;i<70;i++){map[55][i]=PT;map[56][i]=PT;}
+  for(let i=8;i<35;i++){map[55][i]=PT;map[56][i]=PT;}
+  for(let y=10;y<30;y++){map[y][15]=PT;map[y][25]=PT;map[y][20]=PT;map[y][55]=PT;map[y][63]=PT;map[y][52]=PT;}
+  for(let y=50;y<72;y++){map[y][15]=PT;map[y][25]=PT;map[y][20]=PT;map[y][55]=PT;map[y][62]=PT;}
+  [...LMS,NS].forEach(lm=>{for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const tx2=lm.tx+dx,ty2=lm.ty+dy;if(tx2>0&&tx2<MW-1&&ty2>0&&ty2<MH-1&&solid(map[ty2][tx2]))map[ty2][tx2]=PT;}map[lm.ty][lm.tx]=ST;});
+})();
+px=30*T;py=30*T;
+for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const sx=30+dx,sy=30+dy;if(sx>0&&sx<MW-1&&sy>0&&sy<MH-1)map[sy][sx]=PT;}
+for(let i=0;i<90;i++)parts.push({x:Math.random()*MW*T,y:Math.random()*MH*T,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,life:Math.random()*5,ml:3+Math.random()*4});
+
+// Legend symbols
+function dSC(id,type){const sc=document.getElementById(id);if(!sc)return;const c=sc.getContext('2d');c.imageSmoothingEnabled=false;
+  if(type===0){c.fillStyle='#ff3300';c.beginPath();c.arc(12,12,6,0,Math.PI*2);c.fill();c.fillStyle='#ff6633';c.beginPath();c.arc(12,11,3,0,Math.PI*2);c.fill();}
+  else if(type===1){c.fillStyle='#40d8d0';c.beginPath();c.arc(12,12,7,0,Math.PI*2);c.fill();c.fillStyle='#ffeedd';c.beginPath();c.arc(12,12,4,0,Math.PI*2);c.fill();}
+  else{c.fillStyle='#4a8aaa';c.beginPath();c.moveTo(12,3);c.bezierCurveTo(4,10,4,18,12,22);c.bezierCurveTo(20,18,20,10,12,3);c.fill();c.fillStyle='#6ab0d0';c.beginPath();c.moveTo(12,6);c.bezierCurveTo(7,11,7,16,12,19);c.fill();}
+}
+dSC('s0',0);dSC('s1',1);dSC('s2',2);
+
+// UI wiring
+document.querySelectorAll('.cp').forEach(b=>{b.addEventListener('click',e=>{e.stopPropagation();document.querySelectorAll('.cp').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');ci=parseInt(b.dataset.c);});});
+document.getElementById('go').addEventListener('click',()=>{started=true;document.getElementById('ss').classList.add('hide');['lb','cb','mb'].forEach(id=>document.getElementById(id).style.display='block');document.getElementById('dc').style.display='block';canvas.focus();});
+function closeAll(){showQ=false;showL=false;showC=false;showM=false;document.getElementById('qb').classList.remove('vis');document.getElementById('lp').classList.remove('vis');document.getElementById('cs').classList.remove('vis');canvas.focus();}
+document.getElementById('qx').addEventListener('click',closeAll);
+document.getElementById('lx').addEventListener('click',closeAll);
+document.getElementById('cx').addEventListener('click',closeAll);
+document.getElementById('lb').addEventListener('click',()=>{closeAll();showL=true;document.getElementById('lp').classList.add('vis');});
+document.getElementById('cb').addEventListener('click',()=>{closeAll();showC=true;document.getElementById('cs').classList.add('vis');});
+document.getElementById('mb').addEventListener('click',()=>{if(showM){closeAll();}else{closeAll();showM=true;}});
+canvas.addEventListener('click',()=>canvas.focus());
+
+function anyPanel(){return showQ||showL||showC||showM;}
+
+function kd(e){if(!started)return;
+  if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyE','KeyL','KeyC','KeyM','Escape'].includes(e.code))e.preventDefault();
+  keys[e.code]=true;
+  if(e.code==='KeyE'&&nearLM&&!anyPanel()){showQ=true;disc.add(nearLM.name);document.getElementById('dcc').textContent=disc.size;
+    document.getElementById('qln').textContent=nearLM.name;document.getElementById('qlf').textContent=nearLM.folk;
+    document.getElementById('qlq').textContent=nearLM.q;document.getElementById('qlp').textContent=nearLM.p;
+    document.getElementById('qlc').textContent=nearLM.c;document.getElementById('qb').classList.add('vis');document.getElementById('pr').classList.remove('vis');}
+  if(e.code==='KeyL'&&!showQ&&!showC&&!showM){showL=!showL;document.getElementById('lp').classList.toggle('vis');if(!showL)canvas.focus();}
+  if(e.code==='KeyC'&&!showQ&&!showL&&!showM){showC=!showC;document.getElementById('cs').classList.toggle('vis');if(!showC)canvas.focus();}
+  if(e.code==='KeyM'){if(showM){closeAll();}else{closeAll();showM=true;}}
+  if(e.code==='Escape')closeAll();
+}
+function ku(e){keys[e.code]=false;}
+canvas.addEventListener('keydown',kd);canvas.addEventListener('keyup',ku);document.addEventListener('keydown',kd);document.addEventListener('keyup',ku);
+
+// TILE
+function tc(t,x,y,tm){const f=Math.sin(tm*2.5+x*.5+y*.7);
+  switch(t){case E:return'#080810';case DT:return(x+y)%3===0?'#9a8465':(x+y)%5===0?'#a08a68':'#8b7555';
+  case CK:return(x*7+y*13)%5<2?'#7a6a4a':'#5a4a2a';case GR:return(x+y)%2?'#3a6a2a':'#4a7a3a';
+  case DG:return(x+y)%2?'#1a3a2a':'#2a4a3a';case GW:return`rgb(15,${168+Math.floor(f*35)},${183+Math.floor(f*30)})`;
+  case ST:return(x+y)%2?'#525250':'#5a5a58';case BW:return(x+y)%2?'#6a4a2a':'#7a5a3a';
+  case SN:return(x+y)%3===0?'#c8b890':(x+y)%3===1?'#baa878':'#c0b088';case RK:return'#3a3a3a';case TR:return'#1a3a1a';
+  case RP:return`rgb(${33+Math.floor(f*22)},${88+Math.floor(f*22)},${130+Math.floor(f*22)})`;
+  case PT:return(x+y)%2?'#7a6a5a':'#8a7a6a';case FL:return(x+y)%2?'#3a6a2a':'#4a7a3a';default:return'#080810';}}
+function solid(t){return t===RK||t===TR||t===GW||t===RP;}
+function blocked(wx,wy){const tx=Math.floor(wx/T),ty=Math.floor(wy/T);if(tx<0||ty<0||tx>=MW||ty>=MH)return true;return solid(map[ty][tx]);}
+
+// SPRITES
+function drawTree(sx,sy,s,x,y){const sd=(x*31+y*17)%7;ctx.fillStyle=sd%2?'#4a3420':'#3a2a1a';ctx.fillRect(sx+s/2-s*.1,sy+s*.45,s*.2,s*.55);ctx.fillStyle=['#1a4a1a','#2a5a2a','#1a3a18'][sd%3];ctx.fillRect(sx+s*.08,sy+s*.12,s*.84,s*.42);ctx.fillStyle=['#2a5a2a','#1a3a18','#1a4a1a'][(sd+1)%3];ctx.fillRect(sx+s*.18,sy+s*.02,s*.64,s*.32);ctx.fillStyle='rgba(70,130,55,0.18)';ctx.fillRect(sx+s*.2,sy+s*.08,s*.24,s*.16);}
+function drawRock(sx,sy,s){ctx.fillStyle='#3a3a38';ctx.fillRect(sx+s*.08,sy+s*.18,s*.84,s*.72);ctx.fillStyle='#4a4a48';ctx.fillRect(sx+s*.15,sy+s*.12,s*.6,s*.5);ctx.fillStyle='rgba(90,90,85,0.2)';ctx.fillRect(sx+s*.2,sy+s*.15,s*.18,s*.14);}
+function drawFlower(sx,sy,s,x,y,tm){const sd=(x*11+y*23)%6;ctx.fillStyle=['#e88','#da8','#d8d','#8bd','#dd8','#e8a'][sd];ctx.fillRect(sx+s*.3+(sd%3)*s*.1,sy+s*.25+Math.sin(tm*2+sd)*s*.03,s*.14,s*.14);ctx.fillStyle='#2a5a2a';ctx.fillRect(sx+s*.35+(sd%3)*s*.1,sy+s*.39+Math.sin(tm*2+sd)*s*.03,s*.05,s*.2);}
+function drawSym(sx,sy,s,type,tm){const p2=.5+Math.sin(tm*3)*.3;ctx.globalAlpha=p2*.5;
+  if(type===0){ctx.fillStyle='#ff3300';ctx.beginPath();ctx.arc(sx+s/2,sy+s/2,s*.13,0,Math.PI*2);ctx.fill();}
+  else if(type===1){ctx.fillStyle='#40d8d0';ctx.beginPath();ctx.arc(sx+s/2,sy+s/2,s*.15,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffeedd';ctx.beginPath();ctx.arc(sx+s/2,sy+s/2,s*.08,0,Math.PI*2);ctx.fill();}
+  else{ctx.fillStyle='#4a8aaa';ctx.beginPath();const cx2=sx+s/2,cy2=sy+s/2;ctx.moveTo(cx2,cy2-s*.15);ctx.bezierCurveTo(cx2-s*.12,cy2,cx2-s*.12,cy2+s*.12,cx2,cy2+s*.17);ctx.bezierCurveTo(cx2+s*.12,cy2+s*.12,cx2+s*.12,cy2,cx2,cy2-s*.15);ctx.fill();}
+  ctx.globalAlpha=1;}
+
+function drawLM(lm,sx,sy,s,t){
+  const pl=Math.sin(t*3)*.15+.85;const d=disc.has(lm.name);
+  const zc={dried:'#d4a574',glow:'#40d8d0',rapids:'#4a8aaa',bridge:'#e0c060'};const col=zc[lm.z]||'#ffeedd';
+  // Outer glow
+  ctx.globalAlpha=.15*pl;ctx.fillStyle=col;ctx.beginPath();ctx.arc(sx+s/2,sy+s/2,s*1.1,0,Math.PI*2);ctx.fill();
+  // Ring
+  ctx.strokeStyle=col;ctx.lineWidth=d?1:2;ctx.globalAlpha=(d?.12:.28)*pl;ctx.beginPath();ctx.arc(sx+s/2,sy+s/2,s*.7+Math.sin(t*2)*s*.08,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+
+  const sp=lm.sp;
+  if(sp===0){ctx.fillStyle='#6a6058';ctx.fillRect(sx+s*.12,sy+s*.4,s*.76,s*.2);ctx.fillRect(sx+s*.12,sy+s*.12,s*.14,s*.48);ctx.fillStyle='#ff3300';ctx.fillRect(sx+s*.68,sy+s*.28,s*.1,s*.1);ctx.fillStyle=`rgba(255,50,0,${.35*pl})`;ctx.beginPath();ctx.arc(sx+s*.73,sy+s*.33,s*.14,0,Math.PI*2);ctx.fill();}
+  else if(sp===1){ctx.fillStyle='#4a3a2a';ctx.fillRect(sx+s*.44,sy+s*.08,s*.12,s*.85);ctx.fillRect(sx+s*.18,sy+s*.14,s*.64,s*.08);ctx.fillStyle='#1a1a1a';ctx.fillRect(sx+s*.18,sy+s*.02,s*.18,s*.14);}
+  else if(sp===2){ctx.fillStyle='#8a7a5a';ctx.fillRect(sx+s*.1,sy+s*.55,s*.8,s*.12);ctx.fillStyle='#7a6a4a';ctx.fillRect(sx+s*.1,sy+s*.67,s*.8,s*.1);ctx.fillStyle='#6a5a3a';ctx.fillRect(sx+s*.1,sy+s*.77,s*.8,s*.08);}
+  else if(sp===3){ctx.fillStyle=`rgba(64,216,208,${.3*pl})`;ctx.beginPath();ctx.arc(sx+s/2,sy+s/2,s*.4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffeedd';ctx.beginPath();ctx.arc(sx+s/2,sy+s*.44,s*.17,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(sx+s*.44,sy+s*.36,s*.05,s*.05);}
+  else if(sp===4){for(let i=0;i<5;i++){ctx.fillStyle=i%2?'#3a4a5a':'#4a5a6a';ctx.fillRect(sx+s*.18+Math.sin(i+t)*s*.07,sy+s*.15+i*s*.15,s*.16,s*.07);}}
+  else if(sp===5){ctx.globalAlpha=.16*pl;ctx.fillStyle='#40d8d0';ctx.beginPath();ctx.arc(sx+s/2,sy+s/2,s*.4,0,Math.PI*2);ctx.fill();ctx.globalAlpha=.08*pl;ctx.beginPath();ctx.arc(sx+s/2,sy+s/2,s*.55,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
+  else if(sp===6){for(let i=0;i<5;i++){const h=s*(.22+Math.sin(i*2.3)*.1);ctx.fillStyle=i%2?'#5a5a50':'#4a4a45';ctx.fillRect(sx+i*s*.18+s*.05,sy+s*.72-h,s*.15,h);}}
+  else if(sp===7){ctx.fillStyle='#5a5a55';ctx.fillRect(sx+s*.38,sy+s*.08,s*.24,s*.84);ctx.fillStyle='#4a8aaa';ctx.fillRect(sx+s*.33,sy+s*.28,s*.34,s*.06);ctx.fillStyle=`rgba(74,138,170,${.25*pl})`;ctx.fillRect(sx+s*.3,sy+s*.24,s*.4,s*.12);}
+  else if(sp===8){for(let i=0;i<3;i++){ctx.fillStyle='#4a3a2a';ctx.fillRect(sx+s*.12+i*s*.3,sy+s*.28,s*.05,s*.55);ctx.fillStyle=`rgba(224,192,96,${.6*pl})`;ctx.beginPath();ctx.arc(sx+s*.15+i*s*.3,sy+s*.22,s*.11,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(224,192,96,${.12*pl})`;ctx.beginPath();ctx.arc(sx+s*.15+i*s*.3,sy+s*.22,s*.24,0,Math.PI*2);ctx.fill();}}
+  else if(sp===9){ctx.fillStyle='#5a3a1a';ctx.fillRect(sx+s*.18,sy+s*.42,s*.64,s*.36);ctx.fillStyle='#6a4a2a';ctx.fillRect(sx+s*.2,sy+s*.38,s*.6,s*.34);ctx.fillStyle='#ffd700';ctx.fillRect(sx+s*.52,sy+s*.32,s*.11,s*.11);ctx.fillStyle=`rgba(255,215,0,${.18*pl})`;ctx.beginPath();ctx.arc(sx+s*.57,sy+s*.37,s*.14,0,Math.PI*2);ctx.fill();}
+  else if(sp===10){ctx.fillStyle=`rgba(138,138,128,${.55+.3*pl})`;ctx.font=`bold ${Math.floor(s*.6)}px "Press Start 2P",monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('?',sx+s/2,sy+s/2);}
+  else if(sp===11){ctx.fillStyle=`rgba(255,238,221,${.5+.35*pl})`;ctx.beginPath();const cx2=sx+s/2,cy2=sy+s/2,r=s*.36;for(let i=0;i<8;i++){const a=i*Math.PI/4-Math.PI/2,rd=i%2===0?r:r*.3;ctx.lineTo(cx2+Math.cos(a)*rd,cy2+Math.sin(a)*rd);}ctx.closePath();ctx.fill();ctx.fillStyle=`rgba(255,238,221,${.1*pl})`;ctx.beginPath();ctx.arc(cx2,cy2,s*.55,0,Math.PI*2);ctx.fill();}
+  if(d){ctx.fillStyle='rgba(90,210,110,0.65)';ctx.font=`bold ${Math.floor(s*.22)}px sans-serif`;ctx.textAlign='right';ctx.fillText('\u2713',sx+s*.95,sy+s*.2);}
+}
+
+function drawPlayer(sx,sy,s){
+  const c=COLS[ci],fr=pfr%4,w=fr===1||fr===3,b=w?-1:0;
+  ctx.fillStyle='rgba(0,0,0,0.22)';ctx.beginPath();ctx.ellipse(sx+s/2,sy+s*.9,s*.28,s*.05,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=c.shoe;if(w){ctx.fillRect(sx+s*.22,sy+s*.78+b,s*.15,s*.11);ctx.fillRect(sx+s*.58,sy+s*.72+b,s*.15,s*.11);}else{ctx.fillRect(sx+s*.28,sy+s*.78+b,s*.15,s*.11);ctx.fillRect(sx+s*.52,sy+s*.78+b,s*.15,s*.11);}
+  ctx.fillStyle='#2a2a3a';if(w){ctx.fillRect(sx+s*.28,sy+s*.65+b,s*.13,s*.16);ctx.fillRect(sx+s*.58,sy+s*.62+b,s*.13,s*.16);}else{ctx.fillRect(sx+s*.32,sy+s*.65+b,s*.13,s*.17);ctx.fillRect(sx+s*.54,sy+s*.65+b,s*.13,s*.17);}
+  ctx.fillStyle=c.shirt;ctx.fillRect(sx+s*.24,sy+s*.35+b,s*.52,s*.32);
+  ctx.fillStyle=c.skin;if(w){ctx.fillRect(sx+s*.16,sy+s*.38+b,s*.09,s*.18);ctx.fillRect(sx+s*.74,sy+s*.42+b,s*.09,s*.18);}else{ctx.fillRect(sx+s*.18,sy+s*.4+b,s*.09,s*.18);ctx.fillRect(sx+s*.72,sy+s*.4+b,s*.09,s*.18);}
+  ctx.fillStyle=c.skin;ctx.fillRect(sx+s*.26,sy+s*.12+b,s*.48,s*.27);
+  ctx.fillStyle=c.hair;ctx.fillRect(sx+s*.22,sy+s*.06+b,s*.56,s*.14);ctx.fillRect(sx+s*.22,sy+s*.06+b,s*.1,s*.2);ctx.fillRect(sx+s*.68,sy+s*.06+b,s*.1,s*.2);
+  ctx.fillStyle='#1a1a1a';if(pdir===0){ctx.fillRect(sx+s*.32,sy+s*.24+b,s*.07,s*.05);ctx.fillRect(sx+s*.56,sy+s*.24+b,s*.07,s*.05);}else if(pdir===1){ctx.fillRect(sx+s*.28,sy+s*.22+b,s*.07,s*.05);}else if(pdir===2){ctx.fillRect(sx+s*.62,sy+s*.22+b,s*.07,s*.05);}
+}
+
+// Pre-render map texture to offscreen canvas
+const mapCanvas=document.createElement('canvas');
+mapCanvas.width=MW;mapCanvas.height=MH;
+const mctx=mapCanvas.getContext('2d');
+mctx.imageSmoothingEnabled=false;
+let mapDirty=true;
+
+function renderMapTexture(){
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+    const t=map[y][x];
+    let c='#080810';
+    switch(t){
+      case DT:c=(x+y)%3===0?'#8a7558':'#7a6548';break;
+      case CK:c=(x*7+y*13)%5<2?'#6a5a3a':'#4a3a22';break;
+      case GR:c=(x+y)%2?'#3a6a2a':'#4a7a3a';break;
+      case DG:c=(x+y)%2?'#1a3a2a':'#2a4a3a';break;
+      case GW:c='#18a8a0';break;
+      case ST:c='#555553';break;
+      case BW:c='#6a4a2a';break;
+      case SN:c=(x+y)%2?'#b8a878':'#c0b088';break;
+      case RK:c='#333331';break;
+      case TR:c='#1a4a1a';break;
+      case RP:c='#2a6a90';break;
+      case PT:c='#706050';break;
+      case FL:c=(x+y)%3===0?'#c88080':(x+y)%3===1?'#80b880':'#8888c0';break;
+    }
+    mctx.fillStyle=c;
+    mctx.fillRect(x,y,1,1);
+  }
+  mapDirty=false;
+}
+renderMapTexture();
+
+function drawMini(){
+  const mw=140,mh=140,mx=sW-mw-14,my=14;
+  // Background frame
+  ctx.fillStyle='rgba(2,4,12,0.92)';
+  ctx.fillRect(mx-5,my-5,mw+10,mh+10);
+  ctx.strokeStyle='rgba(50,100,150,0.22)';ctx.lineWidth=1;
+  ctx.strokeRect(mx-5,my-5,mw+10,mh+10);
+
+  // Draw actual map texture
+  ctx.drawImage(mapCanvas,0,0,MW,MH,mx,my,mw,mh);
+
+  // Slight darkening overlay for contrast
+  ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(mx,my,mw,mh);
+
+  const ts=mw/MW;
+
+  // Zone border lines (subtle)
+  ctx.strokeStyle='rgba(160,190,220,0.12)';ctx.setLineDash([3,3]);ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(mx+40*ts,my);ctx.lineTo(mx+40*ts,my+mh);
+  ctx.moveTo(mx,my+40*ts);ctx.lineTo(mx+mw,my+40*ts);ctx.stroke();ctx.setLineDash([]);
+
+  // Zone labels
+  ctx.fillStyle='rgba(200,220,240,0.3)';ctx.font='4px "Press Start 2P"';ctx.textAlign='center';
+  ctx.fillText('DRIED',mx+20*ts,my+18*ts);ctx.fillText('LAKE',mx+20*ts,my+22*ts);
+  ctx.fillText('GLOWING',mx+58*ts,my+18*ts);ctx.fillText('LAKE',mx+58*ts,my+22*ts);
+  ctx.fillText('RAPIDS',mx+60*ts,my+60*ts);
+  ctx.fillText('BRIDGE',mx+20*ts,my+60*ts);
+
+  // Landmarks
+  const zcc={dried:'#d4a574',glow:'#40d8d0',rapids:'#4a8aaa',bridge:'#e0c060'};
+  LMS.forEach(l=>{
+    const lx=mx+l.tx*ts,ly=my+l.ty*ts,d=disc.has(l.name);
+    // Glow ring
+    ctx.fillStyle=d?'rgba(90,210,110,0.12)':(zcc[l.z]||'#888')+'18';
+    ctx.beginPath();ctx.arc(lx,ly,5,0,Math.PI*2);ctx.fill();
+    // Dot
+    ctx.fillStyle=d?'rgba(90,210,110,0.85)':zcc[l.z]||'#888';
+    ctx.beginPath();ctx.arc(lx,ly,2.5,0,Math.PI*2);ctx.fill();
+    // White center if discovered
+    if(d){ctx.fillStyle='rgba(255,255,255,0.5)';ctx.beginPath();ctx.arc(lx,ly,1,0,Math.PI*2);ctx.fill();}
+  });
+
+  // North star
+  const nsx=mx+NS.tx*ts,nsy=my+NS.ty*ts;
+  ctx.fillStyle='rgba(255,238,221,0.15)';ctx.beginPath();ctx.arc(nsx,nsy,6,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffeedd';ctx.beginPath();
+  for(let i=0;i<8;i++){const a=i*Math.PI/4-Math.PI/2,r=i%2===0?4:1.5;ctx.lineTo(nsx+Math.cos(a)*r,nsy+Math.sin(a)*r);}
+  ctx.closePath();ctx.fill();
+
+  // Player - pulsing dot with direction
+  const ptx=(px/T)*ts,pty=(py/T)*ts,plx=mx+ptx,ply=my+pty;
+  const pulse=0.6+Math.sin(time*4)*0.4;
+  ctx.fillStyle=`rgba(255,80,80,${0.08*pulse})`;ctx.beginPath();ctx.arc(plx,ply,8,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ee5050';ctx.beginPath();ctx.arc(plx,ply,3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ff8888';ctx.beginPath();ctx.arc(plx,ply,1.5,0,Math.PI*2);ctx.fill();
+  // Direction arrow
+  const dirs=[[0,1],[-1,0],[1,0],[0,-1]];const dd=dirs[pdir];
+  ctx.strokeStyle='rgba(255,100,100,0.7)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(plx+dd[0]*3,ply+dd[1]*3);ctx.lineTo(plx+dd[0]*9,ply+dd[1]*9);ctx.stroke();
+
+  // Compass
+  ctx.fillStyle='rgba(200,220,240,0.45)';ctx.font='7px "Press Start 2P"';ctx.textAlign='center';
+  ctx.fillText('N',mx+mw/2,my-2);
+  ctx.fillStyle='rgba(200,220,240,0.15)';ctx.font='5px "Press Start 2P"';
+  ctx.fillText('S',mx+mw/2,my+mh+8);
+  ctx.textAlign='right';ctx.fillText('W',mx-3,my+mh/2+2);
+  ctx.textAlign='left';ctx.fillText('E',mx+mw+4,my+mh/2+2);
+
+  // Expand hint
+  ctx.fillStyle='rgba(120,150,180,0.22)';ctx.font='4px "Press Start 2P"';ctx.textAlign='center';
+  ctx.fillText('M · FULL MAP',mx+mw/2,my+mh+17);
+  ctx.textAlign='left';
+}
+
+function drawFullMap(){
+  const pad=50;
+  const maxW=sW-pad*2,maxH=sH-pad*2-50;
+  const mapAspect=MW/MH;
+  let mw,mh;
+  if(maxW/maxH>mapAspect){mh=maxH;mw=mh*mapAspect;}else{mw=maxW;mh=mw/mapAspect;}
+  const mx=(sW-mw)/2,my=(sH-mh)/2+10;
+  const ts=mw/MW;
+
+  // Darken
+  ctx.fillStyle='rgba(2,4,12,0.94)';ctx.fillRect(0,0,sW,sH);
+
+  // Map frame
+  ctx.fillStyle='rgba(6,10,20,0.95)';ctx.fillRect(mx-8,my-8,mw+16,mh+16);
+  ctx.strokeStyle='rgba(50,100,150,0.25)';ctx.lineWidth=2;ctx.strokeRect(mx-8,my-8,mw+16,mh+16);
+
+  // Draw actual map texture (scaled up)
+  ctx.drawImage(mapCanvas,0,0,MW,MH,mx,my,mw,mh);
+
+  // Slight overlay for readability
+  ctx.fillStyle='rgba(0,0,0,0.1)';ctx.fillRect(mx,my,mw,mh);
+
+  // Zone dividers
+  ctx.strokeStyle='rgba(180,210,240,0.12)';ctx.setLineDash([6,4]);ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(mx+40*ts,my);ctx.lineTo(mx+40*ts,my+mh);
+  ctx.moveTo(mx,my+40*ts);ctx.lineTo(mx+mw,my+40*ts);ctx.stroke();ctx.setLineDash([]);
+
+  // Zone labels with backgrounds
+  const zInfo=[
+    {x:20,y:20,n:'THE DRIED LAKE',d:'Storytelling & Memory',c:'rgba(139,115,85,0.2)'},
+    {x:58,y:20,n:'THE GLOWING LAKE',d:'Desire & Temptation',c:'rgba(30,100,95,0.15)'},
+    {x:60,y:60,n:'THE RIVER RAPIDS',d:'Water as Power',c:'rgba(40,90,60,0.15)'},
+    {x:20,y:60,n:'THE BRIDGE',d:'Generational Identity',c:'rgba(100,88,50,0.15)'}
+  ];
+  zInfo.forEach(z=>{
+    const cx2=mx+z.x*ts,cy2=my+z.y*ts;
+    // Label background
+    ctx.fillStyle=z.c;
+    const fw=Math.max(80,ts*25),fh=Math.max(22,ts*8);
+    ctx.fillRect(cx2-fw/2,cy2-fh/2-ts*1,fw,fh);
+    // Name
+    ctx.fillStyle='rgba(200,220,240,0.55)';ctx.font=`${Math.max(7,ts*2)}px "Press Start 2P"`;ctx.textAlign='center';
+    ctx.fillText(z.n,cx2,cy2-ts*0.5);
+    // Description
+    ctx.fillStyle='rgba(160,190,210,0.3)';ctx.font=`${Math.max(8,ts*1.6)}px "Crimson Pro"`;
+    ctx.fillText(z.d,cx2,cy2+ts*1.5);
+  });
+
+  // Landmarks
+  const zcc={dried:'#d4a574',glow:'#40d8d0',rapids:'#4a8aaa',bridge:'#e0c060'};
+  LMS.forEach(l=>{
+    const lx=mx+l.tx*ts,ly=my+l.ty*ts,d=disc.has(l.name);
+    // Outer glow
+    ctx.fillStyle=d?'rgba(90,210,110,0.08)':(zcc[l.z]||'#888')+'12';
+    ctx.beginPath();ctx.arc(lx,ly,ts*2,0,Math.PI*2);ctx.fill();
+    // Ring
+    ctx.strokeStyle=d?'rgba(90,210,110,0.35)':zcc[l.z]||'#888';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(lx,ly,ts*1.2,0,Math.PI*2);ctx.stroke();
+    // Center dot
+    ctx.fillStyle=d?'rgba(90,210,110,0.9)':zcc[l.z]||'#888';
+    ctx.beginPath();ctx.arc(lx,ly,ts*0.45,0,Math.PI*2);ctx.fill();
+    // Name label with background
+    const labelH=Math.max(8,ts*1.1);
+    ctx.fillStyle='rgba(4,8,16,0.6)';
+    const name=l.name.length>20?l.name.substring(0,20)+'\u2026':l.name;
+    ctx.font=`${Math.max(5,ts*1)}px "Press Start 2P"`;ctx.textAlign='center';
+    const tw=ctx.measureText(name).width;
+    ctx.fillRect(lx-tw/2-4,ly-ts*1.8-labelH/2,tw+8,labelH+2);
+    ctx.fillStyle=d?'rgba(90,210,110,0.75)':'rgba(200,220,240,0.55)';
+    ctx.fillText(name,lx,ly-ts*1.5);
+    if(d){ctx.fillStyle='rgba(90,210,110,0.4)';ctx.font=`${Math.max(4,ts*0.7)}px "Press Start 2P"`;ctx.fillText('\u2713',lx+tw/2+6,ly-ts*1.5);}
+  });
+
+  // North star
+  const nsx=mx+NS.tx*ts,nsy=my+NS.ty*ts;
+  ctx.fillStyle='rgba(255,238,221,0.08)';ctx.beginPath();ctx.arc(nsx,nsy,ts*3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffeedd';ctx.beginPath();
+  for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,r=i%2===0?ts*1:ts*0.4;ctx.lineTo(nsx+Math.cos(a)*r,nsy+Math.sin(a)*r);}
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle='rgba(255,238,221,0.6)';ctx.font=`${Math.max(6,ts*1.2)}px "Press Start 2P"`;ctx.textAlign='center';
+  ctx.fillText('\u2605 NORTH STAR',nsx,nsy-ts*2.2);
+  ctx.fillStyle='rgba(255,238,221,0.28)';ctx.font=`${Math.max(8,ts*1.5)}px "Crimson Pro"`;
+  ctx.fillText('The Ultimate Hunger',nsx,nsy+ts*2.5);
+
+  // Player
+  const plx=mx+(px/T)*ts,ply=my+(py/T)*ts;
+  const pulse=0.6+Math.sin(time*4)*0.4;
+  ctx.fillStyle=`rgba(255,80,80,${0.06*pulse})`;ctx.beginPath();ctx.arc(plx,ply,ts*2,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,80,80,0.5)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(plx,ply,ts*1.2,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='#ee5050';ctx.beginPath();ctx.arc(plx,ply,ts*0.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,100,100,0.65)';ctx.font=`${Math.max(5,ts*0.9)}px "Press Start 2P"`;ctx.fillText('YOU',plx,ply-ts*1.6);
+
+  // Compass
+  ctx.fillStyle='rgba(200,220,240,0.5)';ctx.font=`${Math.max(9,ts*2.2)}px "Press Start 2P"`;
+  ctx.fillText('N',mx+mw/2,my-14);
+  ctx.fillStyle='rgba(200,220,240,0.18)';ctx.font=`${Math.max(7,ts*1.6)}px "Press Start 2P"`;
+  ctx.fillText('S',mx+mw/2,my+mh+18);
+  ctx.textAlign='right';ctx.fillText('W',mx-12,my+mh/2+3);
+  ctx.textAlign='left';ctx.fillText('E',mx+mw+12,my+mh/2+3);
+
+  // Title
+  ctx.textAlign='center';ctx.fillStyle='rgba(200,220,240,0.5)';ctx.font=`${Math.max(9,ts*2.2)}px "Press Start 2P"`;
+  ctx.fillText('WATER NAMES \u2014 MAP OF DESIRES',sW/2,my-32);
+  ctx.fillStyle='rgba(160,190,210,0.2)';ctx.font=`${Math.max(8,ts*1.4)}px "Crimson Pro"`;
+  ctx.fillText('from Lan Samantha Chang\u2019s Hunger',sW/2,my-18);
+
+  // Close hint
+  ctx.fillStyle='rgba(120,150,180,0.28)';ctx.font=`${Math.max(6,ts*1.1)}px "Press Start 2P"`;
+  ctx.fillText('PRESS M OR ESC TO CLOSE',sW/2,my+mh+36);
+
+  // Legend
+  ctx.textAlign='left';
+  const legX=mx-Math.min(130,mx-20),legY=my+mh-90;
+  if(mx>140){
+    ctx.fillStyle='rgba(4,8,16,0.7)';ctx.fillRect(legX-6,legY-12,118,96);
+    ctx.strokeStyle='rgba(50,100,150,0.12)';ctx.lineWidth=1;ctx.strokeRect(legX-6,legY-12,118,96);
+    ctx.fillStyle='rgba(200,220,240,0.35)';ctx.font='5px "Press Start 2P"';ctx.fillText('LEGEND',legX,legY);
+    const syms=[{c:'#ff3300',n:'Storytelling'},{c:'#40d8d0',n:'Desire'},{c:'#4a8aaa',n:'Water Power'},{c:'#5ad26e',n:'Discovered'},{c:'#ee5050',n:'You'}];
+    syms.forEach((s,i)=>{
+      ctx.fillStyle=s.c;ctx.beginPath();ctx.arc(legX+5,legY+14+i*15,4,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(180,200,220,0.35)';ctx.font=`${Math.max(7,ts*1.2)}px "Crimson Pro"`;ctx.fillText(s.n,legX+16,legY+17+i*15);
+    });
+  }
+  ctx.textAlign='left';
+}
+
+// UPDATE
+function update(dt){
+  if(anyPanel())return;
+  let dx=0,dy=0;const speed=T*4.5;
+  if(keys.KeyW||keys.ArrowUp){dy=-1;pdir=3;}if(keys.KeyS||keys.ArrowDown){dy=1;pdir=0;}
+  if(keys.KeyA||keys.ArrowLeft){dx=-1;pdir=1;}if(keys.KeyD||keys.ArrowRight){dx=1;pdir=2;}
+  if(dx||dy){if(dx&&dy){dx*=.707;dy*=.707;}
+    const nx=px+dx*speed*dt,ny=py+dy*speed*dt;const hx=4,hy=4,hw=8,hh=10;
+    if(!blocked(nx+hx,py+hy)&&!blocked(nx+hx+hw,py+hy)&&!blocked(nx+hx,py+hy+hh)&&!blocked(nx+hx+hw,py+hy+hh))px=nx;
+    if(!blocked(px+hx,ny+hy)&&!blocked(px+hx+hw,ny+hy)&&!blocked(px+hx,ny+hy+hh)&&!blocked(px+hx+hw,ny+hy+hh))py=ny;
+    pa+=dt;if(pa>.14){pa=0;pfr++;}
+  }else{pfr=0;pa=0;}
+  px=Math.max(T,Math.min((MW-2)*T,px));py=Math.max(T,Math.min((MH-2)*T,py));
+  nearLM=null;const ptx=px/T,pty=py/T;
+  [...LMS,NS].forEach(l=>{if(Math.hypot(ptx-l.tx,pty-l.ty)<2.5)nearLM=l;});
+  document.getElementById('pr').classList.toggle('vis',nearLM!==null&&!anyPanel());
+  let nz=null;
+  if(pty<8)nz={name:'\u2605 THE NORTH STAR',desc:NS.c,quote:NS.q,page:NS.p};
+  else{let best=null,minD=1e9;ZONES.forEach(z=>{const d=Math.hypot(ptx-z.cx,pty-z.cy);if(d<minD){minD=d;best=z;}});if(best&&minD<28)nz=best;}
+  if(nz&&nz!==curZone){curZone=nz;zFade=3.5;document.getElementById('zn2').textContent=nz.name;document.getElementById('zs2').textContent=nz.desc;document.getElementById('zq2').textContent=nz.quote||'';document.getElementById('zp2').textContent=nz.page||'';document.getElementById('zb').classList.add('vis');}
+  if(zFade>0){zFade-=dt;if(zFade<=0)document.getElementById('zb').classList.remove('vis');}
+  if(!nz){document.getElementById('zb').classList.remove('vis');curZone=null;}
+}
+
+// RENDER
+function render(){
+  ctx.fillStyle='#080810';ctx.fillRect(0,0,sW,sH);
+  const ts=T*SC;camX=px*SC-sW/2+ts/2;camY=py*SC-sH/2+ts/2;
+  const stx=Math.max(0,Math.floor(camX/ts)-1),sty=Math.max(0,Math.floor(camY/ts)-1);
+  const etx=Math.min(MW,stx+Math.ceil(sW/ts)+3),ety=Math.min(MH,sty+Math.ceil(sH/ts)+3);
+  for(let ty=sty;ty<ety;ty++)for(let tx=stx;tx<etx;tx++){
+    const t=map[ty][tx],sx=tx*ts-camX,sy=ty*ts-camY;
+    ctx.fillStyle=tc(t,tx,ty,time);ctx.fillRect(Math.floor(sx),Math.floor(sy),ts+1,ts+1);
+    if(t===TR)drawTree(sx,sy,ts,tx,ty);else if(t===RK)drawRock(sx,sy,ts);else if(t===FL)drawFlower(sx,sy,ts,tx,ty,time);
+    if(t===PT){ctx.fillStyle='rgba(0,0,0,0.04)';if(ty>0&&map[ty-1][tx]!==PT&&map[ty-1][tx]!==ST&&map[ty-1][tx]!==BW)ctx.fillRect(sx,sy,ts,2);if(ty<MH-1&&map[ty+1][tx]!==PT&&map[ty+1][tx]!==ST&&map[ty+1][tx]!==BW)ctx.fillRect(sx,sy+ts-2,ts,2);}
+    if((t===GW||t===RP)&&Math.sin(time*4+tx*2+ty*3)>.85){ctx.fillStyle='rgba(255,255,255,0.12)';ctx.fillRect(sx+ts*.3,sy+ts*.3,ts*.12,ts*.12);}
+  }
+  SYMS.forEach(sym=>{const sx=sym.x*ts-camX,sy=sym.y*ts-camY;if(sx>-ts&&sx<sW+ts&&sy>-ts&&sy<sH+ts)drawSym(sx,sy,ts,sym.s,time);});
+  // Particles
+  parts.forEach(p2=>{p2.life+=1/60;if(p2.life>p2.ml){p2.life=0;p2.x=Math.random()*MW*T;p2.y=Math.random()*MH*T;}p2.x+=p2.vx/60;p2.y+=p2.vy/60;const sx2=p2.x*SC-camX,sy2=p2.y*SC-camY;if(sx2<-20||sx2>sW+20||sy2<-20||sy2>sH+20)return;const a=Math.sin(p2.life/p2.ml*Math.PI)*.35;const ptx2=p2.x/T,pty2=p2.y/T;ctx.fillStyle=ptx2<40&&pty2<40?`rgba(255,200,60,${a})`:ptx2>=40&&pty2<40?`rgba(64,216,208,${a*.55})`:ptx2>=40?`rgba(120,180,220,${a*.45})`:`rgba(224,192,96,${a*.45})`;ctx.fillRect(sx2,sy2,SC*1.5,SC*1.5);});
+  [...LMS,NS].forEach(l=>{const sx=l.tx*ts-camX,sy=l.ty*ts-camY;if(sx>-ts*2&&sx<sW+ts&&sy>-ts*2&&sy<sH+ts)drawLM(l,sx,sy,ts,time);});
+  drawPlayer(px*SC-camX,py*SC-camY,ts);
+  // Vignette
+  const vg=ctx.createRadialGradient(sW/2,sH/2,sW*.22,sW/2,sH/2,sW*.68);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,0.28)');ctx.fillStyle=vg;ctx.fillRect(0,0,sW,sH);
+  drawMini();
+  if(showM)drawFullMap();
+}
+
+function loop(ts){requestAnimationFrame(loop);if(!started)return;const dt=lastT?Math.min((ts-lastT)/1000,.05):1/60;lastT=ts;time=ts/1000;update(dt);render();}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
