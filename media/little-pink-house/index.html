@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Little Pink House — Branching Flowchart</title>
+<title>The Little Pink House &mdash; A Choose Your Own Adventure</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -11,94 +11,183 @@
 --bg:#0c0c0f;--bg2:#151519;--bg3:#1c1c22;
 --border:#2a2a33;--border-h:#3a3a48;
 --text:#e2e0d8;--text2:#9a988e;--text3:#5e5d57;
---pink:#e8456c;--pink2:#ff6b8a;--pink-bg:rgba(232,69,108,.1);
---amber:#d4a041;--amber-bg:rgba(212,160,65,.1);
---green:#4a9;--green-bg:rgba(68,170,153,.1);
---red:#d45;--red-bg:rgba(221,68,85,.1);
---blue:#4a90d9;--blue-bg:rgba(74,144,217,.1);
---purple:#9a7bd4;--purple-bg:rgba(154,123,212,.1);
+--pink:#e8456c;--pink2:#ff6b8a;--pink-bg:rgba(232,69,108,.08);
+--amber:#d4a041;--amber-bg:rgba(212,160,65,.08);
+--green:#4a9;--green-bg:rgba(68,170,153,.08);
+--red:#d45;--red-bg:rgba(221,68,85,.08);
+--purple:#9a7bd4;--purple-bg:rgba(154,123,212,.08);
 --mono:'JetBrains Mono',monospace;
 --sans:'DM Sans',sans-serif;
 }
-body{background:var(--bg);color:var(--text);font-family:var(--mono)}
-.header{text-align:center;padding:36px 24px 24px;position:relative}
-.header::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--pink),transparent)}
-.header h1{font-size:24px;font-weight:700;font-family:var(--sans);margin-bottom:4px}
-.header h1 span{color:var(--pink)}
-.header .sub{font-size:11px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
-.header .inst{font-size:11px;color:var(--text3);max-width:460px;margin:6px auto 0;line-height:1.5}
-.legend{display:flex;justify-content:center;gap:14px;padding:16px 24px 8px;flex-wrap:wrap}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3)}
-.legend-dot{width:8px;height:8px;border-radius:3px}
-.canvas-wrap{overflow:auto;padding:16px 24px 80px;-webkit-overflow-scrolling:touch}
-.canvas{position:relative;margin:0 auto}
-svg.lines{position:absolute;top:0;left:0;pointer-events:none}
-svg.lines path{fill:none;stroke-width:1.5;transition:stroke .5s,opacity .5s}
-.node{position:absolute;border-radius:10px;background:var(--bg2);transition:all .4s;cursor:default;overflow:hidden}
-.node.ghost{opacity:.06;transform:scale(.92);pointer-events:none}
-.node.available{opacity:1;transform:scale(1);cursor:pointer;border:1px solid var(--border)}
-.node.available:hover{border-color:var(--pink);background:var(--pink-bg);transform:scale(1.03)}
-.node.active{opacity:1;transform:scale(1);border:1px solid var(--pink);box-shadow:0 0 24px rgba(232,69,108,.1)}
-.node.chosen{opacity:1;transform:scale(1);border:1px solid var(--pink);background:var(--pink-bg)}
-.node.completed{opacity:.55;transform:scale(1);border:1px solid var(--border-h)}
-.node.dimmed{opacity:.08;transform:scale(.9);pointer-events:none}
-.node-inner{padding:12px 14px;overflow-y:auto;max-height:100%}
-.node-inner::-webkit-scrollbar{width:4px}
-.node-inner::-webkit-scrollbar-track{background:transparent}
-.node-inner::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:2px}
-.node-inner::-webkit-scrollbar-thumb:hover{background:var(--pink)}
-.node-step{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:3px}
-.node.active .node-step,.node.chosen .node-step{color:var(--pink)}
-.node-title{font-size:12px;font-weight:600;font-family:var(--sans);line-height:1.3;margin-bottom:4px}
-.node-text{font-size:10px;line-height:1.5;color:var(--text2)}
-.node-arrow{position:absolute;bottom:6px;right:10px;font-size:10px;color:var(--pink);opacity:0;transition:opacity .2s}
-.node.available .node-arrow{opacity:.6}
-.node.available:hover .node-arrow{opacity:1}
-.node.ending{border-width:2px}
-.node.ending .node-title{font-size:11px}
-.node.ending.end-good{border-color:var(--green)}
-.node.ending.end-good .node-step{color:var(--green)}
-.node.ending.end-good.active,.node.ending.end-good.chosen{background:var(--green-bg);box-shadow:0 0 24px rgba(68,170,153,.12)}
-.node.ending.end-mixed{border-color:var(--amber)}
-.node.ending.end-mixed .node-step{color:var(--amber)}
-.node.ending.end-mixed.active,.node.ending.end-mixed.chosen{background:var(--amber-bg);box-shadow:0 0 24px rgba(212,160,65,.12)}
-.node.ending.end-bad{border-color:var(--red)}
-.node.ending.end-bad .node-step{color:var(--red)}
-.node.ending.end-bad.active,.node.ending.end-bad.chosen{background:var(--red-bg);box-shadow:0 0 24px rgba(221,68,85,.12)}
-.node.ending.end-great{border-color:var(--purple)}
-.node.ending.end-great .node-step{color:var(--purple)}
-.node.ending.end-great.active,.node.ending.end-great.chosen{background:var(--purple-bg);box-shadow:0 0 24px rgba(154,123,212,.12)}
-.restart-float{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 24px;font-family:var(--mono);font-size:12px;color:var(--text);cursor:pointer;transition:all .2s;z-index:10;display:none}
-.restart-float:hover{border-color:var(--pink);color:var(--pink)}
-.restart-float.show{display:block}
-.path-count{position:fixed;top:16px;right:20px;font-size:10px;color:var(--text3);z-index:10;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;display:none}
-.path-count.show{display:block}
+html,body{height:100%}
+body{
+background:
+radial-gradient(ellipse 80% 60% at 50% 0%,rgba(232,69,108,.08),transparent 70%),
+radial-gradient(ellipse 60% 40% at 50% 100%,rgba(154,123,212,.05),transparent 70%),
+var(--bg);
+color:var(--text);font-family:var(--mono);
+min-height:100vh;display:flex;flex-direction:column;
+overflow-x:hidden;
+}
+.topbar{
+display:flex;align-items:center;justify-content:space-between;
+padding:18px 28px;border-bottom:1px solid var(--border);
+position:sticky;top:0;background:rgba(12,12,15,.85);
+backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:20;
+}
+.brand{font-family:var(--sans);font-size:14px;font-weight:700;letter-spacing:.01em}
+.brand span{color:var(--pink)}
+.brand .sub{display:block;font-family:var(--mono);font-size:9px;font-weight:400;color:var(--text3);letter-spacing:.15em;text-transform:uppercase;margin-top:2px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.pill{
+font-size:10px;color:var(--text3);
+background:var(--bg2);border:1px solid var(--border);
+border-radius:20px;padding:6px 12px;letter-spacing:.08em;text-transform:uppercase;
+}
+.pill b{color:var(--text2);font-weight:600}
+.back-btn{
+background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+padding:8px 14px;font-family:var(--mono);font-size:11px;color:var(--text2);
+cursor:pointer;transition:all .2s;letter-spacing:.05em;
+}
+.back-btn:hover:not(:disabled){border-color:var(--pink);color:var(--pink)}
+.back-btn:disabled{opacity:.3;cursor:not-allowed}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px 60px}
+.stage{width:100%;max-width:720px;position:relative}
+.scene{
+position:relative;
+opacity:0;transform:translateY(12px);
+transition:opacity .45s ease,transform .45s ease;
+}
+.scene.in{opacity:1;transform:translateY(0)}
+.scene.out{opacity:0;transform:translateY(-12px);transition:opacity .25s ease,transform .25s ease}
+.step-label{
+font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);
+margin-bottom:16px;display:flex;align-items:center;gap:10px;
+}
+.step-label::before{
+content:'';display:inline-block;width:24px;height:1px;background:var(--pink);
+}
+.scene-title{
+font-family:var(--sans);font-size:34px;font-weight:700;line-height:1.15;
+margin-bottom:22px;letter-spacing:-.01em;
+}
+.scene-title .accent{color:var(--pink)}
+.scene-text{
+font-family:var(--sans);font-size:17px;line-height:1.65;color:var(--text2);
+margin-bottom:38px;max-width:640px;
+}
+.choices{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.choice{
+display:flex;align-items:flex-start;gap:14px;text-align:left;
+background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+padding:18px 22px;font-family:var(--mono);color:var(--text);cursor:pointer;
+transition:all .25s ease;width:100%;
+}
+.choice:hover{
+border-color:var(--pink);background:var(--pink-bg);
+transform:translateX(4px);
+}
+.choice:hover .choice-arrow{color:var(--pink);transform:translateX(3px)}
+.choice-letter{
+font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--text3);
+background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+padding:4px 8px;margin-top:1px;flex-shrink:0;
+}
+.choice:hover .choice-letter{color:var(--pink);border-color:var(--pink)}
+.choice-label{
+flex:1;font-family:var(--sans);font-size:15px;font-weight:500;line-height:1.4;
+}
+.choice-arrow{font-size:16px;color:var(--text3);transition:all .25s;margin-top:1px}
+.ending-card{
+border:1px solid var(--border);border-radius:14px;padding:34px 32px;
+background:var(--bg2);margin-top:10px;position:relative;overflow:hidden;
+}
+.ending-card::before{
+content:'';position:absolute;top:0;left:0;right:0;height:3px;
+background:var(--pink);
+}
+.ending-card.good::before{background:var(--green)}
+.ending-card.good{background:linear-gradient(180deg,var(--green-bg),var(--bg2) 60%)}
+.ending-card.great::before{background:var(--purple)}
+.ending-card.great{background:linear-gradient(180deg,var(--purple-bg),var(--bg2) 60%)}
+.ending-card.mixed::before{background:var(--amber)}
+.ending-card.mixed{background:linear-gradient(180deg,var(--amber-bg),var(--bg2) 60%)}
+.ending-card.bad::before{background:var(--red)}
+.ending-card.bad{background:linear-gradient(180deg,var(--red-bg),var(--bg2) 60%)}
+.ending-type{
+font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--text3);
+margin-bottom:10px;
+}
+.ending-card.good .ending-type{color:var(--green)}
+.ending-card.great .ending-type{color:var(--purple)}
+.ending-card.mixed .ending-type{color:var(--amber)}
+.ending-card.bad .ending-type{color:var(--red)}
+.ending-name{
+font-family:var(--sans);font-size:30px;font-weight:700;line-height:1.15;
+margin-bottom:18px;letter-spacing:-.01em;
+}
+.ending-text{
+font-family:var(--sans);font-size:16px;line-height:1.65;color:var(--text2);
+margin-bottom:26px;
+}
+.ending-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.action{
+background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+padding:11px 20px;font-family:var(--mono);font-size:12px;color:var(--text);
+cursor:pointer;transition:all .2s;letter-spacing:.05em;
+}
+.action:hover{border-color:var(--pink);color:var(--pink)}
+.action.primary{background:var(--pink);border-color:var(--pink);color:#0c0c0f;font-weight:600}
+.action.primary:hover{background:var(--pink2);border-color:var(--pink2);color:#0c0c0f}
+.path-trail{
+margin-top:48px;padding-top:22px;border-top:1px dashed var(--border);
+font-size:10px;color:var(--text3);letter-spacing:.05em;line-height:1.7;
+}
+.path-trail b{color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.15em;font-size:9px;display:block;margin-bottom:8px}
+.path-trail .crumb{display:inline-block;margin-right:6px}
+.path-trail .crumb + .crumb::before{content:'\203A';margin-right:6px;color:var(--text3)}
+.legend-bar{
+display:flex;justify-content:center;gap:18px;padding:14px 24px;
+border-top:1px solid var(--border);background:var(--bg2);flex-wrap:wrap;
+}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase}
+.legend-dot{width:8px;height:8px;border-radius:2px}
+@media (max-width:640px){
+.topbar{padding:14px 18px}
+.brand{font-size:12px}
+.scene-title{font-size:26px}
+.scene-text{font-size:15px}
+.ending-name{font-size:24px}
+.ending-card{padding:26px 22px}
+.choice{padding:16px 18px}
+.choice-label{font-size:14px}
+main{padding:28px 18px 40px}
+.legend-bar{gap:10px;padding:12px 14px}
+}
 </style>
 </head>
 <body>
-<div class="header">
-<h1>The Little <span>Pink</span> House</h1>
-<div class="sub">Fighting eminent domain &mdash; a choose your own adventure</div>
-<div class="inst">Click choices to branch through the story. Every path leads to a different outcome. 8 possible endings.</div>
+<div class="topbar">
+<div class="brand">The Little <span>Pink</span> House<span class="sub">Choose Your Own Adventure</span></div>
+<div class="topbar-right">
+<div class="pill" id="progressPill">Scene <b id="depthNum">1</b></div>
+<button class="back-btn" id="backBtn" onclick="goBack()">&larr; Back</button>
 </div>
-<div class="legend">
-<div class="legend-item"><div class="legend-dot" style="background:var(--pink)"></div>Your path</div>
-<div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Good ending</div>
+</div>
+<main>
+<div class="stage" id="stage"></div>
+</main>
+<div class="legend-bar">
 <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Great ending</div>
+<div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Good ending</div>
 <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Mixed ending</div>
 <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Bad ending</div>
+<div class="legend-item" style="color:var(--text2)">16 possible endings</div>
 </div>
-<div class="canvas-wrap" id="canvasWrap">
-<div class="canvas" id="canvas">
-<svg class="lines" id="svg"></svg>
-</div>
-</div>
-<button class="restart-float" id="restartBtn" onclick="restart()">&#x21BB; Start over</button>
-<div class="path-count" id="pathCount"></div>
 <script>
-const NODE_W=175,GAP_X=14,LEVEL_H=200,PAD=40;
 const tree={
-id:'start',step:'Start',title:'Eminent domain notice arrives',
+id:'start',step:'Scene 1',title:'Eminent domain notice arrives',
 text:'The government plans to seize your little pink house for a private development project. What do you do?',
 children:[
 {id:'negotiate',step:'Choice A',title:'Negotiate alone',
@@ -190,208 +279,136 @@ ending:{type:'good',name:'The fighter',text:'Your attorney presents the FOIA evi
 ]}
 ]}
 ]};
-let flat=[];
-let lines=[];
-let state={};
-function flattenTree(node,parent,depth){
-parent=parent||null;depth=depth||0;
-const n={id:node.id,step:node.step,title:node.title,text:node.text||'',ending:node.ending||null,parentId:parent?parent.id:null,childIds:node.children?node.children.map(function(c){return c.id}):[],depth:depth,x:0,y:0,subtreeWidth:0};
-flat.push(n);
-if(node.children) node.children.forEach(function(c){flattenTree(c,node,depth+1)});
+
+// Build a flat lookup from id -> node (with parent reference) for back navigation and path display.
+const nodes={};
+(function walk(node,parent){
+node.parent=parent||null;
+nodes[node.id]=node;
+if(node.children) node.children.forEach(function(c){walk(c,node)});
+})(tree);
+
+let history=['start'];
+const stage=document.getElementById('stage');
+const backBtn=document.getElementById('backBtn');
+const depthNum=document.getElementById('depthNum');
+
+function escapeHtml(s){
+return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function computeWidths(){
-var byDepth=[].concat(flat).sort(function(a,b){return b.depth-a.depth});
-byDepth.forEach(function(n){
-if(n.childIds.length===0){n.subtreeWidth=NODE_W}
-else{
-var kids=n.childIds.map(function(id){return flat.find(function(f){return f.id===id})});
-n.subtreeWidth=kids.reduce(function(s,k){return s+k.subtreeWidth},0)+(kids.length-1)*GAP_X;
+
+function highlightTitle(t){
+// Wrap "Pink" in accent span if present (only on start scene title)
+return escapeHtml(t).replace(/Pink/g,'<span class="accent">Pink</span>');
 }
+
+function renderScene(id,direction){
+const node=nodes[id];
+const prev=stage.querySelector('.scene');
+const scene=document.createElement('div');
+scene.className='scene';
+let html='';
+const isStart=(id==='start');
+const stepText=isStart?'Scene 01 \u2014 The beginning':node.step;
+html+='<div class="step-label">'+escapeHtml(stepText)+'</div>';
+
+if(node.ending){
+const e=node.ending;
+html+='<div class="ending-card '+e.type+'">';
+html+='<div class="ending-type">'+({good:'Good ending',great:'Great ending',mixed:'Mixed ending',bad:'Bad ending'})[e.type]+'</div>';
+html+='<div class="ending-name">'+escapeHtml(e.name)+'</div>';
+html+='<div class="ending-text">'+escapeHtml(e.text)+'</div>';
+html+='<div class="ending-actions">';
+html+='<button class="action primary" onclick="restart()">&#x21BB; Start over</button>';
+html+='<button class="action" onclick="goBack()">&larr; Try a different choice</button>';
+html+='</div>';
+html+='</div>';
+}else{
+html+='<div class="scene-title">'+highlightTitle(node.title)+'</div>';
+if(node.text) html+='<div class="scene-text">'+escapeHtml(node.text)+'</div>';
+if(node.children&&node.children.length){
+html+='<div class="choices">';
+node.children.forEach(function(c,i){
+const letter=String.fromCharCode(65+i);
+html+='<button class="choice" data-id="'+c.id+'">';
+html+='<div class="choice-letter">'+letter+'</div>';
+html+='<div class="choice-label">'+escapeHtml(c.title)+'</div>';
+html+='<div class="choice-arrow">&rarr;</div>';
+html+='</button>';
 });
+html+='</div>';
 }
-function positionNodes(id,cx,y){
-var n=flat.find(function(f){return f.id===id});
-n.x=cx-NODE_W/2;
-n.y=y;
-n.cx=cx;
-if(n.childIds.length===0) return;
-var kids=n.childIds.map(function(cid){return flat.find(function(f){return f.id===cid})});
-var left=cx-n.subtreeWidth/2;
-kids.forEach(function(k){
-var kcx=left+k.subtreeWidth/2;
-positionNodes(k.id,kcx,y+LEVEL_H);
-left+=k.subtreeWidth+GAP_X;
+}
+
+// Path trail (breadcrumb of choices made so far)
+if(history.length>1){
+html+='<div class="path-trail"><b>Your path so far</b>';
+history.forEach(function(hid,i){
+if(i===0) return;
+const hn=nodes[hid];
+html+='<span class="crumb">'+escapeHtml(hn.title)+'</span>';
 });
+html+='</div>';
 }
-function getNodeHeight(n){
-if(n.ending) return 180;
-if(n.childIds.length===0) return 65;
-return n.text.length>100?100:85;
-}
-function render(){
-flat=[];lines=[];
-flattenTree(tree);
-computeWidths();
-var root=flat.find(function(f){return f.id==='start'});
-var totalW=root.subtreeWidth+PAD*2;
-var cx=totalW/2;
-positionNodes('start',cx,PAD);
-var maxBottom=Math.max.apply(null,flat.map(function(n){return n.y+getNodeHeight(n)}))+PAD;
-var canvas=document.getElementById('canvas');
-var svg=document.getElementById('svg');
-canvas.style.width=totalW+'px';
-canvas.style.height=maxBottom+'px';
-svg.setAttribute('width',totalW);
-svg.setAttribute('height',maxBottom);
-svg.innerHTML='';
-flat.forEach(function(n){
-if(!n.parentId) return;
-var p=flat.find(function(f){return f.id===n.parentId});
-var x1=p.cx,y1=p.y+getNodeHeight(p);
-var x2=n.cx,y2=n.y;
-var midY=y1+(y2-y1)*.5;
-var path=document.createElementNS('http://www.w3.org/2000/svg','path');
-path.setAttribute('d','M'+x1+','+y1+' C'+x1+','+midY+' '+x2+','+midY+' '+x2+','+y2);
-path.id='line-'+n.id;
-path.setAttribute('stroke','#2a2a33');
-path.setAttribute('opacity','0.15');
-svg.appendChild(path);
-lines.push({parentId:n.parentId,childId:n.id,el:path});
-});
-var existing=canvas.querySelectorAll('.node');
-existing.forEach(function(e){e.remove()});
-flat.forEach(function(n){
-var el=document.createElement('div');
-var h=getNodeHeight(n);
-var cls='node ghost';
-if(n.ending){
-var etype=n.ending.type;
-cls+=' ending end-'+etype;
-}
-el.className=cls;
-el.id='node-'+n.id;
-el.style.left=n.x+'px';
-el.style.top=n.y+'px';
-el.style.width=NODE_W+'px';
-el.style.height=h+'px';
-var inner='<div class="node-inner">';
-inner+='<div class="node-step">'+(n.ending?n.ending.name:n.step)+'</div>';
-inner+='<div class="node-title">'+n.title+'</div>';
-if(n.ending){
-inner+='<div class="node-text">'+n.ending.text+'</div>';
-}else if(n.text){
-inner+='<div class="node-text">'+n.text+'</div>';
-}
-inner+='</div>';
-inner+='<div class="node-arrow">\u2192</div>';
-el.innerHTML=inner;
-el.onclick=function(){clickNode(n.id)};
-canvas.appendChild(el);
-});
-state={};
-flat.forEach(function(n){state[n.id]='ghost'});
-state['start']='active';
-applyState();
-showChildren('start');
-}
-function showChildren(id){
-var n=flat.find(function(f){return f.id===id});
-n.childIds.forEach(function(cid){
-if(state[cid]==='ghost'){
-state[cid]='available';
-var line=lines.find(function(l){return l.childId===cid});
-if(line){line.el.setAttribute('stroke','#3a3a48');line.el.setAttribute('opacity','0.5')}
-}
-});
-applyState();
-}
-function clickNode(id){
-var n=flat.find(function(f){return f.id===id});
-if(state[id]==='available'){
-state[id]='chosen';
-if(n.parentId){
-state[n.parentId]='completed';
-var parent=flat.find(function(f){return f.id===n.parentId});
-parent.childIds.forEach(function(sib){
-if(sib!==id){
-dimSubtree(sib);
-var sibLine=lines.find(function(l){return l.childId===sib});
-if(sibLine){sibLine.el.setAttribute('stroke','#2a2a33');sibLine.el.setAttribute('opacity','0.06')}
-}
-});
-}
-var myLine=lines.find(function(l){return l.childId===id});
-if(myLine){myLine.el.setAttribute('stroke','#e8456c');myLine.el.setAttribute('opacity','1')}
-applyState();
-if(n.ending){
-state[id]='active';
-applyState();
-document.getElementById('restartBtn').classList.add('show');
-var pc=document.getElementById('pathCount');
-pc.classList.add('show');
-var depth=getDepth(id);
-pc.textContent=depth+' choices made';
-scrollToNode(id);
-return;
-}
+
+scene.innerHTML=html;
+
+if(prev){
+prev.classList.remove('in');
+prev.classList.add('out');
 setTimeout(function(){
-state[id]='active';
-showChildren(id);
-applyState();
-scrollToNode(n.childIds[0]);
-},200);
+if(prev.parentNode) prev.parentNode.removeChild(prev);
+stage.appendChild(scene);
+requestAnimationFrame(function(){scene.classList.add('in')});
+attachHandlers(scene);
+},250);
+}else{
+stage.appendChild(scene);
+requestAnimationFrame(function(){scene.classList.add('in')});
+attachHandlers(scene);
 }
+
+backBtn.disabled=(history.length<=1);
+depthNum.textContent=history.length;
 }
-function dimSubtree(id){
-state[id]='dimmed';
-var n=flat.find(function(f){return f.id===id});
-n.childIds.forEach(function(cid){
-dimSubtree(cid);
-var line=lines.find(function(l){return l.childId===cid});
-if(line){line.el.setAttribute('stroke','#2a2a33');line.el.setAttribute('opacity','0.03')}
-});
-}
-function getDepth(id){
-var d=0,n=flat.find(function(f){return f.id===id});
-while(n.parentId){d++;n=flat.find(function(f){return f.id===n.parentId})}
-return d;
-}
-function applyState(){
-flat.forEach(function(n){
-var el=document.getElementById('node-'+n.id);
-el.className=el.className.replace(/\b(ghost|available|active|chosen|completed|dimmed)\b/g,'').trim();
-el.classList.add(state[n.id]);
-});
-}
-function scrollToNode(id){
-var el=document.getElementById('node-'+id);
-if(el){
-var wrap=document.getElementById('canvasWrap');
-var rect=el.getBoundingClientRect();
-var wrapRect=wrap.getBoundingClientRect();
-var targetY=wrap.scrollTop+rect.top-wrapRect.top-window.innerHeight/3;
-window.scrollTo({top:targetY+wrapRect.top+window.scrollY-window.innerHeight/3,behavior:'smooth'});
-var nodeCenterX=el.offsetLeft+NODE_W/2;
-var scrollLeft=nodeCenterX-wrap.clientWidth/2;
-wrap.scrollTo({left:scrollLeft,behavior:'smooth'});
-}
-}
-function restart(){
-document.getElementById('restartBtn').classList.remove('show');
-document.getElementById('pathCount').classList.remove('show');
-render();
+
+function attachHandlers(scene){
+const choices=scene.querySelectorAll('.choice');
+choices.forEach(function(btn){
+btn.addEventListener('click',function(){
+const cid=btn.getAttribute('data-id');
+history.push(cid);
+renderScene(cid,'forward');
 window.scrollTo({top:0,behavior:'smooth'});
-document.getElementById('canvasWrap').scrollTo({left:0,behavior:'smooth'});
+});
+});
 }
-render();
-setTimeout(function(){
-var wrap=document.getElementById('canvasWrap');
-var startEl=document.getElementById('node-start');
-if(startEl&&wrap){
-var nodeCenterX=startEl.offsetLeft+NODE_W/2;
-wrap.scrollLeft=nodeCenterX-wrap.clientWidth/2;
+
+function goBack(){
+if(history.length<=1) return;
+history.pop();
+renderScene(history[history.length-1],'back');
+window.scrollTo({top:0,behavior:'smooth'});
 }
-},100);
+
+function restart(){
+history=['start'];
+renderScene('start','forward');
+window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Keyboard shortcuts: A/B/C/D for choices, Backspace/Escape for back, R for restart.
+document.addEventListener('keydown',function(e){
+if(e.key==='Backspace'||e.key==='Escape'){e.preventDefault();goBack();return}
+if(e.key==='r'||e.key==='R'){restart();return}
+const idx='abcd'.indexOf(e.key.toLowerCase());
+if(idx>=0){
+const choices=stage.querySelectorAll('.choice');
+if(choices[idx]) choices[idx].click();
+}
+});
+
+renderScene('start','forward');
 </script>
 </body>
 </html>
