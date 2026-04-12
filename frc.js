@@ -2,6 +2,7 @@
     const TEAM_KEY = 'frc5940';
     const TEAM_NUM = 5940;
     const TBA_BASE = 'https://www.thebluealliance.com/api/v3';
+    const STATBOTICS_BASE = 'https://api.statbotics.io/v3';
     const API_KEY = 'AXJEgHS1gv8SBtnQFAZinhvUwgqf9m9gdJZBhwdgNrsumbq2kWrW3YLxwxYIyR5W';
     const REFRESH_ACTIVE = 30000;
     const REFRESH_IDLE = 300000;
@@ -11,12 +12,14 @@
 
     let currentYear = new Date().getFullYear();
     let currentEventKey = null;
+    let currentEventDetails = null;
+    let predictions = {};
     let countdownInterval = null;
     let refreshTimer = null;
 
-    // --- API ---
+    // --- TBA API ---
     async function tbaFetch(endpoint) {
-        const res = await fetch(TBA_BASE + endpoint, {
+        var res = await fetch(TBA_BASE + endpoint, {
             headers: { 'X-TBA-Auth-Key': API_KEY }
         });
         if (!res.ok) {
@@ -30,6 +33,38 @@
     function fetchTeamStatus(eventKey) { return tbaFetch('/team/' + TEAM_KEY + '/event/' + eventKey + '/status'); }
     function fetchRankings(eventKey) { return tbaFetch('/event/' + eventKey + '/rankings'); }
     function fetchEventDetails(eventKey) { return tbaFetch('/event/' + eventKey); }
+
+    // --- Statbotics API ---
+    async function fetchStatboticsMatches(eventKey) {
+        try {
+            var res = await fetch(STATBOTICS_BASE + '/matches?event=' + eventKey);
+            if (!res.ok) return [];
+            return await res.json();
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function buildPredictionMap(statMatches) {
+        predictions = {};
+        if (!Array.isArray(statMatches)) return;
+        statMatches.forEach(function (m) {
+            var key = m.key || m.match;
+            if (!key) return;
+            predictions[key] = {
+                redWinProb: m.pred ? (m.pred.red_win_prob != null ? m.pred.red_win_prob : null) : null,
+                redScore: m.pred ? m.pred.red_score : null,
+                blueScore: m.pred ? m.pred.blue_score : null
+            };
+        });
+    }
+
+    function getOurWinProb(matchKey) {
+        var pred = predictions[matchKey];
+        if (!pred || pred.redWinProb == null) return null;
+        // Figure out which alliance we're on from the stored match data
+        return pred;
+    }
 
     // --- Helpers ---
     function getTeamAlliance(match) {
@@ -66,6 +101,17 @@
 
     function teamDisplay(key) {
         return key.replace('frc', '');
+    }
+
+    function isEventToday(eventDetails) {
+        if (!eventDetails) return false;
+        var today = new Date().toISOString().split('T')[0];
+        return eventDetails.start_date <= today && eventDetails.end_date >= today;
+    }
+
+    function formatEventDate(dateStr) {
+        var d = new Date(dateStr + 'T12:00:00');
+        return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
 
     function findCurrentOrNextEvent(events) {
@@ -150,6 +196,19 @@
         var allianceEl = document.getElementById('countdown-alliance');
         allianceEl.textContent = alliance ? (alliance.charAt(0).toUpperCase() + alliance.slice(1) + ' Alliance') : '';
         allianceEl.className = 'countdown-alliance alliance-' + (alliance || '');
+
+        // Show prediction on countdown
+        var predEl = document.getElementById('countdown-prediction');
+        var pred = predictions[next.key];
+        if (pred && pred.redWinProb != null && alliance) {
+            var ourProb = alliance === 'red' ? pred.redWinProb : (1 - pred.redWinProb);
+            var pct = Math.round(ourProb * 100);
+            predEl.textContent = pct + '% win chance';
+            predEl.className = 'countdown-prediction ' + (pct >= 50 ? 'pred-favor' : 'pred-against');
+        } else {
+            predEl.textContent = '';
+        }
+
         card.style.display = '';
 
         clearInterval(countdownInterval);
@@ -177,10 +236,34 @@
 
     function renderStream(eventDetails) {
         var container = document.getElementById('frc-stream-embed');
-        if (!eventDetails || !eventDetails.webcasts || !eventDetails.webcasts.length) {
-            container.innerHTML = '<div class="frc-stream-placeholder"><span>No live stream available</span><a href="https://www.thebluealliance.com/event/' + (currentEventKey || '') + '" target="_blank" rel="noopener">View on The Blue Alliance</a></div>';
+        currentEventDetails = eventDetails;
+        var tbaLink = 'https://www.thebluealliance.com/event/' + (currentEventKey || '');
+
+        // Check if event is happening today
+        if (!isEventToday(eventDetails)) {
+            var dateInfo = '';
+            if (eventDetails) {
+                var today = new Date().toISOString().split('T')[0];
+                if (today < eventDetails.start_date) {
+                    dateInfo = '<span class="stream-date-info">Event starts ' + formatEventDate(eventDetails.start_date) + '</span>';
+                } else {
+                    dateInfo = '<span class="stream-date-info">Event ended ' + formatEventDate(eventDetails.end_date) + '</span>';
+                }
+            }
+            container.innerHTML = '<div class="frc-stream-placeholder">' +
+                '<span>Stream not active today</span>' +
+                dateInfo +
+                '<a href="' + tbaLink + '" target="_blank" rel="noopener">View on The Blue Alliance</a>' +
+                '</div>';
             return;
         }
+
+        // Event is today — try to embed the webcast
+        if (!eventDetails.webcasts || !eventDetails.webcasts.length) {
+            container.innerHTML = '<div class="frc-stream-placeholder"><span>No stream link available yet</span><a href="' + tbaLink + '" target="_blank" rel="noopener">View on The Blue Alliance</a></div>';
+            return;
+        }
+
         var wc = eventDetails.webcasts[0];
         var src = '';
         if (wc.type === 'twitch') {
@@ -193,7 +276,7 @@
         if (src) {
             container.innerHTML = '<iframe src="' + src + '" allowfullscreen frameborder="0"></iframe>';
         } else {
-            container.innerHTML = '<div class="frc-stream-placeholder"><span>Unsupported stream type</span><a href="https://www.thebluealliance.com/event/' + currentEventKey + '" target="_blank" rel="noopener">Watch on The Blue Alliance</a></div>';
+            container.innerHTML = '<div class="frc-stream-placeholder"><span>Unsupported stream type</span><a href="' + tbaLink + '" target="_blank" rel="noopener">Watch on The Blue Alliance</a></div>';
         }
     }
 
@@ -324,6 +407,23 @@
             html += '</div>';
 
             html += '</div>';
+
+            // Prediction badge
+            var pred = predictions[m.key];
+            if (pred && pred.redWinProb != null && alliance) {
+                var ourProb = alliance === 'red' ? pred.redWinProb : (1 - pred.redWinProb);
+                var pct = Math.round(ourProb * 100);
+                if (played) {
+                    // Show if prediction was right or wrong
+                    var predCorrect = (pct >= 50 && resultClass === 'win') || (pct < 50 && resultClass === 'loss');
+                    html += '<div class="match-pred ' + (predCorrect ? 'pred-correct' : 'pred-wrong') + '">' + pct + '%</div>';
+                } else {
+                    html += '<div class="match-pred ' + (pct >= 50 ? 'pred-favor' : 'pred-against') + '">' + pct + '%</div>';
+                }
+            } else {
+                html += '<div class="match-pred"></div>';
+            }
+
             html += '</div>';
         });
 
@@ -344,13 +444,16 @@
                 fetchMatches(eventKey),
                 fetchTeamStatus(eventKey),
                 fetchRankings(eventKey),
-                fetchEventDetails(eventKey)
+                fetchEventDetails(eventKey),
+                fetchStatboticsMatches(eventKey)
             ]);
             var matches = results[0];
             var status = results[1];
             var rankings = results[2];
             var eventDetails = results[3];
+            var statMatches = results[4];
 
+            buildPredictionMap(statMatches);
             renderCountdown(matches);
             renderStream(eventDetails);
             renderTeamStatus(status);
@@ -390,8 +493,10 @@
             var results = await Promise.all([
                 fetchMatches(currentEventKey),
                 fetchTeamStatus(currentEventKey),
-                fetchRankings(currentEventKey)
+                fetchRankings(currentEventKey),
+                fetchStatboticsMatches(currentEventKey)
             ]);
+            buildPredictionMap(results[3]);
             renderCountdown(results[0]);
             renderTeamStatus(results[1]);
             renderRankings(results[2]);
@@ -404,7 +509,6 @@
 
     function startAutoRefresh() {
         clearInterval(refreshTimer);
-        // Check if there's an active event today
         var interval = REFRESH_ACTIVE;
         refreshTimer = setInterval(refreshData, interval);
     }

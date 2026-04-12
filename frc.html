@@ -47,14 +47,17 @@
 
             <!-- Next Match Countdown -->
             <div id="frc-countdown" class="frc-countdown-card" style="display:none">
+                <div class="frc-info-icon" data-tooltip="Shows when BREAD's next match starts — get ready to watch!">i</div>
                 <span class="countdown-label">Next Match</span>
                 <span id="countdown-match" class="countdown-match"></span>
                 <span id="countdown-timer" class="countdown-timer"></span>
                 <span id="countdown-alliance" class="countdown-alliance"></span>
+                <span id="countdown-prediction" class="countdown-prediction"></span>
             </div>
 
             <!-- Live Stream -->
             <div id="frc-stream" class="frc-stream-card">
+                <div class="frc-info-icon" data-tooltip="Live video feed from the competition venue. Only active on event days.">i</div>
                 <div id="frc-stream-embed" class="frc-stream-embed">
                     <div class="frc-stream-placeholder">
                         <span>No live stream available</span>
@@ -68,7 +71,10 @@
                 <div class="frc-col">
                     <!-- Team Info -->
                     <div id="frc-team-info" class="frc-card">
-                        <h3>Team Status</h3>
+                        <div class="frc-card-header">
+                            <h3>Team Status</h3>
+                            <div class="frc-info-icon" data-tooltip="BREAD's current ranking, win-loss record, and Ranking Points (RP) at this event. RP determines qualification rankings.">i</div>
+                        </div>
                         <div id="frc-team-stats" class="frc-team-stats">
                             <div class="frc-stat-card">
                                 <div class="stat-num" id="stat-rank">--</div>
@@ -88,7 +94,10 @@
 
                     <!-- Rankings -->
                     <div id="frc-rankings" class="frc-card">
-                        <h3>Event Rankings</h3>
+                        <div class="frc-card-header">
+                            <h3>Event Rankings</h3>
+                            <div class="frc-info-icon" data-tooltip="How all teams at this event compare. Teams are ranked by Ranking Points (RP) earned in qualification matches. Higher rank = better chance to pick alliance partners for playoffs.">i</div>
+                        </div>
                         <div id="frc-rankings-body" class="frc-rankings-body">
                             <p class="frc-muted">Select an event to view rankings</p>
                         </div>
@@ -99,7 +108,10 @@
                 <div class="frc-col">
                     <!-- Match Schedule -->
                     <div id="frc-matches" class="frc-card">
-                        <h3>Match Schedule</h3>
+                        <div class="frc-card-header">
+                            <h3>Match Schedule</h3>
+                            <div class="frc-info-icon" data-tooltip="Every match BREAD plays at this event. Green = win, red = loss. Win predictions are powered by Statbotics EPA ratings — a statistical model that measures each team's scoring contribution.">i</div>
+                        </div>
                         <div id="frc-matches-body" class="frc-matches-body">
                             <p class="frc-muted">Select an event to view matches</p>
                         </div>

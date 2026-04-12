@@ -1262,6 +1262,89 @@ footer {
     text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
 }
 
+.frc-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.frc-card-header h3 {
+    margin-bottom: 0;
+}
+
+/* Info tooltip icons */
+.frc-info-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid #808080;
+    color: #808080;
+    font-size: 0.65rem;
+    font-weight: 700;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: help;
+    flex-shrink: 0;
+    position: relative;
+    font-family: Georgia, serif;
+    transition: all 0.2s;
+}
+
+.frc-info-icon:hover {
+    border-color: #00d4ff;
+    color: #00d4ff;
+}
+
+.frc-info-icon::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f0f0f;
+    border: 1px solid #00d4ff;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #e0e0e0;
+    font-size: 0.8rem;
+    font-weight: 400;
+    font-style: normal;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.4;
+    width: 260px;
+    white-space: normal;
+    text-align: left;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 50;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+.frc-info-icon:hover::after {
+    opacity: 1;
+}
+
+/* Position tooltip for stream/countdown (inside positioned containers) */
+.frc-stream-card > .frc-info-icon,
+.frc-countdown-card > .frc-info-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+}
+
+.frc-stream-card {
+    position: relative;
+}
+
+.frc-countdown-card {
+    position: relative;
+}
+
 /* Team Stats */
 .frc-team-stats {
     display: grid;
@@ -1337,7 +1420,7 @@ footer {
 
 .frc-match-row {
     display: grid;
-    grid-template-columns: 90px 60px 1fr;
+    grid-template-columns: 90px 60px 1fr 45px;
     align-items: center;
     gap: 8px;
     padding: 8px 10px;
@@ -1416,6 +1499,54 @@ footer {
     font-family: 'Courier New', Courier, monospace;
 }
 
+/* Prediction badges */
+.match-pred {
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: 'Courier New', Courier, monospace;
+    text-align: right;
+    min-width: 40px;
+}
+
+.match-pred.pred-favor {
+    color: #00ff88;
+}
+
+.match-pred.pred-against {
+    color: #ff6699;
+}
+
+.match-pred.pred-correct {
+    color: #00ff8866;
+}
+
+.match-pred.pred-wrong {
+    color: #ff006644;
+}
+
+/* Countdown prediction */
+.countdown-prediction {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.countdown-prediction.pred-favor {
+    color: #00ff88;
+    text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+}
+
+.countdown-prediction.pred-against {
+    color: #ff6699;
+    text-shadow: 0 0 8px rgba(255, 0, 102, 0.3);
+}
+
+/* Stream date info */
+.stream-date-info {
+    color: #00d4ff;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
 /* Scrollbar for rankings/matches */
 .frc-rankings-body::-webkit-scrollbar,
 .frc-matches-body::-webkit-scrollbar {
@@ -1452,8 +1583,15 @@ footer {
     }
 
     .frc-match-row {
-        grid-template-columns: 70px 50px 1fr;
+        grid-template-columns: 70px 50px 1fr 40px;
         font-size: 0.85rem;
+    }
+
+    .frc-info-icon::after {
+        left: auto;
+        right: 0;
+        transform: none;
+        width: 220px;
     }
 
     .frc-team-stats {
