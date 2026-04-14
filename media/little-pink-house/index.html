@@ -188,93 +188,93 @@ main{padding:28px 18px 40px}
 <script>
 const tree={
 id:'start',step:'Scene 1',title:'Eminent domain notice arrives',
-text:'The government plans to seize your little pink house for a private development project. What do you do?',
+text:'A letter from the city informs you that your little pink house sits in a "redevelopment zone" and will be seized under eminent domain for a private development project. The Fifth Amendment requires "just compensation," but the government\u2019s opening offer is far below market value. Your home, your memories, and your neighborhood are all at stake \u2014 and you have limited time to respond.',
 children:[
 {id:'negotiate',step:'Choice A',title:'Negotiate alone',
-text:'You try to reason with the government agents yourself, hoping they\'ll raise the offer. They barely budge.',
+text:'You sit across the table from government agents and a team of city attorneys, trying to argue for a fair price without any legal representation of your own. The power imbalance is enormous \u2014 they have appraisers, lawyers, and the full weight of the state behind them. They raise the offer slightly but make it clear this is their final number, and the condemnation will proceed regardless.',
 children:[
 {id:'accept',step:'Choice A',title:'Accept the low offer',
-ending:{type:'bad',name:'Underpaid',text:'You sign away your home for a fraction of its real value. Within months, bulldozers flatten the little pink house. The developer breaks ground on luxury condos where your kitchen used to be.'}},
+ending:{type:'bad',name:'Underpaid',text:'You sign away your home for a fraction of its real value, pressured by the fear that fighting could leave you with even less. The government\u2019s appraisal ignored your home\u2019s sentimental value and the cost of relocating your life. Within months, bulldozers flatten the little pink house and the developer breaks ground on luxury condos where your kitchen used to be. Your neighbors who held out longer ended up getting significantly more money.'}},
 {id:'fight_solo',step:'Choice B',title:'Refuse \u2014 fight back alone',
-text:'No lawyer, no money, but you refuse to give up. You need the public on your side.',
+text:'No lawyer, no money, but you refuse to give up your home without a real fight. Fighting eminent domain without legal counsel is risky \u2014 the procedural rules are complex, deadlines are strict, and one missed filing could end your case. You know you need the public on your side to have any chance of shifting the political calculus.',
 children:[
 {id:'media_solo',step:'Choice A',title:'Take your story to the media',
-text:'A local reporter runs your story. The neighborhood starts paying attention. Momentum builds.',
+text:'A local reporter picks up your story and runs a front-page feature on the little pink house. The article sparks outrage \u2014 readers are shocked that the government can take a private home and hand the land to a developer. Social media amplifies the coverage, and suddenly city council members are fielding angry phone calls. The political pressure is building, but the legal process hasn\u2019t stopped.',
 children:[
 {id:'rally',step:'Choice A',title:'Rally neighbors to fight the blight hearing',
-text:'You pack the hearing room with supporters and photos of well-maintained homes. The council votes anyway.',
+text:'The city must declare your neighborhood "blighted" before it can justify the taking, so you organize your neighbors to fight back at the public hearing. You pack the hearing room with supporters carrying photos of well-maintained homes, tax receipts, and evidence that the "blight" designation is a pretext. Despite the overwhelming testimony, the council votes to approve the blight finding anyway \u2014 the developer\u2019s lobbyists were more persuasive behind closed doors.',
 children:[
 {id:'blight_win',step:'Choice A',title:'Challenge the designation in court',
-ending:{type:'good',name:'Home saved',text:'Your attorney challenges the blight finding and wins. Without "blight," the city can\'t justify the taking. The little pink house stands. You sit on your porch and watch the sunset, same as always.'}},
+ending:{type:'good',name:'Home saved',text:'Your attorney challenges the blight finding in court, arguing it was arbitrary and unsupported by evidence. The judge agrees \u2014 the neighborhood doesn\u2019t meet the statutory definition of "blighted," and the city\u2019s process was riddled with conflicts of interest. Without a valid blight designation, the city can\u2019t justify the taking under state law. The little pink house stands, and you sit on your porch watching the sunset, same as always.'}},
 {id:'blight_lose',step:'Choice B',title:'Lose the challenge \u2014 condemnation proceeds',
-text:'The court upholds the blight finding. Your home will be taken. The only question left is how much they pay you.',
+text:'The court upholds the blight finding, ruling that the city\u2019s determination is entitled to broad deference under state law. With the legal challenge lost, the condemnation moves forward and your home will be taken. A panel of three commissioners is appointed to determine "just compensation" \u2014 the only question left is how much they\u2019ll pay you for the home you never wanted to sell.',
 children:[
 {id:'settle1',step:'Choice A',title:'Accept the commissioners\' award',
-ending:{type:'mixed',name:'The pragmatist',text:'You take the money and walk away. It\'s more than the first offer, but less than your home is worth. You find a new place, start over. The little pink house becomes a parking garage.'}},
+ending:{type:'mixed',name:'The pragmatist',text:'You take the commissioners\u2019 award and walk away. It\u2019s more than the government\u2019s first offer, but still below what a willing buyer would have paid on the open market \u2014 "just compensation" rarely accounts for the true cost of forced displacement. You use the money to find a new place and start over, though it takes years to feel at home again. The little pink house becomes a parking garage for the new condo development.'}},
 {id:'jury1',step:'Choice B',title:'Demand a jury trial',
-ending:{type:'good',name:'The fighter',text:'The jury awards you 4x the government\'s initial offer. You lost the house, but you won the fight for fair compensation. Your story runs in the national papers.'}}
+ending:{type:'good',name:'The fighter',text:'You exercise your constitutional right to a jury trial on the question of just compensation. Your attorney presents comparable sales, relocation costs, and testimony about what the home meant to you and the neighborhood. The jury awards you 4x the government\u2019s initial offer, sending a clear message that lowball tactics won\u2019t go unchallenged. Your story runs in the national papers, and other homeowners facing eminent domain reach out for advice.'}}
 ]}
 ]},
 {id:'referendum',step:'Choice B',title:'Push for a ballot referendum instead',
-ending:{type:'mixed',name:'The reformer',text:'Your petition gets enough signatures. The referendum passes \u2014 but too late to save your home. Future homeowners in your state are protected by the new law you helped create. The pink house is gone, but its legacy lives on.'}}
+ending:{type:'mixed',name:'The reformer',text:'You channel the public outrage into a petition drive for a ballot referendum restricting eminent domain for private development. Volunteers gather signatures outside grocery stores and at community events, and the measure qualifies for the ballot. The referendum passes with 68% of the vote \u2014 but the new law can\u2019t be applied retroactively to save your home. The pink house is demolished, but future homeowners in your state now have constitutional protections you helped create.'}}
 ]},
 {id:'retaliate',step:'Choice B',title:'City retaliates \u2014 fast-tracks your case',
-text:'Without a lawyer, the city accelerates the condemnation timeline. You\'re being steamrolled.',
+text:'The city doesn\u2019t appreciate the negative press coverage and responds by accelerating the condemnation timeline against you specifically. Without a lawyer, you struggle to keep up with the flurry of legal filings, court dates, and procedural deadlines. Code enforcement officers suddenly appear to cite your property for minor violations they\u2019d ignored for years. The message is clear: fighting back has consequences.',
 children:[
 {id:'cave',step:'Choice A',title:'Give up under pressure',
-ending:{type:'bad',name:'Pressured out',text:'The legal threats, the deadlines, the isolation \u2014 it breaks you. You sign under duress for barely more than the original offer. You watch them demolish your home from across the street.'}},
+ending:{type:'bad',name:'Pressured out',text:'The legal threats, the impossible deadlines, the code violations, the isolation \u2014 it all becomes too much. You sign the papers under duress for barely more than the original offer, exhausted and broken by the bureaucratic machinery arrayed against you. You watch from across the street as they demolish your home, knowing you were bullied out of a fair fight. The experience leaves you distrustful of government and convinced the system is rigged against ordinary people.'}},
 {id:'probono',step:'Choice B',title:'A pro-bono lawyer takes your case',
-text:'A civil liberties attorney sees your story and offers to represent you for free. Finally, a fair fight \u2014 but the taking is already approved.',
+text:'A civil liberties attorney from a nonprofit legal organization sees your story in the news and offers to represent you for free. Property rights cases like yours are exactly the kind of David-vs-Goliath fights these organizations exist to take on. Your lawyer immediately files motions to slow the accelerated timeline and challenges the retaliatory code violations. It\u2019s finally a fair fight \u2014 but the taking itself has already been approved, so the battle now is over compensation.',
 children:[
 {id:'settle2',step:'Choice A',title:'Settle for the revised offer',
-ending:{type:'mixed',name:'The pragmatist',text:'Your lawyer negotiates a better settlement. You take the money and move on. It\'s not what the home was worth to you \u2014 but what is?'}},
+ending:{type:'mixed',name:'The pragmatist',text:'Your lawyer negotiates a settlement significantly higher than the original offer by documenting the city\u2019s retaliatory tactics and threatening to take the case public. The revised number covers your relocation costs and gives you a down payment on a comparable home. It\u2019s not what the home was truly worth to you \u2014 decades of memories can\u2019t be appraised \u2014 but it\u2019s enough to move forward. You take the money and close this chapter of your life.'}},
 {id:'jury2',step:'Choice B',title:'Push for a jury trial',
-ending:{type:'good',name:'The fighter',text:'The jury sees through the city\'s low-ball tactics and awards you far more than the commissioners\' figure. You leave with your head high and enough to start fresh.'}}
+ending:{type:'good',name:'The fighter',text:'Your attorney presents the full timeline to the jury: the lowball offer, the media coverage, the retaliatory code violations, the fast-tracked condemnation. The jury sees through the city\u2019s tactics and is visibly angry at the abuse of power. They award you far more than the commissioners\u2019 figure \u2014 enough to buy a nicer home and still have money left over. You leave the courtroom with your head high, knowing you made the city pay for playing dirty.'}}
 ]}
 ]}
 ]}
 ]},
 {id:'attorney',step:'Choice B',title:'Hire an eminent domain attorney',
-text:'Your attorney files a FOIA request and uncovers the private developer deal. Now you have real ammunition.',
+text:'You hire a specialized eminent domain attorney who immediately files a Freedom of Information Act request with the city. The FOIA documents reveal what the city tried to hide: a private developer had been promised your land months before the "public use" justification was even drafted. Internal emails show city officials coordinating with the developer\u2019s lobbyists to target your neighborhood specifically. Now you have real ammunition for a legal fight.',
 children:[
 {id:'coalition',step:'Choice A',title:'Build a coalition + media blitz',
-text:'Door-to-door organizing, protests, Op-Eds. You turn your fight into a political headache for City Hall.',
+text:'Armed with the FOIA evidence, you launch a full-scale grassroots campaign. You go door-to-door organizing neighbors, hold protests outside City Hall, and write Op-Eds for the local paper exposing the backroom deal. Sympathetic council members start breaking ranks, and the mayor\u2019s approval ratings take a hit. Your fight has become a political headache that city leadership can no longer ignore.',
 children:[
 {id:'court_challenge',step:'Choice A',title:'Challenge the lawsuit in court',
-text:'Your attorney argues the city failed to follow proper procedures and your property isn\'t necessary for the project.',
+text:'Your attorney files a motion to dismiss the condemnation, arguing the city failed to follow its own procedures: required public hearings were skipped, environmental impact studies were never completed, and the "necessity" determination was predetermined before any analysis. Due process under the Fourteenth Amendment requires that government follow fair procedures before taking property. The judge agrees to hear oral arguments.',
 children:[
 {id:'court_win',step:'Choice A',title:'Win on procedural grounds',
-ending:{type:'good',name:'Victory \u2014 case dismissed',text:'The court finds the city cut corners: improper notice, missing environmental studies, predetermined outcomes. The condemnation is thrown out. Your little pink house stands. The developers have to go back to the drawing board.'}},
+ending:{type:'good',name:'Victory \u2014 case dismissed',text:'The court finds that the city cut corners at every stage: improper public notice, missing environmental impact studies, and predetermined outcomes that violated due process. The judge rules the condemnation proceedings void and dismisses the case entirely. The developers are forced to go back to the drawing board, and several city officials face ethics investigations based on the FOIA evidence. Your little pink house stands, and the neighborhood organizes a block party to celebrate.'}},
 {id:'court_lose',step:'Choice B',title:'Judge defers to the city',
-text:'The judge upholds the taking but moves to valuation. Your coalition pressure means the commissioners can\'t lowball you easily.',
+text:'The judge acknowledges procedural irregularities but rules they weren\u2019t severe enough to invalidate the taking, deferring to the city\u2019s broad discretion in redevelopment matters. The condemnation is upheld, and the case moves to the valuation phase where three appointed commissioners will determine fair market value. Your coalition\u2019s public pressure means the commissioners can\u2019t easily lowball you \u2014 the whole city is watching what they decide.',
 children:[
 {id:'settle3',step:'Choice A',title:'Accept the commissioners\' award',
-ending:{type:'mixed',name:'The pragmatist',text:'The coalition pressure got you a better award than most. You take the money, donate some to the neighborhood action group, and find a new home. The fight continues without you.'}},
+ending:{type:'mixed',name:'The pragmatist',text:'The commissioners\u2019 award, influenced by your coalition\u2019s public pressure and your attorney\u2019s detailed appraisal, comes in well above the original offer. You accept the money, donate a portion to the neighborhood action group to continue the fight for others, and find a new home in the next town. The coalition you built continues operating long after you leave, successfully blocking two more attempted takings in the same neighborhood.'}},
 {id:'jury3',step:'Choice B',title:'Demand a jury trial',
-ending:{type:'good',name:'The fighter',text:'Your coalition fills the courtroom gallery. The jury awards you 5x the initial offer \u2014 the largest eminent domain verdict in the state\'s history. National news covers the story.'}}
+ending:{type:'good',name:'The fighter',text:'Your coalition fills the courtroom gallery for every day of the trial, and the media covers each session. Your attorney presents the FOIA evidence, comparable property sales, and expert testimony on the true value of your home and the community it anchored. The jury awards you 5x the initial offer \u2014 the largest eminent domain compensation verdict in the state\u2019s history. National news picks up the story, and your case becomes a rallying point for property rights reform across the country.'}}
 ]}
 ]},
 {id:'ij',step:'Choice B',title:'Get the Institute for Justice involved',
-text:'The national property rights organization takes your case. They see it as a test case for eminent domain reform.',
+text:'The Institute for Justice, a national nonprofit that litigates property rights cases, agrees to take your case pro bono. They see it as a potential test case that could reshape eminent domain law across the entire state. Their legal team has argued before state supreme courts and even the U.S. Supreme Court. With their resources and expertise, your little pink house becomes the center of a constitutional battle over the meaning of "public use."',
 children:[
 {id:'landmark',step:'Choice A',title:'Win the landmark case',
-ending:{type:'great',name:'Landmark victory',text:'The state supreme court rules the taking unconstitutional \u2014 private development is not "public use." Your case becomes a textbook example. The little pink house becomes a symbol of property rights. Law students study your case for decades.'}},
+ending:{type:'great',name:'Landmark victory',text:'The state supreme court rules that transferring private property to another private party for economic development does not qualify as "public use" under the state constitution. The decision overturns decades of permissive precedent and establishes a strict standard: the government can only take property for genuinely public purposes like roads, schools, or utilities. Your case becomes a textbook example studied in law schools nationwide. The little pink house becomes a symbol of property rights, and your name is forever linked to the protection of homeowners against government overreach.'}},
 {id:'movement',step:'Choice B',title:'Lose \u2014 but the nation watches',
-ending:{type:'mixed',name:'The movement',text:'You lose the case, but the Institute publicizes it nationwide. 43 states pass eminent domain reform laws. Your little pink house is gone, but the movement it created protects millions of homeowners. Sometimes you lose the battle but win the war.'}}
+ending:{type:'mixed',name:'The movement',text:'The state supreme court rules against you, holding that economic development and increased tax revenue qualify as "public use" \u2014 a devastating legal loss. But the Institute for Justice turns your defeat into a national campaign, running ads, publishing reports, and lobbying state legislatures across the country. Within five years, 43 states pass eminent domain reform laws restricting takings for private development. Your little pink house is gone, but the movement it sparked protects millions of homeowners from the same fate.'}}
 ]}
 ]},
 {id:'direct_court',step:'Choice B',title:'Skip the politics \u2014 go straight to court',
-text:'Your attorney uses the FOIA evidence to challenge whether this is really a "public use" or just a giveaway to a private developer.',
+text:'Rather than building a public campaign, your attorney goes straight to the courthouse with the FOIA evidence. The legal argument is straightforward: the Fifth Amendment\u2019s "public use" requirement means the government can only take property for genuinely public purposes, not to hand it to a private developer for luxury condos. The FOIA documents prove this was never about public benefit \u2014 it was a sweetheart deal from the start.',
 children:[
 {id:'pu_win',step:'Choice A',title:'"Public use" challenge succeeds',
-ending:{type:'great',name:'Taking blocked',text:'The court agrees: handing private land to another private party for condos isn\'t "public use." The taking is blocked. Your home is safe. The developer\'s lawyers appeal, but the ruling holds. You plant new flowers in front of your little pink house.'}},
+ending:{type:'great',name:'Taking blocked',text:'The court agrees that transferring your land to a private developer for luxury condominiums does not satisfy the constitutional requirement of "public use." The judge writes that increased tax revenue and speculative economic benefits are not enough to justify stripping a citizen of their home. The taking is permanently blocked, and the developer\u2019s appeal to the state supreme court fails. You plant new flowers in front of your little pink house, knowing it\u2019s finally safe.'}},
 {id:'pu_lose',step:'Choice B',title:'Court upholds broad "public use"',
-text:'The court says increased tax revenue counts as "public benefit." The taking stands. Only the price is left to fight over.',
+text:'The court adopts a broad interpretation of "public use," ruling that the anticipated increase in tax revenue and job creation from the development qualifies as a legitimate "public benefit" under current precedent. This expansive reading means almost any private development can be justified as serving the public interest. The taking stands, and the only remaining question is the price \u2014 your attorney vows to make the city pay every dollar your home is worth.',
 children:[
 {id:'settle4',step:'Choice A',title:'Settle and move on',
-ending:{type:'mixed',name:'The pragmatist',text:'Your attorney negotiates the best deal possible. You take the check and buy a place in the next town over. It\'s not the same. On quiet evenings you drive past where the pink house used to be.'}},
+ending:{type:'mixed',name:'The pragmatist',text:'Your attorney negotiates the best deal possible, using the FOIA evidence as leverage to push the settlement well above the commissioners\u2019 initial figure. You take the check and buy a place in the next town over, but it never quite feels like home. On quiet evenings you sometimes drive past where the little pink house used to stand, now a concrete foundation for someone else\u2019s investment property. The experience changes how you think about property rights and the limits of government power.'}},
 {id:'jury4',step:'Choice B',title:'Take it to a jury',
-ending:{type:'good',name:'The fighter',text:'Your attorney presents the FOIA evidence showing the sweetheart developer deal. The jury is furious. They award you massive compensation \u2014 a reckoning for the city\'s greed. You lost your home, but you made them pay for it.'}}
+ending:{type:'good',name:'The fighter',text:'Your attorney presents the FOIA evidence to the jury in devastating detail: the secret meetings, the backroom promises, the predetermined outcome disguised as public planning. Jurors are visibly furious as they review internal emails between city officials and the developer\u2019s lobbyists. They award you massive compensation \u2014 a financial reckoning for the city\u2019s greed and dishonesty. You lost your home, but you made them pay dearly for it, and the verdict sends a warning to every city that tries the same thing.'}}
 ]}
 ]}
 ]}
