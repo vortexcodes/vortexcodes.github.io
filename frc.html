@@ -55,6 +55,20 @@
                 <span id="countdown-prediction" class="countdown-prediction"></span>
             </div>
 
+            <!-- Calendar & Notifications -->
+            <div id="frc-reminders" class="frc-reminders-card" style="display:none">
+                <div class="frc-info-icon" data-tooltip="Add upcoming matches to your calendar (with built-in 5-minute alarms) or enable browser notifications that fire 5 minutes before each match with the live stream link.">i</div>
+                <div class="frc-reminders-header">
+                    <h3>Match Reminders</h3>
+                    <span id="frc-reminders-count" class="frc-reminders-count"></span>
+                </div>
+                <div class="frc-reminders-actions">
+                    <button id="frc-btn-calendar" class="frc-btn" type="button">Add to Calendar</button>
+                    <button id="frc-btn-notify" class="frc-btn" type="button">Enable Notifications</button>
+                </div>
+                <p id="frc-reminders-status" class="frc-reminders-status"></p>
+            </div>
+
             <!-- Live Stream -->
             <div id="frc-stream" class="frc-stream-card">
                 <div class="frc-info-icon" data-tooltip="Live video feed from the competition venue. Only active on event days.">i</div>
