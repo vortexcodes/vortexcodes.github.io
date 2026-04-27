@@ -1181,6 +1181,87 @@ footer {
     50% { box-shadow: 0 0 40px rgba(255, 0, 102, 0.7); }
 }
 
+/* Match Reminders */
+.frc-reminders-card {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.frc-reminders-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.frc-reminders-header h3 {
+    margin: 0;
+    color: #00d4ff;
+    font-size: 1.05rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.frc-reminders-count {
+    font-size: 0.8rem;
+    color: #808080;
+}
+
+.frc-reminders-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.frc-btn {
+    background: #0a0a0a;
+    border: 1px solid #00d4ff;
+    color: #00d4ff;
+    padding: 9px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.frc-btn:hover:not(:disabled) {
+    background: #00d4ff;
+    color: #0a0a0a;
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.5);
+}
+
+.frc-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: #444;
+    color: #808080;
+}
+
+.frc-btn.active {
+    background: #00ff88;
+    border-color: #00ff88;
+    color: #0a0a0a;
+}
+
+.frc-btn.active:hover:not(:disabled) {
+    background: #0a0a0a;
+    color: #00ff88;
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.5);
+}
+
+.frc-reminders-status {
+    margin: 12px 0 0;
+    font-size: 0.82rem;
+    color: #a0a0a0;
+    min-height: 1em;
+}
+
 /* Stream */
 .frc-stream-card {
     margin-bottom: 20px;
@@ -1330,7 +1411,8 @@ footer {
 
 /* Position tooltip for stream/countdown (inside positioned containers) */
 .frc-stream-card > .frc-info-icon,
-.frc-countdown-card > .frc-info-icon {
+.frc-countdown-card > .frc-info-icon,
+.frc-reminders-card > .frc-info-icon {
     position: absolute;
     top: 8px;
     right: 8px;
