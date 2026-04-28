@@ -594,6 +594,55 @@
         setReminderStatus('Test notification sent. If you do not see it, check your OS notification settings (Do Not Disturb, Focus mode).');
     }
 
+    function downloadTestCalendar() {
+        var sample = pickSampleMatch();
+        var streamUrl = getStreamUrl(currentEventDetails);
+        var viewerUrl = getViewerUrl();
+        var name = sample ? formatMatchName(sample) : 'Sample Match';
+        var alliance = sample ? getTeamAlliance(sample) : null;
+        var now = Date.now();
+        var startMs = now + 6 * 60 * 1000;
+        var endMs = startMs + MATCH_DURATION_MS;
+        var descLines = ['[TEST] FRC 5940 BREAD' + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '. This event is for testing — ignore the time.'];
+        if (streamUrl) descLines.push('Watch live: ' + streamUrl);
+        descLines.push('Dashboard: ' + viewerUrl);
+        var lines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Vortex1//FRC 5940 BREAD//EN',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            'X-WR-CALNAME:' + escapeIcs('FRC 5940 - Calendar Test'),
+            'BEGIN:VEVENT',
+            'UID:test-' + now + '@vortex1.dev',
+            'DTSTAMP:' + icsDate(now),
+            'DTSTART:' + icsDate(startMs),
+            'DTEND:' + icsDate(endMs),
+            'SUMMARY:' + escapeIcs('[TEST] FRC 5940 - ' + name),
+            'DESCRIPTION:' + escapeIcs(descLines.join('\n'))
+        ];
+        if (streamUrl) lines.push('URL:' + streamUrl);
+        lines.push(
+            'BEGIN:VALARM',
+            'TRIGGER:-PT5M',
+            'ACTION:DISPLAY',
+            'DESCRIPTION:' + escapeIcs('[TEST] FRC 5940 plays in 5 minutes - ' + name),
+            'END:VALARM',
+            'END:VEVENT',
+            'END:VCALENDAR'
+        );
+        var blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'frc5940-calendar-test.ics';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        setReminderStatus('Test calendar event downloaded. Import it now — the 5-minute alarm should fire in about 1 minute.');
+    }
+
     function pickSampleMatch() {
         if (!currentMatches.length) return null;
         var upcoming = upcomingMatches(currentMatches);
@@ -804,6 +853,7 @@
         document.getElementById('frc-btn-calendar').addEventListener('click', downloadCalendar);
         document.getElementById('frc-btn-notify').addEventListener('click', toggleNotifications);
         document.getElementById('frc-btn-test').addEventListener('click', sendTestNotification);
+        document.getElementById('frc-btn-test-cal').addEventListener('click', downloadTestCalendar);
 
         loadYear(currentYear).then(function () {
             showLoading(false);
