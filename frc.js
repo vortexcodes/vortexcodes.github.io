@@ -594,6 +594,50 @@
         setReminderStatus('Test notification sent. If you do not see it, check your OS notification settings (Do Not Disturb, Focus mode).');
     }
 
+    function googleCalendarUrl(match, eventDetails) {
+        var matchStartMs = matchTime(match);
+        var startMs = matchStartMs - NOTIFY_LEAD_MS;
+        var endMs = matchStartMs + MATCH_DURATION_MS;
+        var name = formatMatchName(match);
+        var alliance = getTeamAlliance(match);
+        var streamUrl = getStreamUrl(eventDetails);
+        var viewerUrl = getViewerUrl();
+        var detailLines = [
+            'FRC 5940 BREAD' + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '.',
+            'Match starts at ' + formatTime(matchStartMs / 1000) + ' — this event is set 5 minutes early as your heads-up.'
+        ];
+        if (streamUrl) detailLines.push('Watch live: ' + streamUrl);
+        detailLines.push('Dashboard: ' + viewerUrl);
+        var locParts = [];
+        if (eventDetails) {
+            if (eventDetails.name) locParts.push(eventDetails.name);
+            if (eventDetails.city) locParts.push(eventDetails.city);
+            if (eventDetails.state_prov) locParts.push(eventDetails.state_prov);
+            if (eventDetails.country) locParts.push(eventDetails.country);
+        }
+        var params = new URLSearchParams({
+            action: 'TEMPLATE',
+            text: 'FRC 5940 - ' + name + ' (5 min warning)',
+            dates: icsDate(startMs) + '/' + icsDate(endMs),
+            details: detailLines.join('\n'),
+            location: locParts.join(', ')
+        });
+        return 'https://calendar.google.com/calendar/render?' + params.toString();
+    }
+
+    function openGoogleCalendar() {
+        var match = pickSampleMatch();
+        if (!match) {
+            setReminderStatus('No match available to add.');
+            return;
+        }
+        var url = googleCalendarUrl(match, currentEventDetails);
+        window.open(url, '_blank', 'noopener');
+        var upcoming = upcomingMatches(currentMatches);
+        var label = upcoming.length ? 'next match' : 'most recent match';
+        setReminderStatus('Opened Google Calendar for the ' + label + ' (' + formatMatchName(match) + '). Event is scheduled 5 minutes before kickoff so it doubles as your reminder.');
+    }
+
     function downloadTestCalendar() {
         var sample = pickSampleMatch();
         var streamUrl = getStreamUrl(currentEventDetails);
@@ -851,6 +895,7 @@
         });
 
         document.getElementById('frc-btn-calendar').addEventListener('click', downloadCalendar);
+        document.getElementById('frc-btn-google').addEventListener('click', openGoogleCalendar);
         document.getElementById('frc-btn-notify').addEventListener('click', toggleNotifications);
         document.getElementById('frc-btn-test').addEventListener('click', sendTestNotification);
         document.getElementById('frc-btn-test-cal').addEventListener('click', downloadTestCalendar);
