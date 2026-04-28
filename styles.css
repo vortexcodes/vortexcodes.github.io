@@ -1255,6 +1255,17 @@ footer {
     box-shadow: 0 0 12px rgba(0, 255, 136, 0.5);
 }
 
+.frc-btn.frc-btn-secondary {
+    border-color: #555;
+    color: #a0a0a0;
+}
+
+.frc-btn.frc-btn-secondary:hover:not(:disabled) {
+    background: #2a2a2a;
+    color: #fff;
+    box-shadow: none;
+}
+
 .frc-reminders-status {
     margin: 12px 0 0;
     font-size: 0.82rem;

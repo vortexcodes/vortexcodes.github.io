@@ -478,7 +478,7 @@
             .replace(/\r?\n/g, '\\n');
     }
 
-    function buildIcs(matches, eventDetails) {
+    function buildIcs(matches, eventDetails, includePast) {
         var streamUrl = getStreamUrl(eventDetails);
         var viewerUrl = getViewerUrl();
         var stamp = icsDate(Date.now());
@@ -500,7 +500,15 @@
             'METHOD:PUBLISH',
             'X-WR-CALNAME:' + escapeIcs(calName)
         ];
-        upcomingMatches(matches).forEach(function (m) {
+        var iterMatches;
+        if (includePast) {
+            iterMatches = matches.slice()
+                .filter(function (m) { return matchTime(m) > 0; })
+                .sort(function (a, b) { return matchTime(a) - matchTime(b); });
+        } else {
+            iterMatches = upcomingMatches(matches);
+        }
+        iterMatches.forEach(function (m) {
             var startMs = matchTime(m);
             var endMs = startMs + MATCH_DURATION_MS;
             var name = formatMatchName(m);
@@ -530,12 +538,14 @@
     }
 
     function downloadCalendar() {
-        var matches = upcomingMatches(currentMatches);
+        var upcoming = upcomingMatches(currentMatches);
+        var matches = upcoming.length ? upcoming : currentMatches.slice().sort(function (a, b) { return matchTime(a) - matchTime(b); });
         if (!matches.length) {
-            setReminderStatus('No upcoming matches to add. Schedule may not be released yet.');
+            setReminderStatus('No matches available to export.');
             return;
         }
-        var ics = buildIcs(currentMatches, currentEventDetails);
+        var includePast = upcoming.length === 0;
+        var ics = buildIcs(matches, currentEventDetails, includePast);
         var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
@@ -545,7 +555,100 @@
         a.click();
         document.body.removeChild(a);
         setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-        setReminderStatus('Calendar downloaded — ' + matches.length + ' upcoming match' + (matches.length === 1 ? '' : 'es') + ' with 5-minute alarms.');
+        var label = includePast ? 'past match' : 'upcoming match';
+        setReminderStatus('Calendar downloaded — ' + matches.length + ' ' + label + (matches.length === 1 ? '' : 'es') + ' with 5-minute alarms.');
+    }
+
+    async function sendTestNotification() {
+        if (!('Notification' in window)) {
+            setReminderStatus('This browser does not support notifications.');
+            return;
+        }
+        var perm = Notification.permission;
+        if (perm === 'default') {
+            perm = await Notification.requestPermission();
+        }
+        if (perm !== 'granted') {
+            setReminderStatus('Notification permission denied. Enable it in your browser site settings to test alerts.');
+            return;
+        }
+        var sample = pickSampleMatch();
+        var streamUrl = getStreamUrl(currentEventDetails);
+        var viewerUrl = getViewerUrl();
+        var name = sample ? formatMatchName(sample) : 'Sample Match';
+        var alliance = sample ? getTeamAlliance(sample) : null;
+        var bodyParts = ['[TEST] BREAD plays in 5 minutes' + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '.'];
+        if (streamUrl) bodyParts.push('Watch: ' + streamUrl);
+        bodyParts.push('Dashboard: ' + viewerUrl);
+        var notif = new Notification('FRC 5940 - ' + name + ' (Test)', {
+            body: bodyParts.join('\n'),
+            icon: 'media/favicon.png',
+            tag: 'frc5940-test',
+            requireInteraction: true
+        });
+        notif.onclick = function () {
+            window.focus();
+            if (streamUrl) window.open(streamUrl, '_blank', 'noopener');
+            notif.close();
+        };
+        setReminderStatus('Test notification sent. If you do not see it, check your OS notification settings (Do Not Disturb, Focus mode).');
+    }
+
+    function downloadTestCalendar() {
+        var sample = pickSampleMatch();
+        var streamUrl = getStreamUrl(currentEventDetails);
+        var viewerUrl = getViewerUrl();
+        var name = sample ? formatMatchName(sample) : 'Sample Match';
+        var alliance = sample ? getTeamAlliance(sample) : null;
+        var now = Date.now();
+        var startMs = now + 6 * 60 * 1000;
+        var endMs = startMs + MATCH_DURATION_MS;
+        var descLines = ['[TEST] FRC 5940 BREAD' + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '. This event is for testing — ignore the time.'];
+        if (streamUrl) descLines.push('Watch live: ' + streamUrl);
+        descLines.push('Dashboard: ' + viewerUrl);
+        var lines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Vortex1//FRC 5940 BREAD//EN',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            'X-WR-CALNAME:' + escapeIcs('FRC 5940 - Calendar Test'),
+            'BEGIN:VEVENT',
+            'UID:test-' + now + '@vortex1.dev',
+            'DTSTAMP:' + icsDate(now),
+            'DTSTART:' + icsDate(startMs),
+            'DTEND:' + icsDate(endMs),
+            'SUMMARY:' + escapeIcs('[TEST] FRC 5940 - ' + name),
+            'DESCRIPTION:' + escapeIcs(descLines.join('\n'))
+        ];
+        if (streamUrl) lines.push('URL:' + streamUrl);
+        lines.push(
+            'BEGIN:VALARM',
+            'TRIGGER:-PT5M',
+            'ACTION:DISPLAY',
+            'DESCRIPTION:' + escapeIcs('[TEST] FRC 5940 plays in 5 minutes - ' + name),
+            'END:VALARM',
+            'END:VEVENT',
+            'END:VCALENDAR'
+        );
+        var blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'frc5940-calendar-test.ics';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        setReminderStatus('Test calendar event downloaded. Import it now — the 5-minute alarm should fire in about 1 minute.');
+    }
+
+    function pickSampleMatch() {
+        if (!currentMatches.length) return null;
+        var upcoming = upcomingMatches(currentMatches);
+        if (upcoming.length) return upcoming[0];
+        var sorted = currentMatches.slice().sort(function (a, b) { return matchTime(b) - matchTime(a); });
+        return sorted[0];
     }
 
     function clearScheduledNotifications() {
@@ -749,6 +852,8 @@
 
         document.getElementById('frc-btn-calendar').addEventListener('click', downloadCalendar);
         document.getElementById('frc-btn-notify').addEventListener('click', toggleNotifications);
+        document.getElementById('frc-btn-test').addEventListener('click', sendTestNotification);
+        document.getElementById('frc-btn-test-cal').addEventListener('click', downloadTestCalendar);
 
         loadYear(currentYear).then(function () {
             showLoading(false);

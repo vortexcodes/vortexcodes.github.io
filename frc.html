@@ -56,7 +56,7 @@
             </div>
 
             <!-- Calendar & Notifications -->
-            <div id="frc-reminders" class="frc-reminders-card" style="display:none">
+            <div id="frc-reminders" class="frc-reminders-card">
                 <div class="frc-info-icon" data-tooltip="Add upcoming matches to your calendar (with built-in 5-minute alarms) or enable browser notifications that fire 5 minutes before each match with the live stream link.">i</div>
                 <div class="frc-reminders-header">
                     <h3>Match Reminders</h3>
@@ -65,6 +65,8 @@
                 <div class="frc-reminders-actions">
                     <button id="frc-btn-calendar" class="frc-btn" type="button">Add to Calendar</button>
                     <button id="frc-btn-notify" class="frc-btn" type="button">Enable Notifications</button>
+                    <button id="frc-btn-test" class="frc-btn frc-btn-secondary" type="button" title="Fire a sample notification right now so you can verify the alert works on this event.">Send Test Notification</button>
+                    <button id="frc-btn-test-cal" class="frc-btn frc-btn-secondary" type="button" title="Download a single-event .ics scheduled 6 minutes from now. After importing, the 5-minute alarm fires in about 1 minute.">Test Calendar Event</button>
                 </div>
                 <p id="frc-reminders-status" class="frc-reminders-status"></p>
             </div>
