@@ -595,16 +595,19 @@
     }
 
     function googleCalendarUrl(match, eventDetails) {
-        var startMs = matchTime(match);
-        var endMs = startMs + MATCH_DURATION_MS;
+        var matchStartMs = matchTime(match);
+        var startMs = matchStartMs - NOTIFY_LEAD_MS;
+        var endMs = matchStartMs + MATCH_DURATION_MS;
         var name = formatMatchName(match);
         var alliance = getTeamAlliance(match);
         var streamUrl = getStreamUrl(eventDetails);
         var viewerUrl = getViewerUrl();
-        var detailLines = ['FRC 5940 BREAD' + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '.'];
+        var detailLines = [
+            'FRC 5940 BREAD' + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '.',
+            'Match starts at ' + formatTime(matchStartMs / 1000) + ' — this event is set 5 minutes early as your heads-up.'
+        ];
         if (streamUrl) detailLines.push('Watch live: ' + streamUrl);
         detailLines.push('Dashboard: ' + viewerUrl);
-        detailLines.push('Tip: set a 5-minute reminder in Google Calendar so you do not miss the start.');
         var locParts = [];
         if (eventDetails) {
             if (eventDetails.name) locParts.push(eventDetails.name);
@@ -614,7 +617,7 @@
         }
         var params = new URLSearchParams({
             action: 'TEMPLATE',
-            text: 'FRC 5940 - ' + name,
+            text: 'FRC 5940 - ' + name + ' (5 min warning)',
             dates: icsDate(startMs) + '/' + icsDate(endMs),
             details: detailLines.join('\n'),
             location: locParts.join(', ')
@@ -632,7 +635,7 @@
         window.open(url, '_blank', 'noopener');
         var upcoming = upcomingMatches(currentMatches);
         var label = upcoming.length ? 'next match' : 'most recent match';
-        setReminderStatus('Opened Google Calendar for the ' + label + ' (' + formatMatchName(match) + '). Google does not carry the 5-minute alarm — set it manually or use Add to Calendar for the .ics import.');
+        setReminderStatus('Opened Google Calendar for the ' + label + ' (' + formatMatchName(match) + '). Event is scheduled 5 minutes before kickoff so it doubles as your reminder.');
     }
 
     function downloadTestCalendar() {
