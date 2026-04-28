@@ -638,6 +638,39 @@
         setReminderStatus('Opened Google Calendar for the ' + label + ' (' + formatMatchName(match) + '). Event is scheduled 5 minutes before kickoff so it doubles as your reminder.');
     }
 
+    function openTestGoogleCalendar() {
+        var sample = pickSampleMatch();
+        var streamUrl = getStreamUrl(currentEventDetails);
+        var viewerUrl = getViewerUrl();
+        var name = sample ? formatMatchName(sample) : 'Sample Match';
+        var alliance = sample ? getTeamAlliance(sample) : null;
+        var now = Date.now();
+        var matchStartMs = now + 6 * 60 * 1000;
+        var startMs = matchStartMs - NOTIFY_LEAD_MS;
+        var endMs = matchStartMs + MATCH_DURATION_MS;
+        var detailLines = [
+            '[TEST] FRC 5940 BREAD' + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '. This event is for testing — ignore the time.'
+        ];
+        if (streamUrl) detailLines.push('Watch live: ' + streamUrl);
+        detailLines.push('Dashboard: ' + viewerUrl);
+        var locParts = [];
+        if (currentEventDetails) {
+            if (currentEventDetails.name) locParts.push(currentEventDetails.name);
+            if (currentEventDetails.city) locParts.push(currentEventDetails.city);
+            if (currentEventDetails.state_prov) locParts.push(currentEventDetails.state_prov);
+            if (currentEventDetails.country) locParts.push(currentEventDetails.country);
+        }
+        var params = new URLSearchParams({
+            action: 'TEMPLATE',
+            text: '[TEST] FRC 5940 - ' + name + ' (5 min warning)',
+            dates: icsDate(startMs) + '/' + icsDate(endMs),
+            details: detailLines.join('\n'),
+            location: locParts.join(', ')
+        });
+        window.open('https://calendar.google.com/calendar/render?' + params.toString(), '_blank', 'noopener');
+        setReminderStatus('Opened Google Calendar with a test event. Save it — the entry will appear on your calendar in about 1 minute.');
+    }
+
     function downloadTestCalendar() {
         var sample = pickSampleMatch();
         var streamUrl = getStreamUrl(currentEventDetails);
@@ -899,6 +932,7 @@
         document.getElementById('frc-btn-notify').addEventListener('click', toggleNotifications);
         document.getElementById('frc-btn-test').addEventListener('click', sendTestNotification);
         document.getElementById('frc-btn-test-cal').addEventListener('click', downloadTestCalendar);
+        document.getElementById('frc-btn-test-google').addEventListener('click', openTestGoogleCalendar);
 
         loadYear(currentYear).then(function () {
             showLoading(false);
