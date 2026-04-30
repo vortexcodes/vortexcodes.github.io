@@ -638,6 +638,18 @@
         setReminderStatus('Opened Google Calendar for the ' + label + ' (' + formatMatchName(match) + '). Event is scheduled 5 minutes before kickoff so it doubles as your reminder.');
     }
 
+    function addAllToGoogleCalendar() {
+        var upcoming = upcomingMatches(currentMatches);
+        var matches = upcoming.length ? upcoming : currentMatches.slice().sort(function (a, b) { return matchTime(a) - matchTime(b); });
+        if (!matches.length) {
+            setReminderStatus('No matches available to add.');
+            return;
+        }
+        downloadCalendar();
+        window.open('https://calendar.google.com/calendar/u/0/r/settings/export', '_blank', 'noopener');
+        setReminderStatus('Downloaded ' + matches.length + ' match' + (matches.length === 1 ? '' : 'es') + ' and opened Google Calendar. Scroll to "Import" in the new tab and select the .ics file — the 5-minute alarms will carry through.');
+    }
+
     function openTestGoogleCalendar() {
         var sample = pickSampleMatch();
         var streamUrl = getStreamUrl(currentEventDetails);
@@ -929,6 +941,7 @@
 
         document.getElementById('frc-btn-calendar').addEventListener('click', downloadCalendar);
         document.getElementById('frc-btn-google').addEventListener('click', openGoogleCalendar);
+        document.getElementById('frc-btn-google-all').addEventListener('click', addAllToGoogleCalendar);
         document.getElementById('frc-btn-notify').addEventListener('click', toggleNotifications);
         document.getElementById('frc-btn-test').addEventListener('click', sendTestNotification);
         document.getElementById('frc-btn-test-cal').addEventListener('click', downloadTestCalendar);
