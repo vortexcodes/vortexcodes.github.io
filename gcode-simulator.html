@@ -28,6 +28,26 @@
             flex-direction: column;
             overflow: hidden;
         }
+        .sim-panel.scroll { overflow-y: auto; }
+        .stl-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72rem;
+            color: #c0c0c0;
+        }
+        .stl-row label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+        .stl-ctrls button {
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            background: #0a0a0a;
+            color: #00d4ff;
+            border: 1px solid #2a2a2a;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .stl-ctrls button:hover { background: rgba(0,212,255,0.1); }
         .sim-panel h2 {
             font-size: 0.85rem;
             text-transform: uppercase;
@@ -68,7 +88,6 @@
         }
         .sim-controls input[type="file"] { color: #b0b0b0; font-size: 0.8rem; }
         #gcode {
-            flex: 1;
             background: #0a0a0a;
             color: #d0d0d0;
             border: none;
@@ -76,9 +95,11 @@
             font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
             font-size: 0.78rem;
             line-height: 1.4;
-            resize: none;
+            resize: vertical;
             outline: none;
             min-height: 200px;
+            height: 280px;
+            width: 100%;
         }
         #viewer { width: 100%; flex: 1; min-height: 500px; position: relative; }
         #viewer canvas { display: block; }
@@ -160,7 +181,7 @@
     </header>
 
     <div class="sim-wrap">
-        <div class="sim-panel">
+        <div class="sim-panel scroll">
             <h2>G-code</h2>
             <div class="sim-controls">
                 <div class="row">
@@ -182,6 +203,12 @@
                     <label><input type="checkbox" id="tShowEnvelope"> Envelope</label>
                     <label><input type="checkbox" id="tShowArms" checked> Arms</label>
                     <label><input type="checkbox" id="tShowFrame" checked> Frame</label>
+                    <label><input type="checkbox" id="tShowBed" checked> Bed</label>
+                </div>
+                <div class="row" style="gap:4px;">
+                    <button id="btnFrameIso">Iso</button>
+                    <button id="btnFrameFront">Front</button>
+                    <button id="btnFrameTop">Top</button>
                 </div>
             </div>
             <textarea id="gcode" spellcheck="false">; Doron Velta sample - safe square at Z=5
@@ -207,6 +234,44 @@ G1 X0 Y0 Z50
                 <b>Delta radius:</b> 100.92mm &nbsp; <b>Arm length:</b> 215mm<br>
                 <b>Min Z:</b> −25 &nbsp; <b>Max Z:</b> 170
             </div>
+
+            <h2 style="border-top:1px solid #1f1f1f;">Acoustic Sim</h2>
+            <div class="sim-controls">
+                <div class="row">
+                    <label><input type="checkbox" id="audioEnable"> Enable motor sound</label>
+                </div>
+                <div class="row">
+                    <label style="width:80px;">Volume</label>
+                    <input id="audioVol" type="range" min="0" max="0.6" step="0.01" value="0.25">
+                </div>
+                <div class="row">
+                    <label style="width:80px;">Waveform</label>
+                    <select id="audioWave" style="background:#0a0a0a;color:#e0e0e0;border:1px solid #2a2a2a;border-radius:4px;padding:4px;font-family:inherit;">
+                        <option value="sawtooth" selected>Sawtooth (typical TMC)</option>
+                        <option value="square">Square (harsher)</option>
+                        <option value="triangle">Triangle (softer)</option>
+                        <option value="sine">Sine (clean tone)</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <label style="width:80px;">Steps/mm</label>
+                    <input id="audioSPMM" type="number" min="10" max="800" step="1" value="80">
+                    <span style="font-size:0.7rem;color:#888;">default 80 = 16μstep · 2mm GT2 · 20T</span>
+                </div>
+                <div class="specs" style="border-top:none;font-size:0.7rem;">
+                    Frequency per tower = steps/mm × |carriage velocity|.<br>
+                    Doron Velta typically uses TMC2209 with stealthChop (quieter mid-range).
+                </div>
+            </div>
+
+            <h2 style="border-top:1px solid #1f1f1f;">Real CAD overlay</h2>
+            <div class="sim-controls">
+                <div class="row" style="flex-direction:column;align-items:stretch;gap:6px;">
+                    <input id="stlInput" type="file" accept=".stl" multiple>
+                    <div style="font-size:0.7rem;color:#888;">Or drag STL files onto the 3D view. Grab them from <a href="https://github.com/rogerlz/Doron-Velta" style="color:#00d4ff;" target="_blank">rogerlz/Doron-Velta</a> or <a href="https://github.com/FYSETC/FYSETC-Doron_Velta" style="color:#00d4ff;" target="_blank">FYSETC-Doron_Velta</a>.</div>
+                </div>
+                <div id="stlList" style="display:flex;flex-direction:column;gap:4px;font-size:0.72rem;"></div>
+            </div>
         </div>
 
         <div class="sim-panel">
@@ -217,6 +282,7 @@ G1 X0 Y0 Z50
                     <div><span class="lbl">Carriages A/B/C:</span> <span id="hudCar">—</span></div>
                     <div><span class="lbl">Feedrate:</span> <span id="hudF">—</span> mm/min</div>
                     <div><span class="lbl">Line:</span> <span id="hudLine">0</span> / <span id="hudTotal">0</span></div>
+                    <div><span class="lbl">Motor freq A/B/C:</span> <span id="hudFreq">—</span></div>
                     <div id="hudStatus" class="ok">● Idle</div>
                 </div>
                 <div class="legend">
