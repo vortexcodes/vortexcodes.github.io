@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doron Velta G-code Simulator | Vortex1</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="media/favicon.png">
+    <style>
+        .sim-wrap {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 16px;
+            padding: 16px 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+            height: calc(100vh - 60px - 80px);
+            min-height: 600px;
+        }
+        @media (max-width: 1000px) {
+            .sim-wrap { grid-template-columns: 1fr; height: auto; }
+        }
+        .sim-panel {
+            background: #111;
+            border: 1px solid #1f1f1f;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .sim-panel h2 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #00ff88;
+            padding: 10px 14px;
+            border-bottom: 1px solid #1f1f1f;
+            margin: 0;
+        }
+        .sim-controls {
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-bottom: 1px solid #1f1f1f;
+        }
+        .sim-controls .row { display: flex; gap: 8px; align-items: center; }
+        .sim-controls button {
+            background: #0f0f0f;
+            color: #00ff88;
+            border: 1px solid #00ff88;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .sim-controls button:hover { background: rgba(0,255,136,0.1); }
+        .sim-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .sim-controls button.danger { color: #ff3366; border-color: #ff3366; }
+        .sim-controls button.danger:hover { background: rgba(255,51,102,0.1); }
+        .sim-controls label { font-size: 0.8rem; color: #b0b0b0; }
+        .sim-controls input[type="range"] { flex: 1; }
+        .sim-controls input[type="number"] {
+            background: #0a0a0a; color: #e0e0e0; border: 1px solid #2a2a2a;
+            border-radius: 4px; padding: 4px 6px; width: 70px; font-family: inherit;
+        }
+        .sim-controls input[type="file"] { color: #b0b0b0; font-size: 0.8rem; }
+        #gcode {
+            flex: 1;
+            background: #0a0a0a;
+            color: #d0d0d0;
+            border: none;
+            padding: 10px 14px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.78rem;
+            line-height: 1.4;
+            resize: none;
+            outline: none;
+            min-height: 200px;
+        }
+        #viewer { width: 100%; flex: 1; min-height: 500px; position: relative; }
+        #viewer canvas { display: block; }
+        .hud {
+            position: absolute;
+            top: 10px; left: 10px;
+            background: rgba(15,15,15,0.85);
+            border: 1px solid #1f1f1f;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-family: 'Menlo', monospace;
+            font-size: 0.75rem;
+            color: #b0b0b0;
+            pointer-events: none;
+            line-height: 1.5;
+        }
+        .hud .lbl { color: #00ff88; }
+        .hud .warn { color: #ff3366; font-weight: bold; }
+        .legend {
+            position: absolute;
+            bottom: 10px; right: 10px;
+            background: rgba(15,15,15,0.85);
+            border: 1px solid #1f1f1f;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-family: 'Menlo', monospace;
+            font-size: 0.7rem;
+            color: #b0b0b0;
+            pointer-events: none;
+        }
+        .legend .sw { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: middle; }
+        #log {
+            background: #0a0a0a;
+            color: #c0c0c0;
+            padding: 8px 14px;
+            font-family: 'Menlo', monospace;
+            font-size: 0.72rem;
+            height: 120px;
+            overflow-y: auto;
+            border-top: 1px solid #1f1f1f;
+        }
+        #log .err { color: #ff3366; }
+        #log .ok { color: #00ff88; }
+        #log .info { color: #00d4ff; }
+        .specs {
+            font-size: 0.72rem;
+            color: #888;
+            padding: 8px 14px;
+            border-top: 1px solid #1f1f1f;
+            background: #0a0a0a;
+            line-height: 1.5;
+        }
+        .specs b { color: #00ff88; }
+        .toggle-row { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem; }
+        .toggle-row label { display: flex; align-items: center; gap: 4px; color: #b0b0b0; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">Vortex1</a>
+            <div class="nav-links">
+                <a href="index.html">Projects</a>
+                <a href="school.html">School</a>
+                <a href="frc.html">FRC</a>
+                <a href="about.html">About</a>
+                <a href="gcode-simulator.html" class="active">Simulator</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="account.html">Account</a>
+            </div>
+        </div>
+    </nav>
+
+    <header style="padding: 14px 20px; border-bottom: 1px solid #1f1f1f;">
+        <div style="max-width:1600px; margin:0 auto;">
+            <h1 style="font-size:1.3rem; color:#00ff88;">Doron Velta G-code Simulator</h1>
+            <p style="font-size:0.8rem; color:#888;">Visual delta-kinematics simulator with crash detection. Based on rogerlz/Doron-Velta &amp; FYSETC-Doron_Velta specs.</p>
+        </div>
+    </header>
+
+    <div class="sim-wrap">
+        <div class="sim-panel">
+            <h2>G-code</h2>
+            <div class="sim-controls">
+                <div class="row">
+                    <button id="btnPlay">▶ Play</button>
+                    <button id="btnPause" disabled>❚❚ Pause</button>
+                    <button id="btnReset">↺ Reset</button>
+                    <button id="btnCheck">✔ Check</button>
+                </div>
+                <div class="row">
+                    <label>Speed</label>
+                    <input id="speed" type="range" min="0.1" max="20" step="0.1" value="3">
+                    <span id="speedVal" style="font-size:0.75rem;color:#00ff88;width:40px;text-align:right;">3.0×</span>
+                </div>
+                <div class="row">
+                    <input id="fileInput" type="file" accept=".gcode,.gco,.nc,.txt">
+                </div>
+                <div class="toggle-row">
+                    <label><input type="checkbox" id="tShowPath" checked> Path</label>
+                    <label><input type="checkbox" id="tShowEnvelope"> Envelope</label>
+                    <label><input type="checkbox" id="tShowArms" checked> Arms</label>
+                    <label><input type="checkbox" id="tShowFrame" checked> Frame</label>
+                </div>
+            </div>
+            <textarea id="gcode" spellcheck="false">; Doron Velta sample - safe square at Z=5
+G28
+G90
+G1 X0 Y0 Z20 F6000
+G1 X50 Y0 Z5 F3000
+G1 X50 Y50
+G1 X-50 Y50
+G1 X-50 Y-50
+G1 X50 Y-50
+G1 X50 Y0
+G1 X0 Y0 Z50
+
+; Try uncommenting these to see crash detection:
+; G1 X120 Y0 Z5    ; outside print radius
+; G1 X0 Y0 Z-30    ; below bed
+; G1 X0 Y0 Z200    ; above max Z
+</textarea>
+            <div class="specs">
+                <b>Printer:</b> Doron Velta (delta)<br>
+                <b>Build:</b> Ø200mm × 170mm &nbsp; <b>Print radius:</b> 100mm<br>
+                <b>Delta radius:</b> 100.92mm &nbsp; <b>Arm length:</b> 215mm<br>
+                <b>Min Z:</b> −25 &nbsp; <b>Max Z:</b> 170
+            </div>
+        </div>
+
+        <div class="sim-panel">
+            <h2>3D View — drag to orbit, scroll to zoom</h2>
+            <div id="viewer">
+                <div class="hud" id="hud">
+                    <div><span class="lbl">Effector:</span> <span id="hudPos">—</span></div>
+                    <div><span class="lbl">Carriages A/B/C:</span> <span id="hudCar">—</span></div>
+                    <div><span class="lbl">Feedrate:</span> <span id="hudF">—</span> mm/min</div>
+                    <div><span class="lbl">Line:</span> <span id="hudLine">0</span> / <span id="hudTotal">0</span></div>
+                    <div id="hudStatus" class="ok">● Idle</div>
+                </div>
+                <div class="legend">
+                    <div><span class="sw" style="background:#00ff88"></span> Travel/print path</div>
+                    <div><span class="sw" style="background:#ff3366"></span> Crash zone</div>
+                    <div><span class="sw" style="background:#00d4ff"></span> Build envelope</div>
+                </div>
+            </div>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container" style="padding:10px 20px; text-align:center; font-size:0.75rem; color:#666;">
+            &copy; 2026 Vortex1
+        </div>
+    </footer>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="gcode-simulator.js"></script>
+</body>
+</html>
