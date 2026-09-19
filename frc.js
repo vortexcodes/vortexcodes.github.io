@@ -2,10 +2,11 @@
     const TEAM_KEY = 'frc5940';
     const TEAM_NUM = 5940;
     const TBA_BASE = 'https://www.thebluealliance.com/api/v3';
-    const STATBOTICS_BASE = 'https://api.statbotics.io/v3';
     const API_KEY = 'AXJEgHS1gv8SBtnQFAZinhvUwgqf9m9gdJZBhwdgNrsumbq2kWrW3YLxwxYIyR5W';
     const REFRESH_ACTIVE = 30000;
     const REFRESH_IDLE = 300000;
+
+    const EVENT_TYPE_OFFSEASON = 99;
 
     const COMP_LEVELS = { qm: 'Quals', qf: 'Quarters', sf: 'Semis', f: 'Finals' };
     const COMP_ORDER = { qm: 0, qf: 1, sf: 2, f: 3 };
@@ -15,11 +16,36 @@
     let currentEventDetails = null;
     let currentMatches = [];
     let predictions = {};
+    let predictionSource = null;
     let countdownInterval = null;
     let refreshTimer = null;
     let scheduledNotifications = [];
     const NOTIFY_PREF_KEY = 'frc5940-notify-enabled';
-    const NOTIFY_LEAD_MS = 5 * 60 * 1000;
+    const NOTIFY_LEAD_KEY = 'frc5940-notify-lead-min';
+    const NOTIFY_RESULTS_KEY = 'frc5940-notify-results';
+    const DEFAULT_LEAD_MIN = 5;
+
+    // How far ahead of a match the alert fires. Stored per-browser so the
+    // choice survives a reload.
+    function notifyLeadMin() {
+        var stored = parseInt(localStorage.getItem(NOTIFY_LEAD_KEY), 10);
+        return isNaN(stored) ? DEFAULT_LEAD_MIN : stored;
+    }
+
+    function notifyLeadMs() {
+        return notifyLeadMin() * 60 * 1000;
+    }
+
+    function leadPhrase() {
+        var m = notifyLeadMin();
+        return m + ' minute' + (m === 1 ? '' : 's');
+    }
+
+    // Place a test match far enough out that the reminder still lands about a
+    // minute from now, whatever lead time is selected.
+    function testMatchOffsetMs() {
+        return notifyLeadMs() + 60 * 1000;
+    }
     const MATCH_DURATION_MS = 8 * 60 * 1000;
 
     // --- TBA API ---
@@ -39,36 +65,114 @@
     function fetchRankings(eventKey) { return tbaFetch('/event/' + eventKey + '/rankings'); }
     function fetchEventDetails(eventKey) { return tbaFetch('/event/' + eventKey); }
 
-    // --- Statbotics API ---
-    async function fetchStatboticsMatches(eventKey) {
+    // --- Win predictions ---
+    // Statbotics (api.statbotics.io) was the original source but its v3 API now
+    // returns HTTP 500, so predictions come from The Blue Alliance instead:
+    //   1. TBA's own match prediction model  -> /event/{key}/predictions
+    //   2. OPR-derived estimate as a fallback -> /event/{key}/oprs
+    // Both ride the TBA key already used everywhere else, so there is no second
+    // provider to keep alive.
+
+    // Spread of alliance scores, in points. Used to turn a predicted score
+    // margin into a win probability when we fall back to OPR.
+    const OPR_PROB_SCALE = 40;
+
+    // TBA's model is trained on official events and goes haywire on some
+    // offseason ones -- at 2026cc it predicted ~640-point alliances (real
+    // average is ~119) and called 39 of 70 quals at over 99% confidence.
+    // A field where the median match is a near-certainty is not a real field,
+    // so treat that as "no model" rather than showing bogus percentages.
+    const DEGENERATE_PROB_MEDIAN = 0.95;
+
+    function median(nums) {
+        if (!nums.length) return null;
+        var sorted = nums.slice().sort(function (a, b) { return a - b; });
+        var mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
+    async function fetchPredictions(eventKey) {
         try {
-            var res = await fetch(STATBOTICS_BASE + '/matches?event=' + eventKey);
-            if (!res.ok) return [];
-            return await res.json();
+            return await tbaFetch('/event/' + eventKey + '/predictions');
         } catch (e) {
-            return [];
+            return null;
         }
     }
 
-    function buildPredictionMap(statMatches) {
-        predictions = {};
-        if (!Array.isArray(statMatches)) return;
-        statMatches.forEach(function (m) {
-            var key = m.key || m.match;
-            if (!key) return;
-            predictions[key] = {
-                redWinProb: m.pred ? (m.pred.red_win_prob != null ? m.pred.red_win_prob : null) : null,
-                redScore: m.pred ? m.pred.red_score : null,
-                blueScore: m.pred ? m.pred.blue_score : null
-            };
-        });
+    async function fetchOprs(eventKey) {
+        try {
+            return await tbaFetch('/event/' + eventKey + '/oprs');
+        } catch (e) {
+            return null;
+        }
     }
 
-    function getOurWinProb(matchKey) {
-        var pred = predictions[matchKey];
-        if (!pred || pred.redWinProb == null) return null;
-        // Figure out which alliance we're on from the stored match data
-        return pred;
+    function buildPredictionMap(predData, oprData, matches) {
+        predictions = {};
+        predictionSource = null;
+
+        // --- Preferred: TBA's match prediction model ---
+        var mp = predData && predData.match_predictions;
+        if (mp) {
+            var modelled = {};
+            var winnerProbs = [];
+            ['qual', 'playoff'].forEach(function (level) {
+                var bucket = mp[level];
+                if (!bucket) return;
+                Object.keys(bucket).forEach(function (key) {
+                    var p = bucket[key];
+                    if (!p || p.prob == null || !isFinite(p.prob)) return;
+                    // TBA reports the probability that `winning_alliance` wins,
+                    // not the probability that red wins.
+                    var redWinProb = p.winning_alliance === 'red' ? p.prob : 1 - p.prob;
+                    modelled[key] = {
+                        redWinProb: redWinProb,
+                        redScore: p.red ? p.red.score : null,
+                        blueScore: p.blue ? p.blue.score : null
+                    };
+                    winnerProbs.push(Math.max(p.prob, 1 - p.prob));
+                });
+            });
+
+            var med = median(winnerProbs);
+            var degenerate = winnerProbs.length >= 5 && med != null && med >= DEGENERATE_PROB_MEDIAN;
+            if (Object.keys(modelled).length && !degenerate) {
+                predictions = modelled;
+                predictionSource = 'tba';
+                return;
+            }
+        }
+
+        // --- Fallback: estimate from OPR (offense power rating) ---
+        var oprs = oprData && oprData.oprs;
+        if (!oprs || !Array.isArray(matches)) return;
+
+        // Before any match is played TBA reports every OPR as 0, which would
+        // make every match a coin flip. Treat that as "no data" instead.
+        var anyOpr = Object.keys(oprs).some(function (k) { return oprs[k]; });
+        if (!anyOpr) return;
+
+        function allianceScore(teamKeys) {
+            return teamKeys.reduce(function (sum, tk) { return sum + (oprs[tk] || 0); }, 0);
+        }
+
+        matches.forEach(function (m) {
+            if (!m.alliances) return;
+            var red = allianceScore(m.alliances.red.team_keys);
+            var blue = allianceScore(m.alliances.blue.team_keys);
+            predictions[m.key] = {
+                redWinProb: 1 / (1 + Math.exp(-(red - blue) / OPR_PROB_SCALE)),
+                redScore: red,
+                blueScore: blue
+            };
+        });
+        if (Object.keys(predictions).length) predictionSource = 'opr';
+    }
+
+    function predictionSourceLabel() {
+        if (predictionSource === 'tba') return 'Predictions: The Blue Alliance model';
+        if (predictionSource === 'opr') return 'Predictions: OPR estimate from this event';
+        return 'Predictions unavailable until matches are played';
     }
 
     // --- Helpers ---
@@ -80,6 +184,14 @@
 
     function matchTime(match) {
         return (match.predicted_time || match.time || 0) * 1000;
+    }
+
+    // A match counts as played once TBA posts a result. Ties leave
+    // winning_alliance as an empty string, so that field alone is not enough.
+    function isPlayed(match) {
+        if (!match || !match.alliances) return false;
+        return !!(match.actual_time || (match.alliances.red.score >= 0 && match.alliances.blue.score >= 0 &&
+            (match.alliances.red.score > 0 || match.alliances.blue.score > 0)));
     }
 
     function sortMatches(matches) {
@@ -175,7 +287,8 @@
         events.forEach(function (ev) {
             var opt = document.createElement('option');
             opt.value = ev.key;
-            opt.textContent = ev.name + ' (' + ev.start_date.slice(5) + ')';
+            var suffix = ev.event_type === EVENT_TYPE_OFFSEASON ? ' \u2014 Offseason' : '';
+            opt.textContent = ev.name + ' (' + ev.start_date.slice(5) + ')' + suffix;
             sel.appendChild(opt);
         });
         if (currentEventKey) sel.value = currentEventKey;
@@ -376,8 +489,7 @@
 
         sorted.forEach(function (m) {
             var alliance = getTeamAlliance(m);
-            var played = m.actual_time || (m.alliances.red.score >= 0 && m.alliances.blue.score >= 0 &&
-                (m.alliances.red.score > 0 || m.alliances.blue.score > 0));
+            var played = isPlayed(m);
             var isNext = !played && !nextFound && matchTime(m) > now;
             if (isNext) nextFound = true;
 
@@ -433,6 +545,9 @@
         });
 
         body.innerHTML = html;
+
+        var srcEl = document.getElementById('frc-pred-source');
+        if (srcEl) srcEl.textContent = predictionSourceLabel();
 
         // Scroll to next match
         var nextEl = body.querySelector('.frc-match-row.next');
@@ -527,9 +642,9 @@
             if (locationStr) lines.push('LOCATION:' + escapeIcs(locationStr));
             if (streamUrl) lines.push('URL:' + streamUrl);
             lines.push('BEGIN:VALARM');
-            lines.push('TRIGGER:-PT5M');
+            lines.push('TRIGGER:-PT' + notifyLeadMin() + 'M');
             lines.push('ACTION:DISPLAY');
-            lines.push('DESCRIPTION:' + escapeIcs('FRC 5940 plays in 5 minutes - ' + name));
+            lines.push('DESCRIPTION:' + escapeIcs('FRC 5940 plays in ' + leadPhrase() + ' - ' + name));
             lines.push('END:VALARM');
             lines.push('END:VEVENT');
         });
@@ -577,7 +692,7 @@
         var viewerUrl = getViewerUrl();
         var name = sample ? formatMatchName(sample) : 'Sample Match';
         var alliance = sample ? getTeamAlliance(sample) : null;
-        var bodyParts = ['[TEST] BREAD plays in 5 minutes' + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '.'];
+        var bodyParts = ['[TEST] BREAD plays in ' + leadPhrase() + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '.'];
         if (streamUrl) bodyParts.push('Watch: ' + streamUrl);
         bodyParts.push('Dashboard: ' + viewerUrl);
         var notif = new Notification('FRC 5940 - ' + name + ' (Test)', {
@@ -596,7 +711,7 @@
 
     function googleCalendarUrl(match, eventDetails) {
         var matchStartMs = matchTime(match);
-        var startMs = matchStartMs - NOTIFY_LEAD_MS;
+        var startMs = matchStartMs - notifyLeadMs();
         var endMs = matchStartMs + MATCH_DURATION_MS;
         var name = formatMatchName(match);
         var alliance = getTeamAlliance(match);
@@ -604,7 +719,7 @@
         var viewerUrl = getViewerUrl();
         var detailLines = [
             'FRC 5940 BREAD' + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '.',
-            'Match starts at ' + formatTime(matchStartMs / 1000) + ' — this event is set 5 minutes early as your heads-up.'
+            'Match starts at ' + formatTime(matchStartMs / 1000) + ' \u2014 this event is set ' + leadPhrase() + ' early as your heads-up.'
         ];
         if (streamUrl) detailLines.push('Watch live: ' + streamUrl);
         detailLines.push('Dashboard: ' + viewerUrl);
@@ -635,7 +750,7 @@
         window.open(url, '_blank', 'noopener');
         var upcoming = upcomingMatches(currentMatches);
         var label = upcoming.length ? 'next match' : 'most recent match';
-        setReminderStatus('Opened Google Calendar for the ' + label + ' (' + formatMatchName(match) + '). Event is scheduled 5 minutes before kickoff so it doubles as your reminder.');
+        setReminderStatus('Opened Google Calendar for the ' + label + ' (' + formatMatchName(match) + '). Event is scheduled ' + leadPhrase() + ' before kickoff so it doubles as your reminder.');
     }
 
     function addAllToGoogleCalendar() {
@@ -657,8 +772,8 @@
         var name = sample ? formatMatchName(sample) : 'Sample Match';
         var alliance = sample ? getTeamAlliance(sample) : null;
         var now = Date.now();
-        var matchStartMs = now + 6 * 60 * 1000;
-        var startMs = matchStartMs - NOTIFY_LEAD_MS;
+        var matchStartMs = now + testMatchOffsetMs();
+        var startMs = matchStartMs - notifyLeadMs();
         var endMs = matchStartMs + MATCH_DURATION_MS;
         var detailLines = [
             '[TEST] FRC 5940 BREAD' + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '. This event is for testing — ignore the time.'
@@ -690,7 +805,7 @@
         var name = sample ? formatMatchName(sample) : 'Sample Match';
         var alliance = sample ? getTeamAlliance(sample) : null;
         var now = Date.now();
-        var startMs = now + 6 * 60 * 1000;
+        var startMs = now + testMatchOffsetMs();
         var endMs = startMs + MATCH_DURATION_MS;
         var descLines = ['[TEST] FRC 5940 BREAD' + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '. This event is for testing — ignore the time.'];
         if (streamUrl) descLines.push('Watch live: ' + streamUrl);
@@ -713,9 +828,9 @@
         if (streamUrl) lines.push('URL:' + streamUrl);
         lines.push(
             'BEGIN:VALARM',
-            'TRIGGER:-PT5M',
+            'TRIGGER:-PT' + notifyLeadMin() + 'M',
             'ACTION:DISPLAY',
-            'DESCRIPTION:' + escapeIcs('[TEST] FRC 5940 plays in 5 minutes - ' + name),
+            'DESCRIPTION:' + escapeIcs('[TEST] FRC 5940 plays in ' + leadPhrase() + ' - ' + name),
             'END:VALARM',
             'END:VEVENT',
             'END:VCALENDAR'
@@ -754,13 +869,15 @@
         var now = Date.now();
         var scheduled = 0;
         upcomingMatches(currentMatches).forEach(function (m) {
-            var fireAt = matchTime(m) - NOTIFY_LEAD_MS;
+            var fireAt = matchTime(m) - notifyLeadMs();
             var delay = fireAt - now;
             if (delay <= 0 || delay > 2147483000) return;
             var name = formatMatchName(m);
             var alliance = getTeamAlliance(m);
             var id = setTimeout(function () {
-                var bodyParts = ['BREAD plays in 5 minutes' + (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '.'];
+                var lead = notifyLeadMin();
+                var bodyParts = ['BREAD plays in ' + lead + ' minute' + (lead === 1 ? '' : 's') +
+                    (alliance ? ' on ' + alliance.toUpperCase() + ' alliance' : '') + '.'];
                 if (streamUrl) bodyParts.push('Watch: ' + streamUrl);
                 bodyParts.push('Dashboard: ' + viewerUrl);
                 var notif = new Notification('FRC 5940 - ' + name, {
@@ -779,6 +896,42 @@
             scheduled++;
         });
         updateReminderUi(scheduled);
+    }
+
+    // Fire a notification when one of BREAD's matches gets a score posted.
+    // Compares the previous poll against the fresh one so each result alerts once.
+    function notifyNewResults(previousMatches, freshMatches) {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        if (localStorage.getItem(NOTIFY_PREF_KEY) !== '1') return;
+        if (localStorage.getItem(NOTIFY_RESULTS_KEY) === '0') return;
+        if (!Array.isArray(previousMatches) || !previousMatches.length) return;
+
+        var wasPlayed = {};
+        previousMatches.forEach(function (m) {
+            wasPlayed[m.key] = isPlayed(m);
+        });
+
+        freshMatches.forEach(function (m) {
+            // Only announce a transition from "no result" to "result".
+            if (!isPlayed(m) || wasPlayed[m.key] !== false) return;
+
+            var alliance = getTeamAlliance(m);
+            if (!alliance) return;
+            var ours = m.alliances[alliance].score;
+            var theirs = m.alliances[alliance === 'red' ? 'blue' : 'red'].score;
+            var name = formatMatchName(m);
+            var outcome = ours > theirs ? ' \u2014 WIN' : (ours < theirs ? ' \u2014 Loss' : ' \u2014 Tie');
+
+            var notif = new Notification('FRC 5940 - ' + name + outcome, {
+                body: 'Final: ' + ours + ' \u2013 ' + theirs + ' (BREAD on ' + alliance.toUpperCase() + ').',
+                icon: 'media/favicon.png',
+                tag: 'frc5940-result-' + m.key
+            });
+            notif.onclick = function () {
+                window.focus();
+                notif.close();
+            };
+        });
     }
 
     function setReminderStatus(msg) {
@@ -851,17 +1004,17 @@
                 fetchTeamStatus(eventKey),
                 fetchRankings(eventKey),
                 fetchEventDetails(eventKey),
-                fetchStatboticsMatches(eventKey)
+                fetchPredictions(eventKey),
+                fetchOprs(eventKey)
             ]);
             var matches = results[0];
             var status = results[1];
             var rankings = results[2];
             var eventDetails = results[3];
-            var statMatches = results[4];
 
             currentMatches = matches || [];
             currentEventDetails = eventDetails;
-            buildPredictionMap(statMatches);
+            buildPredictionMap(results[4], results[5], currentMatches);
             renderCountdown(matches);
             renderStream(eventDetails);
             renderTeamStatus(status);
@@ -882,11 +1035,15 @@
 
         try {
             var events = await fetchEvents(year);
-            // Filter to official events (regionals, districts, championships)
-            var official = events.filter(function (e) { return e.event_type <= 6; });
-            renderEventSelector(official);
+            // Keep official events (regionals, districts, championships) *and*
+            // offseason events — Chezy Champs, Madtown Throwdown and friends are
+            // event_type 99 and were previously filtered out entirely.
+            var shown = events.filter(function (e) {
+                return e.event_type <= 6 || e.event_type === EVENT_TYPE_OFFSEASON;
+            });
+            renderEventSelector(shown);
 
-            var autoEvent = findCurrentOrNextEvent(official);
+            var autoEvent = findCurrentOrNextEvent(shown);
             if (autoEvent) {
                 currentEventKey = autoEvent.key;
                 document.getElementById('frc-event').value = autoEvent.key;
@@ -904,10 +1061,13 @@
                 fetchMatches(currentEventKey),
                 fetchTeamStatus(currentEventKey),
                 fetchRankings(currentEventKey),
-                fetchStatboticsMatches(currentEventKey)
+                fetchPredictions(currentEventKey),
+                fetchOprs(currentEventKey)
             ]);
+            var previousMatches = currentMatches;
             currentMatches = results[0] || [];
-            buildPredictionMap(results[3]);
+            buildPredictionMap(results[3], results[4], currentMatches);
+            notifyNewResults(previousMatches, currentMatches);
             renderCountdown(results[0]);
             renderTeamStatus(results[1]);
             renderRankings(results[2]);
@@ -946,6 +1106,37 @@
         document.getElementById('frc-btn-test').addEventListener('click', sendTestNotification);
         document.getElementById('frc-btn-test-cal').addEventListener('click', downloadTestCalendar);
         document.getElementById('frc-btn-test-google').addEventListener('click', openTestGoogleCalendar);
+
+        var leadSel = document.getElementById('frc-notify-lead');
+        if (leadSel) {
+            leadSel.value = String(notifyLeadMin());
+            leadSel.addEventListener('change', function () {
+                localStorage.setItem(NOTIFY_LEAD_KEY, this.value);
+                // Re-arm the pending timers against the new lead time.
+                scheduleMatchNotifications();
+                setReminderStatus('Alerts now fire ' + this.value + ' minutes before each match.');
+            });
+        }
+
+        var resultsToggle = document.getElementById('frc-notify-results');
+        if (resultsToggle) {
+            resultsToggle.checked = localStorage.getItem(NOTIFY_RESULTS_KEY) !== '0';
+            resultsToggle.addEventListener('change', function () {
+                localStorage.setItem(NOTIFY_RESULTS_KEY, this.checked ? '1' : '0');
+                setReminderStatus(this.checked
+                    ? 'Score alerts on: you will get a notification when each BREAD match is scored.'
+                    : 'Score alerts off.');
+            });
+        }
+
+        // Browsers throttle (and sometimes drop) timers in background tabs.
+        // Re-arm on the way back so a long-pending alert is not lost.
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible' && currentEventKey) {
+                scheduleMatchNotifications();
+                refreshData();
+            }
+        });
 
         loadYear(currentYear).then(function () {
             showLoading(false);
