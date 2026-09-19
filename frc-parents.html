@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FRC for Parents - Vortex1 Portfolio</title>
+    <meta name="description" content="A plain-English guide to FIRST Robotics Competition and the 2026 game REBUILT, for parents and families of FRC 5940 BREAD.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="media/favicon.png">
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">Vortex1</a>
+            <div class="nav-links">
+                <a href="index.html">Projects</a>
+                <a href="school.html">School</a>
+                <a href="frc.html">FRC</a>
+                <a href="frc-parents.html" class="active">For Parents</a>
+                <a href="about.html">About</a>
+                <a href="gcode-simulator.html">Simulator</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="account.html">Account</a>
+            </div>
+        </div>
+    </nav>
+
+    <header>
+        <div class="container">
+            <h1>FRC for Parents</h1>
+            <p class="tagline">What the game is, how scoring works, and how to follow along</p>
+        </div>
+    </header>
+
+    <main class="container parents-page">
+
+        <div class="parents-intro">
+            <p>
+                Your student is on <strong>FRC Team 5940 &ldquo;BREAD&rdquo;</strong>, a
+                <em>FIRST</em> Robotics Competition team. Every January, thousands of high school
+                teams worldwide get the same brand-new game and the same deadline: design, build and
+                program a 120-pound robot to play it. Then they compete.
+            </p>
+            <p>
+                This page explains the basics in plain English &mdash; no robotics background needed.
+                You can read the whole thing in about five minutes, or jump to
+                <a href="#follow">How to follow along</a> if you just want to watch.
+            </p>
+        </div>
+
+        <!-- The big idea -->
+        <section class="parents-section">
+            <h2>The big idea</h2>
+            <p>
+                Two <strong>alliances</strong> &mdash; three robots on red, three on blue &mdash;
+                play a 2 minute 40 second match on a field the size of a basketball court. Robots
+                are driven by students from behind a wall; for the first 20 seconds they run
+                entirely on pre-written code with no driver input at all.
+            </p>
+            <p>
+                Teams are shuffled into different alliances each match, so the team you're playing
+                <em>with</em> in one match may be the team you play <em>against</em> in the next.
+                That's intentional: the program calls it &ldquo;Coopertition,&rdquo; and it's why
+                you'll see teams lending each other parts in the pits minutes before competing.
+            </p>
+        </section>
+
+        <!-- The 2026 game -->
+        <section class="parents-section">
+            <h2>The 2026 game: <span class="game-name">REBUILT</span></h2>
+            <p>
+                Each season has its own game. The 2026 game is <strong>REBUILT</strong>, presented
+                by Haas, and it works like this:
+            </p>
+
+            <div class="parents-cards">
+                <div class="parents-card">
+                    <h3>FUEL</h3>
+                    <p>
+                        Yellow foam balls, about 6 inches across. There are 504 of them on the
+                        field. This is the only game piece, and robots shoot them.
+                    </p>
+                </div>
+                <div class="parents-card">
+                    <h3>The HUB</h3>
+                    <p>
+                        Each alliance's goal. Robots shoot FUEL through the opening at the top.
+                        Every ball that goes in is worth <strong>1 point</strong> &mdash; so scores
+                        run high, often past 100.
+                    </p>
+                </div>
+                <div class="parents-card">
+                    <h3>The TOWER</h3>
+                    <p>
+                        A ladder-shaped structure. In the closing seconds, robots climb it. The
+                        higher they get, the more points &mdash; up to 30 for one robot.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- The twist -->
+        <section class="parents-section">
+            <h2>The twist: your HUB turns off</h2>
+            <p>
+                This is the part that confuses most first-time spectators, so it's worth
+                understanding &mdash; it explains why robots sometimes appear to stop scoring
+                on purpose.
+            </p>
+            <p>
+                During the middle of the match, the two alliances take turns. Only
+                <strong>one alliance's HUB is active at a time</strong>. Score into an inactive HUB
+                and you get nothing. So while your HUB is off, the smart play is to
+                <em>gather</em> FUEL and <em>defend</em> &mdash; block the other alliance, get in
+                their way, and stockpile for when your HUB switches back on.
+            </p>
+            <p>
+                Which alliance sits out first is decided by the autonomous period: whoever scores
+                <em>more</em> FUEL in those opening 20 seconds has their HUB switched off first.
+                A strong auto is still worth it, but it hands the opponent the first turn.
+            </p>
+        </section>
+
+        <!-- Timeline -->
+        <section class="parents-section">
+            <h2>How a match unfolds</h2>
+            <ol class="parents-timeline">
+                <li>
+                    <span class="t-time">0:20</span>
+                    <span class="t-name">Autonomous</span>
+                    <span class="t-desc">No drivers. The robot runs pre-written code on its own. Both HUBs are active. A robot can climb to Level 1 of the TOWER here for 15 points.</span>
+                </li>
+                <li>
+                    <span class="t-time">0:10</span>
+                    <span class="t-name">Transition</span>
+                    <span class="t-desc">Drivers take the controls. Both HUBs still active &mdash; a brief free-for-all.</span>
+                </li>
+                <li>
+                    <span class="t-time">4 &times; 0:25</span>
+                    <span class="t-name">Alliance Shifts</span>
+                    <span class="t-desc">The alternating on/off period described above. One alliance scores while the other gathers and defends, then they swap. Four times.</span>
+                </li>
+                <li>
+                    <span class="t-time">0:30</span>
+                    <span class="t-name">End Game</span>
+                    <span class="t-desc">Both HUBs active again, and robots head for the TOWER to climb. This is usually the loudest part of the match.</span>
+                </li>
+            </ol>
+            <p class="parents-note">
+                Total: 2 minutes 40 seconds. Matches run back-to-back all day, so an event is a
+                long one &mdash; bring a water bottle and ear protection if you're sensitive to noise.
+            </p>
+        </section>
+
+        <!-- Scoring -->
+        <section class="parents-section">
+            <h2>What things are worth</h2>
+            <table class="parents-table">
+                <thead>
+                    <tr><th>Action</th><th>Points</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>FUEL scored in an <em>active</em> HUB</td><td>1 each</td></tr>
+                    <tr><td>FUEL scored in an <em>inactive</em> HUB</td><td>0</td></tr>
+                    <tr><td>TOWER Level 1 &mdash; robot off the ground (autonomous)</td><td>15</td></tr>
+                    <tr><td>TOWER Level 1 &mdash; robot off the ground (driver period)</td><td>10</td></tr>
+                    <tr><td>TOWER Level 2 &mdash; bumpers above the low rung</td><td>20</td></tr>
+                    <tr><td>TOWER Level 3 &mdash; bumpers above the mid rung</td><td>30</td></tr>
+                </tbody>
+            </table>
+            <p class="parents-note">
+                For scale: at BREAD's district events this season the average alliance scored about
+                <strong>119 points</strong>, and the highest single score was <strong>491</strong>.
+            </p>
+        </section>
+
+        <!-- Ranking points -->
+        <section class="parents-section">
+            <h2>Winning isn't the only thing that counts</h2>
+            <p>
+                During the qualification rounds, teams are ranked by <strong>Ranking Points
+                (RP)</strong>, not by score. You'll see RP on the dashboard's Team Status card.
+            </p>
+            <ul class="parents-list">
+                <li><strong>3 RP</strong> &mdash; win the match</li>
+                <li><strong>1 RP</strong> &mdash; tie</li>
+                <li><strong>0 RP</strong> &mdash; lose</li>
+                <li><strong>+1 RP &mdash; ENERGIZED:</strong> your alliance scores at least 100 FUEL</li>
+                <li><strong>+1 RP &mdash; SUPERCHARGED:</strong> your alliance scores at least 360 FUEL</li>
+                <li><strong>+1 RP &mdash; TRAVERSAL:</strong> your alliance earns at least 50 TOWER points</li>
+            </ul>
+            <p>
+                This is why an alliance that's clearly losing will still fight for one more climb or
+                one more armful of FUEL in the final seconds &mdash; a bonus RP is worth real
+                ground in the standings even in a loss.
+            </p>
+        </section>
+
+        <!-- Event structure -->
+        <section class="parents-section">
+            <h2>How a competition weekend works</h2>
+            <ol class="parents-list parents-list-numbered">
+                <li>
+                    <strong>Qualification matches.</strong> Every team plays roughly 10 matches with
+                    randomly assigned partners. These set the rankings.
+                </li>
+                <li>
+                    <strong>Alliance selection.</strong> The top-ranked teams become alliance
+                    captains and take turns picking partners, live, in front of everyone. Getting
+                    picked is a big deal &mdash; it means other teams rate your robot.
+                </li>
+                <li>
+                    <strong>Playoffs.</strong> The alliances play a bracket until one wins the event.
+                </li>
+                <li>
+                    <strong>Awards.</strong> Judged awards recognize engineering design, outreach,
+                    and team culture. Several rank above winning on the field &mdash; the
+                    Impact Award is the program's highest honor and has nothing to do with
+                    match record.
+                </li>
+            </ol>
+        </section>
+
+        <!-- Chezy Champs -->
+        <section class="parents-section parents-highlight">
+            <h2>Right now: Chezy Champs</h2>
+            <p>
+                <strong>Chezy Champs</strong> runs <strong>September 18&ndash;20, 2026</strong> at
+                Bellarmine College Preparatory in San Jose, CA. It's an
+                <strong>offseason</strong> event &mdash; it doesn't affect official standings or
+                championship qualification.
+            </p>
+            <p>
+                That doesn't mean it's casual. Chezy Champs is hosted by Team 254 and is one of the
+                most competitive events of the year, because it invites a strong field and lets
+                teams run robots they've spent all summer improving. It's a great first event to
+                watch: the robots are more polished than they were in the spring, and the
+                atmosphere is looser. The playoff bracket here runs <strong>16 alliances</strong>.
+            </p>
+        </section>
+
+        <!-- Following along -->
+        <section class="parents-section" id="follow">
+            <h2>How to follow along</h2>
+            <p>
+                The <a href="frc.html">FRC dashboard</a> on this site tracks BREAD live. A few
+                things worth setting up before match day:
+            </p>
+            <ul class="parents-list">
+                <li>
+                    <strong>Match reminders.</strong> Click <em>Enable Notifications</em> on the
+                    dashboard and your browser will alert you before each BREAD match, with a link
+                    straight to the live stream. You can choose how much warning you get (2 to 15
+                    minutes) and optionally get an alert when each match is scored. These alerts
+                    need the dashboard tab left open.
+                </li>
+                <li>
+                    <strong>Calendar entries.</strong> <em>Add to Calendar</em> downloads the whole
+                    match schedule with alarms built in &mdash; this works even with the tab closed
+                    and is the more reliable option if you'll be away from your computer. There's
+                    also a one-click Google Calendar import.
+                </li>
+                <li>
+                    <strong>Live stream.</strong> When the event is running, the stream appears
+                    directly on the dashboard.
+                </li>
+                <li>
+                    <strong>Win predictions.</strong> The percentage next to each match is a
+                    statistical estimate from The Blue Alliance based on past performance. It is a
+                    forecast, not a verdict &mdash; upsets are routine and are most of the fun.
+                </li>
+            </ul>
+        </section>
+
+        <!-- Glossary -->
+        <section class="parents-section">
+            <h2>Words you'll hear</h2>
+            <dl class="parents-glossary">
+                <dt>Alliance</dt><dd>The three teams playing together in a match.</dd>
+                <dt>Auto / Autonomous</dt><dd>The opening 20 seconds, robot-controlled, no drivers.</dd>
+                <dt>Teleop</dt><dd>The rest of the match, driven by students.</dd>
+                <dt>Quals</dt><dd>Qualification matches &mdash; the round-robin that sets rankings.</dd>
+                <dt>RP</dt><dd>Ranking Points. What the standings are actually sorted by.</dd>
+                <dt>OPR</dt><dd>A statistic estimating how many points a team contributes per match.</dd>
+                <dt>The pits</dt><dd>The work area where teams repair robots between matches. Open to spectators &mdash; safety glasses required, and worth a walk through.</dd>
+                <dt>Scouting</dt><dd>Students recording data on every robot to inform alliance picks.</dd>
+                <dt>Bag / Load-in</dt><dd>Moving the robot and toolboxes into the venue before the event.</dd>
+            </dl>
+        </section>
+
+        <div class="parents-footer-note">
+            <p>
+                Questions are welcome &mdash; ask your student. Being asked to explain the game is
+                one of the better things that can happen to a rookie on a robotics team.
+            </p>
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Vortex1. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
