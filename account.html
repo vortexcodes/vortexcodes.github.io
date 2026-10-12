@@ -2,33 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account - Vortex1</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gear accounts | Jones Anderson</title>
     <link rel="icon" type="image/png" href="media/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+    <link rel="stylesheet" href="site.css">
+    <link rel="stylesheet" href="tools.css">
 </head>
 <body>
-    <nav class="top-nav">
-        <div class="nav-container">
-            <a href="index.html" class="nav-logo">Vortex1</a>
-            <div class="nav-links">
-                <a href="index.html">Projects</a>
-                <a href="school.html">School</a>
-                <a href="frc.html">FRC</a>
-                <a href="about.html">About</a>
-                <a href="gcode-simulator.html">Simulator</a>
-                <a href="changelog.html">Changelog</a>
-                <a href="account.html" class="active">Account</a>
-            </div>
-        </div>
-    </nav>
+    <header class="site-head">
+      <div class="wrap">
+        <a class="wordmark" href="index.html">Jones Anderson <small>vortex1</small></a>
+        <nav class="site-nav" aria-label="Main"><a href="index.html">Work</a><a href="log.html">Build log</a><a href="school.html">School</a><a href="frc.html">FRC</a><a href="gcode-simulator.html">G-code simulator</a><a href="about.html">About</a></nav>
+      </div>
+    </header>
 
-    <header>
-        <div class="container">
+    <div class="wrap page-head">
             <h1 id="page-title">Account</h1>
             <p class="tagline" id="page-subtitle">Login or create an account to save your gear</p>
         </div>
-    </header>
 
     <main class="container">
         <!-- Login/Register form (shown when logged out) -->
@@ -136,10 +130,17 @@
         </section>
     </main>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 Vortex1. All rights reserved.</p>
-        </div>
+    <footer class="site-foot">
+      <div class="wrap">
+        <span>&copy; 2026 Jones Anderson</span>
+        <nav aria-label="Footer">
+          <a href="mailto:ja@vortex1.dev">ja@vortex1.dev</a>
+          <a href="https://github.com/vortexcodes" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://coruscantventures.com" target="_blank" rel="noopener">Coruscant Ventures</a>
+          <a href="changelog.html">Changelog</a>
+          <a href="account.html">Gear accounts</a>
+        </nav>
+      </div>
     </footer>
 
     <script src="accounts.js"></script>
