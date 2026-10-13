@@ -227,6 +227,16 @@
     var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10);
   }
 
+  // Copies onto `fresh` only the fields this dialog changed from `orig`, so edits made elsewhere
+  // (another device, the daily check-in) to other fields survive.
+  function mergeChanges(fresh, orig, out) {
+    Object.keys(Object.assign({}, orig, out)).forEach(function (k) {
+      if (JSON.stringify(out[k]) === JSON.stringify(orig[k])) return;
+      if (out[k] === undefined) delete fresh[k]; else fresh[k] = out[k];
+    });
+    return fresh;
+  }
+
   /* ---------- dialogs ---------- */
   function sheet(title, body, actions) {
     var dlg = el('dialog', { class: 'ed-sheet', 'aria-label': title });
@@ -260,6 +270,7 @@
   /* ---------- project editor ---------- */
   function editProject(p) {
     var isNew = !p;
+    var orig = JSON.parse(JSON.stringify(p || {}));
     p = p || { status: 'In progress', sort: today().slice(0, 7), photos: [], facts: {}, details: [], links: [] };
     var all = Site.data().projects;
     var kinds = Array.from(new Set(all.map(function (x) { return x.kind; }).filter(Boolean)));
@@ -335,7 +346,7 @@
         var i = d.projects.findIndex(function (x) { return x.slug === out.slug; });
         if (isNew && i >= 0) throw new Error('Another project already uses the address "' + out.slug + '".');
         if (!isNew && i < 0) throw new Error('This project was deleted somewhere else. Reload the page.');
-        if (isNew) d.projects.push(out); else d.projects[i] = out;
+        if (isNew) d.projects.push(out); else mergeChanges(d.projects[i], orig, out);
       }, photos.uploads()).then(function () {
         done('Saved ' + n + '.');
         s.dlg.close();
@@ -352,6 +363,7 @@
   }
   function editEntry(e, slug) {
     var isNew = !e;
+    var orig = JSON.parse(JSON.stringify(e || {}));
     var projects = Site.projects();
     e = e || { date: today(), project: slug || (projects[0] && projects[0].slug), photos: [] };
     var date = text(e.date, { type: 'date', required: '' });
@@ -393,7 +405,7 @@
         if (isNew) return d.log.push(out);
         var i = d.log.findIndex(function (x) { return sameEntry(x, e); });
         if (i < 0) throw new Error('This entry was changed somewhere else. Reload the page.');
-        d.log[i] = out;
+        mergeChanges(d.log[i], orig, out);
       }, photos.uploads()).then(function () { done(isNew ? 'Entry posted.' : 'Entry saved.'); s.dlg.close(); },
         function (err) { busy([saveBtn, del], false); s.msg(err.message, true); });
     };

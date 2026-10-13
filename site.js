@@ -54,6 +54,10 @@
       lb = el('dialog', { class: 'lightbox', 'aria-label': 'Photo viewer' });
       var inner = el('div', { class: 'lb-inner' });
       lbImg = el('img', { alt: '' });
+      lbImg.onerror = function () {
+        var path = lbList[lbIdx] && lbList[lbIdx].src;
+        if (path && !/^https?:|^data:/.test(path) && lbImg.src.indexOf(REPO_RAW) < 0) lbImg.src = REPO_RAW + path;
+      };
       lbCount = el('div', { class: 'lb-count' });
       var close = el('button', { class: 'lb-close', type: 'button', text: 'Close' });
       var prev = el('button', { class: 'lb-prev', type: 'button', text: 'Previous', 'aria-label': 'Previous photo' });
