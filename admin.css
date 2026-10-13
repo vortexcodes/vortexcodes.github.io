@@ -1,0 +1,104 @@
+/* Site editor: edit bar, edit buttons, and the edit sheets. Only loads when signed in. */
+
+button.btn { font: inherit; font-weight: 700; cursor: pointer; }
+.btn:disabled { opacity: 0.5; cursor: progress; }
+.btn.danger { border-color: var(--red); color: var(--red); }
+.btn.danger:hover { background: var(--red); color: #fff; }
+.btn.ed-small { padding: 6px 12px; font-size: var(--step--1); }
+
+/* Edit buttons drawn into the pages */
+.edit-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+.edit-row:empty { display: none; }
+.edit-btn {
+  font: 700 var(--step--1)/1 var(--body); padding: 9px 14px; border-radius: 3px; cursor: pointer;
+  border: 1.5px dashed var(--accent); background: var(--accent-soft); color: var(--accent);
+}
+.edit-btn.primary { border-style: solid; background: var(--accent); color: #fff; }
+.edit-btn:hover { filter: brightness(1.06); }
+.entry .edit-row { margin: 12px 0 0; }
+
+/* Bar pinned to the bottom while signed in */
+body.has-edit-bar { padding-bottom: 64px; }
+.edit-bar {
+  position: fixed; inset: auto 0 0 0; z-index: 50;
+  background: var(--ink); color: var(--paper); font-size: var(--step--1);
+  border-top: 3px solid var(--accent);
+}
+.edit-bar .wrap { display: flex; align-items: center; gap: 8px 18px; min-height: 52px; flex-wrap: wrap; padding-block: 8px; }
+.eb-toggle {
+  font: 700 var(--step--1)/1 var(--body); cursor: pointer; padding: 8px 12px; border-radius: 3px;
+  border: 1.5px solid var(--paper); background: transparent; color: var(--paper);
+}
+.eb-toggle[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.eb-who { opacity: 0.75; }
+.eb-msg { flex: 1; min-width: 0; }
+.eb-link { margin-left: auto; font: inherit; background: none; border: 0; color: var(--paper); text-decoration: underline; cursor: pointer; padding: 6px 0; }
+
+/* Edit sheet */
+.ed-sheet {
+  width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0;
+  border: 1.5px solid var(--ink); border-radius: 4px; background: var(--surface); color: var(--ink);
+}
+.ed-sheet::backdrop { background: rgba(10, 12, 14, 0.6); }
+.ed-sheet form { display: flex; flex-direction: column; max-height: calc(100vh - 52px); }
+.ed-sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 24px; border-bottom: 1px solid var(--rule); }
+.ed-sheet-head h2 { font: 800 var(--step-2)/1 var(--display); margin: 0; }
+.ed-close { font: inherit; background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; }
+.ed-sheet-body { overflow-y: auto; padding: 20px 24px 28px; display: grid; gap: 18px; }
+.ed-sheet-body > p { margin: 0; }
+.ed-sheet-foot { border-top: 1px solid var(--rule); padding: 14px 24px; display: grid; gap: 10px; background: var(--paper); }
+.ed-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ed-spacer { flex: 1; }
+.ed-msg { margin: 0; min-height: 1.4em; font-size: var(--step--1); color: var(--ink-2); }
+.ed-msg:empty { display: none; }
+.ed-msg.bad { color: var(--red); font-weight: 700; }
+
+.ed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
+.ed-field { display: grid; gap: 6px; }
+.ed-label { font-weight: 700; font-size: var(--step--1); }
+.ed-hint { color: var(--muted); font-size: var(--step--1); margin: 0; }
+.ed-sheet input[type="text"], .ed-sheet input[type="password"], .ed-sheet input[type="month"], .ed-sheet input[type="date"],
+.ed-sheet input[type="number"], .ed-sheet select, .ed-sheet textarea {
+  font: inherit; width: 100%; padding: 9px 11px; border: 1.5px solid var(--rule); border-radius: 3px;
+  background: var(--paper); color: var(--ink);
+}
+.ed-sheet textarea { resize: vertical; line-height: 1.5; }
+.ed-sheet input:focus, .ed-sheet select:focus, .ed-sheet textarea:focus { outline: none; border-color: var(--accent); }
+.ed-sheet input[readonly] { color: var(--muted); }
+.ed-check { display: flex; gap: 10px; align-items: center; font-weight: 700; font-size: var(--step--1); }
+.ed-check input { width: 18px; height: 18px; accent-color: var(--accent); }
+.ed-set { border: 1.5px solid var(--rule); border-radius: 3px; padding: 12px 16px 16px; margin: 0; display: grid; gap: 10px; }
+.ed-set legend { font-weight: 700; font-size: var(--step--1); padding: 0 6px; }
+.ed-steps { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+
+.ed-pairs { display: grid; gap: 8px; justify-items: start; }
+.ed-pairs > div:first-child { display: grid; gap: 8px; width: 100%; }
+.ed-pair { display: grid; grid-template-columns: 1fr 1.6fr auto; gap: 8px; }
+.ed-x { font: inherit; font-size: var(--step--1); background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; }
+
+.ed-photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.ed-photo { margin: 0; position: relative; border: 1.5px solid var(--rule); border-radius: 3px; overflow: hidden; background: var(--paper); }
+.ed-photo.is-cover { border-color: var(--brass); }
+.ed-photo img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.ed-badge { position: absolute; top: 6px; left: 6px; background: var(--brass); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 2px 7px; border-radius: 2px; }
+.ed-photo-tools { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px; }
+.ed-photo-tools button {
+  font: 700 0.75rem/1 var(--body); padding: 6px 7px; border: 0; border-radius: 2px; cursor: pointer;
+  background: transparent; color: var(--ink-2);
+}
+.ed-photo-tools button:hover { background: var(--accent-soft); color: var(--accent); }
+.ed-photo-add { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+.ed-file { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.ed-file:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ed-photo-add label { cursor: pointer; }
+
+@media (max-width: 720px) {
+  .ed-sheet { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; border: 0; border-radius: 0; margin: 0; }
+  .ed-sheet form { max-height: 100dvh; height: 100%; }
+  .ed-sheet-body { flex: 1; padding: 16px; }
+  .ed-sheet-head, .ed-sheet-foot { padding-inline: 16px; }
+  .ed-grid { grid-template-columns: 1fr; }
+  .ed-pair { grid-template-columns: 1fr; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+  .ed-pair .ed-x { justify-self: start; }
+  .eb-who { display: none; }
+}

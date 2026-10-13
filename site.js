@@ -1,19 +1,38 @@
-// Renders the home page, project pages and build log from data/projects.js and data/log.js.
+// Renders the home page, project pages and build log from data/projects.json and data/log.json.
+// When signed in (see admin.js), the same renderers draw edit buttons.
 (function () {
-  var P = (window.PROJECTS || []).slice().sort(function (a, b) { return b.sort.localeCompare(a.sort); });
-  var L = (window.LOG || []).slice().sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); });
-  var bySlug = {}; P.forEach(function (p) { bySlug[p.slug] = p; });
+  var RAW = { projects: [], log: [], oldSlugs: {} };
+  var P = [], L = [], bySlug = {};
+  var previews = {}; // path -> data URL for photos uploaded this session (before Pages rebuilds)
+  var REPO_RAW = 'https://raw.githubusercontent.com/vortexcodes/vortexcodes.github.io/main/';
+
+  function setData(d) {
+    RAW = { projects: d.projects || [], log: d.log || [], oldSlugs: d.oldSlugs || {} };
+    P = RAW.projects.slice().sort(function (a, b) { return (b.sort || '').localeCompare(a.sort || ''); });
+    L = RAW.log.map(function (e, i) { return { e: e, i: i }; })
+      .sort(function (a, b) { return (b.e.date || '').localeCompare(a.e.date || '') || b.i - a.i; })
+      .map(function (x) { return x.e; });
+    bySlug = {}; P.forEach(function (p) { bySlug[p.slug] = p; });
+  }
 
   function el(tag, attrs, kids) {
     var n = document.createElement(tag);
     if (attrs) for (var k in attrs) {
+      if (attrs[k] == null) continue;
       if (k === 'text') n.textContent = attrs[k];
       else if (k === 'html') n.innerHTML = attrs[k];
       else if (k === 'class') n.className = attrs[k];
+      else if (k === 'onclick') n.onclick = attrs[k];
       else n.setAttribute(k, attrs[k]);
     }
     (kids || []).forEach(function (c) { if (c) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
     return n;
+  }
+  // Photo src: a fresh upload shows from memory; anything not on Pages yet falls back to the repo copy.
+  function img(path, alt, lazy) {
+    var i = el('img', { src: previews[path] || path, alt: alt, loading: lazy ? 'lazy' : 'eager' });
+    i.onerror = function () { if (!/^https?:|^data:/.test(path) && i.src.indexOf(REPO_RAW) < 0) i.src = REPO_RAW + path; };
+    return i;
   }
   function url(p) { return 'project.html?p=' + encodeURIComponent(p.slug); }
   function fmtDate(s) {
@@ -22,6 +41,11 @@
   }
   function hrs(n) { return (Math.round(n * 10) / 10).toString(); }
   function logFor(slug) { return L.filter(function (e) { return e.project === slug; }); }
+  function editing() { return !!(window.SiteEdit && window.SiteEdit.on()); }
+  function editBtn(label, fn, cls) {
+    return el('button', { type: 'button', class: 'edit-btn' + (cls ? ' ' + cls : ''), text: label, onclick: fn });
+  }
+  function clear(n) { if (n) n.textContent = ''; return n; }
 
   /* ---------- lightbox ---------- */
   var lb, lbImg, lbCount, lbList = [], lbIdx = 0;
@@ -52,7 +76,7 @@
   }
   function show(i) {
     lbIdx = (i + lbList.length) % lbList.length;
-    lbImg.src = lbList[lbIdx].src; lbImg.alt = lbList[lbIdx].alt;
+    lbImg.src = previews[lbList[lbIdx].src] || lbList[lbIdx].src; lbImg.alt = lbList[lbIdx].alt;
     lbCount.textContent = (lbIdx + 1) + ' of ' + lbList.length;
   }
   function gallery(photos, label, videos) {
@@ -60,7 +84,7 @@
     var list = photos.map(function (src, i) { return { src: src, alt: label + ', photo ' + (i + 1) }; });
     list.forEach(function (ph, i) {
       var b = el('button', { type: 'button', 'aria-label': 'Open ' + ph.alt });
-      b.appendChild(el('img', { src: ph.src, alt: ph.alt, loading: i ? 'lazy' : 'eager' }));
+      b.appendChild(img(ph.src, ph.alt, i > 0));
       b.onclick = function () { openLightbox(list, i); };
       g.appendChild(b);
     });
@@ -74,36 +98,42 @@
 
   /* ---------- home ---------- */
   function renderHome() {
-    var grid = document.getElementById('work-grid');
+    var grid = clear(document.getElementById('work-grid'));
     if (grid) P.filter(function (p) { return p.featured; }).forEach(function (p) {
       grid.appendChild(el('a', { class: 'item', href: url(p) }, [
-        el('div', { class: 'shot' }, [el('img', { src: p.cover, alt: p.name, loading: 'lazy' })]),
+        el('div', { class: 'shot' }, [p.cover ? img(p.cover, p.name, true) : null]),
         el('h3', { text: p.name }),
-        el('p', { text: p.when + ', ' + p.kind.toLowerCase() })
+        el('p', { text: [p.when, (p.kind || '').toLowerCase()].filter(Boolean).join(', ') })
       ]));
     });
-    var body = document.getElementById('index-body');
+    var body = clear(document.getElementById('index-body'));
     if (body) P.forEach(function (p) {
       body.appendChild(el('tr', null, [
         el('td', { text: p.when }),
         el('td', null, [el('a', { href: url(p), text: p.name }), el('span', { class: 'sum', text: p.summary })]),
         el('td', { class: 'kind', text: p.kind }),
-        el('td', { class: 'status' }, [el('span', { class: 'status-dot', 'data-s': p.status }), p.status])
+        el('td', { class: 'status' }, [el('span', { class: 'status-dot', 'data-s': p.status }), p.status || ''])
       ]));
     });
-    var latest = document.getElementById('latest-log');
-    if (latest) {
-      if (!L.length) latest.appendChild(emptyLog());
-      else latest.appendChild(logList(L.slice(0, 3)));
+    var tools = document.getElementById('home-edit');
+    if (body && !tools) {
+      tools = el('div', { id: 'home-edit', class: 'edit-row' });
+      document.getElementById('all').insertBefore(tools, document.querySelector('#all .index-wrap'));
     }
+    if (tools) {
+      clear(tools);
+      if (editing()) tools.appendChild(editBtn('New project', function () { SiteEdit.editProject(null); }, 'primary'));
+    }
+    var latest = clear(document.getElementById('latest-log'));
+    if (latest) latest.appendChild(L.length ? logList(L.slice(0, 3)) : emptyLog());
   }
 
   /* ---------- project page ---------- */
   function renderProject() {
-    var root = document.getElementById('project');
+    var root = clear(document.getElementById('project'));
     if (!root) return;
     var slug = new URLSearchParams(location.search).get('p') || '';
-    var p = bySlug[slug] || bySlug[(window.OLD_SLUGS || {})[slug]];
+    var p = bySlug[slug] || bySlug[RAW.oldSlugs[slug]];
     if (!p) {
       document.title = 'Project not found | Jones Anderson';
       root.appendChild(el('div', { class: 'page-head' }, [
@@ -113,10 +143,15 @@
       return;
     }
     document.title = p.name + ' | Jones Anderson';
-    var meta = document.querySelector('meta[name="description"]'); if (meta) meta.content = p.summary;
+    var meta = document.querySelector('meta[name="description"]'); if (meta) meta.content = p.summary || '';
 
     root.appendChild(el('p', { class: 'crumb' }, [el('a', { href: 'index.html#all', text: 'All work' })]));
-    root.appendChild(el('div', { class: 'proj-head' }, [el('h1', { text: p.name }), el('p', { class: 'lede', text: p.summary })]));
+    var head = el('div', { class: 'proj-head' }, [el('h1', { text: p.name }), el('p', { class: 'lede', text: p.summary })]);
+    if (editing()) head.appendChild(el('div', { class: 'edit-row' }, [
+      editBtn('Edit project', function () { SiteEdit.editProject(p); }, 'primary'),
+      editBtn('Add log entry', function () { SiteEdit.editEntry(null, p.slug); })
+    ]));
+    root.appendChild(head);
 
     var gal = el('div', { class: 'proj-gal' });
     if (p.photos && p.photos.length) gal.appendChild(gallery(p.photos, p.name, p.videos));
@@ -135,11 +170,10 @@
       prose.appendChild(logList(entries, true));
     }
 
-    // title block
     var dl = el('dl');
     var rows = [['Made by', 'Jones Anderson'], ['When', p.when], ['Kind', p.kind], ['Status', p.status]];
     Object.keys(p.facts || {}).forEach(function (k) { rows.push([k, p.facts[k]]); });
-    rows.forEach(function (r) { dl.appendChild(el('dt', { text: r[0] })); dl.appendChild(el('dd', { text: r[1] })); });
+    rows.forEach(function (r) { if (r[1]) { dl.appendChild(el('dt', { text: r[0] })); dl.appendChild(el('dd', { text: r[1] })); } });
     var idx = P.indexOf(p) + 1;
     var tHours = entries.reduce(function (s, e) { return s + (+e.hours || 0); }, 0);
     var side = el('aside', { class: 'proj-side' }, [el('div', { class: 'proj-side-in' }, [
@@ -179,8 +213,9 @@
       var p = bySlug[e.project];
       var bodyKids = [el('h3', { text: e.title || 'Build session' })];
       if (!hideProject && p) bodyKids.push(el('a', { class: 'proj', href: url(p), text: p.name }));
-      if (e.text) bodyKids.push(el('p', { text: e.text }));
+      if (e.text) e.text.split(/\n\s*\n/).forEach(function (para) { bodyKids.push(el('p', { text: para })); });
       if (e.photos && e.photos.length) bodyKids.push(gallery(e.photos, e.title || 'Build photo'));
+      if (editing()) bodyKids.push(el('div', { class: 'edit-row' }, [editBtn('Edit entry', function () { SiteEdit.editEntry(e); })]));
       ol.appendChild(el('li', { class: 'entry' }, [
         el('div', { class: 'when' }, [el('strong', { text: fmtDate(e.date) }), e.hours ? hrs(+e.hours) + ' hours' : '']),
         el('div', null, bodyKids)
@@ -193,8 +228,15 @@
     if (!root) return;
     var sel = document.getElementById('log-filter');
     var sum = document.getElementById('log-summary');
+    var keep = sel.value;
+    while (sel.options.length > 1) sel.remove(1);
     var used = P.filter(function (p) { return logFor(p.slug).length; });
     used.forEach(function (p) { sel.appendChild(el('option', { value: p.slug, text: p.name })); });
+    sel.value = used.some(function (p) { return p.slug === keep; }) ? keep : '';
+    var tools = document.getElementById('log-edit');
+    if (!tools) { tools = el('div', { id: 'log-edit', class: 'edit-row' }); root.parentNode.insertBefore(tools, root); }
+    clear(tools);
+    if (editing()) tools.appendChild(editBtn('New entry', function () { SiteEdit.editEntry(null, sel.value); }, 'primary'));
     function draw() {
       var list = sel.value ? logFor(sel.value) : L;
       var h = list.reduce(function (s, e) { return s + (+e.hours || 0); }, 0);
@@ -202,7 +244,7 @@
       sum.textContent = list.length
         ? hrs(h) + ' hours over ' + list.length + (list.length === 1 ? ' session' : ' sessions') + ' on ' + n + (n === 1 ? ' project' : ' projects') + '.'
         : 'Nothing logged yet.';
-      root.textContent = '';
+      clear(root);
       root.appendChild(list.length ? logList(list, !!sel.value) : emptyLog());
     }
     sel.onchange = draw;
@@ -210,5 +252,36 @@
     draw();
   }
 
-  renderHome(); renderProject(); renderLog();
+  function render() { renderHome(); renderProject(); renderLog(); }
+
+  /* ---------- sign-in link + loading ---------- */
+  function loadEditor(then) {
+    if (window.SiteEdit) return then && then();
+    var s = document.createElement('script');
+    s.src = 'admin.js?v=1'; s.onload = function () { then && then(); };
+    document.body.appendChild(s);
+  }
+  var footNav = document.querySelector('.site-foot nav');
+  if (footNav) footNav.appendChild(el('a', { href: '#edit', text: 'Edit site', onclick: function (e) {
+    e.preventDefault(); loadEditor(function () { SiteEdit.open(); });
+  } }));
+
+  window.Site = {
+    el: el, img: img, url: url, render: render, setData: setData, previews: previews,
+    data: function () { return RAW; }, projects: function () { return P; }
+  };
+
+  function signedIn() { try { return !!localStorage.getItem('vx-gh-token'); } catch (e) { return false; } }
+  Promise.all([
+    fetch('data/projects.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }),
+    fetch('data/log.json', { cache: 'no-cache' }).then(function (r) { return r.json(); })
+  ]).then(function (res) {
+    setData({ projects: res[0].projects, oldSlugs: res[0].oldSlugs, log: res[1] });
+    render();
+  }).catch(function () {
+    var r = document.getElementById('project') || document.getElementById('work-grid') || document.getElementById('log-root');
+    if (r) r.appendChild(el('p', { text: 'Projects did not load. Refresh the page to try again.' }));
+  }).then(function () {
+    if (signedIn() || location.hash === '#edit') loadEditor(function () { SiteEdit.boot(); });
+  });
 })();

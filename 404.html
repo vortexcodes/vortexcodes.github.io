@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <title>Redirecting | Jones Anderson</title>
-<script src="/data/projects.js"></script>
 <script>
   // Old project links (vortex1.dev/sao-many-saos) go to the new project page.
   var slug = location.pathname.replace(/^\/|\/$/g, '');
-  var known = (window.PROJECTS || []).some(function (p) { return p.slug === slug; }) || (window.OLD_SLUGS || {})[slug];
-  location.replace(known ? '/project.html?p=' + encodeURIComponent(slug) : '/');
+  fetch('/data/projects.json').then(function (r) { return r.json(); }).then(function (d) {
+    var known = d.projects.some(function (p) { return p.slug === slug; }) || (d.oldSlugs || {})[slug];
+    location.replace(known ? '/project.html?p=' + encodeURIComponent(slug) : '/');
+  }).catch(function () { location.replace('/'); });
 </script>
 </head>
 <body><p>Redirecting to <a href="/">vortex1.dev</a>.</p></body>
