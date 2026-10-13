@@ -2,37 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Changelog - Vortex1 Portfolio</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Changelog | Jones Anderson</title>
     <link rel="icon" type="image/png" href="media/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+    <link rel="stylesheet" href="site.css">
+    <link rel="stylesheet" href="tools.css">
 </head>
 <body>
-    <nav class="top-nav">
-        <div class="nav-container">
-            <a href="index.html" class="nav-logo">Vortex1</a>
-            <div class="nav-links">
-                <a href="index.html">Projects</a>
-                <a href="school.html">School</a>
-                <a href="frc.html">FRC</a>
-                <a href="about.html">About</a>
-                <a href="gcode-simulator.html">Simulator</a>
-                <a href="changelog.html" class="active">Changelog</a>
-                <a href="account.html">Account</a>
-            </div>
-        </div>
-    </nav>
-
-    <header>
-        <div class="container">
-            <h1>Changelog</h1>
-            <p class="tagline">Website updates & project progress</p>
-        </div>
+    <header class="site-head">
+      <div class="wrap">
+        <a class="wordmark" href="index.html">Jones Anderson <small>vortex1</small></a>
+        <nav class="site-nav" aria-label="Main"><a href="index.html">Work</a><a href="log.html">Build log</a><a href="school.html">School</a><a href="frc.html">FRC</a><a href="gcode-simulator.html">G-code simulator</a><a href="about.html">About</a></nav>
+      </div>
     </header>
+
+    <div class="wrap page-head">
+        <h1>Changelog</h1>
+        <p>Updates to this site.</p>
+    </div>
 
     <main class="container">
         <section class="changelog-section">
             <div class="changelog-list">
+                <div class="changelog-entry">
+                    <span class="changelog-date">10/12/26 @ 16:30</span>
+                    <span class="changelog-text">Redesign the whole site: new home page with selected work and a full project index, a page for every project, a build log, and a rewritten About page. Old project links still work.</span>
+                </div>
                 <div class="changelog-entry">
                     <span class="changelog-date">04/14/26 @ 00:00</span>
                     <span class="changelog-text">Expand all flowchart nodes to 3-4 sentences with more legal and historical detail</span>
@@ -161,10 +159,17 @@
         </section>
     </main>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 Vortex1. All rights reserved.</p>
-        </div>
+    <footer class="site-foot">
+      <div class="wrap">
+        <span>&copy; 2026 Jones Anderson</span>
+        <nav aria-label="Footer">
+          <a href="mailto:ja@vortex1.dev">ja@vortex1.dev</a>
+          <a href="https://github.com/vortexcodes" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://coruscantventures.com" target="_blank" rel="noopener">Coruscant Ventures</a>
+          <a href="changelog.html">Changelog</a>
+          <a href="account.html">Gear accounts</a>
+        </nav>
+      </div>
     </footer>
 </body>
 </html>

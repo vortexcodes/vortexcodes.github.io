@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="media/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<title>Build log | Jones Anderson</title>
+<meta name="description" content="Dated notes, photos and hours from every build session on Jones Anderson's personal projects.">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="wordmark" href="index.html">Jones Anderson <small>vortex1</small></a>
+    <nav class="site-nav" aria-label="Main"><a href="index.html">Work</a><a href="log.html" aria-current="page">Build log</a><a href="school.html">School</a><a href="frc.html">FRC</a><a href="gcode-simulator.html">G-code simulator</a><a href="about.html">About</a></nav>
+  </div>
+</header>
+<main class="wrap">
+  <div class="page-head">
+    <h1>Build log</h1>
+    <p>Notes from each build session on my own projects: what I did, why, what went wrong, and how long it took. Robotics team work isn't logged here.</p>
+  </div>
+  <div class="log-tools">
+    <p id="log-summary"></p>
+    <label>Project <select id="log-filter"><option value="">All projects</option></select></label>
+  </div>
+  <div id="log-root"></div>
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <span>&copy; 2026 Jones Anderson</span>
+    <nav aria-label="Footer">
+      <a href="mailto:ja@vortex1.dev">ja@vortex1.dev</a>
+      <a href="https://github.com/vortexcodes" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://coruscantventures.com" target="_blank" rel="noopener">Coruscant Ventures</a>
+      <a href="changelog.html">Changelog</a>
+      <a href="account.html">Gear accounts</a>
+    </nav>
+  </div>
+</footer>
+<script src="data/projects.js"></script>
+<script src="data/log.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

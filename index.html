@@ -1,58 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vortex1 Portfolio</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/png" href="media/favicon.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="media/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<title>Jones Anderson | vortex1</title>
+<meta name="description" content="Jones Anderson builds LED helmets, DEF CON badges, 3D printers, and machined parts in the Bay Area.">
+<link rel="stylesheet" href="site.css">
 </head>
 <body>
-    <nav class="top-nav">
-        <div class="nav-container">
-            <a href="index.html" class="nav-logo">Vortex1</a>
-            <div class="nav-links">
-                <a href="index.html" class="active">Projects</a>
-                <a href="school.html">School</a>
-                <a href="frc.html">FRC</a>
-                <a href="about.html">About</a>
-                <a href="gcode-simulator.html">Simulator</a>
-                <a href="changelog.html">Changelog</a>
-                <a href="account.html">Account</a>
-            </div>
-        </div>
-    </nav>
-
-    <header>
-        <div class="container">
-            <h1>Vortex1 | Jones JH Anderson</h1>
-            <p class="tagline">Maker • 3D Printing • Electronics</p>
-        </div>
-    </header>
-
-    <main class="container">
-        <section id="projects">
-            <!-- Projects will be dynamically loaded here -->
-        </section>
-    </main>
-
-    <!-- Project Detail Modal -->
-    <div id="projectModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <div id="modalBody">
-                <!-- Project details will be loaded here -->
-            </div>
-        </div>
+<header class="site-head">
+  <div class="wrap">
+    <a class="wordmark" href="index.html">Jones Anderson <small>vortex1</small></a>
+    <nav class="site-nav" aria-label="Main"><a href="index.html" aria-current="page">Work</a><a href="log.html">Build log</a><a href="school.html">School</a><a href="frc.html">FRC</a><a href="gcode-simulator.html">G-code simulator</a><a href="about.html">About</a></nav>
+  </div>
+</header>
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1>Jones<br>Anderson</h1>
+      <p class="lede">I design and build things: LED helmets, DEF CON badges, 3D printers, and parts I machine on CNC mills and lathes.</p>
+      <p class="where">Bay Area, California. I also build robots with FRC team 5940 BREAD.</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#selected">See my work</a>
+        <a class="btn" href="log.html">Read the build log</a>
+      </div>
     </div>
+    <figure>
+      <img src="media/WhatsApp Image 2025-12-18 at 18.16.33.jpeg" alt="Jones wearing his LED deadmau5 helmet, lit red, under an arch of lights">
+      <figcaption><a href="project.html?p=mau5head-v1">Mau5head v1</a>, the first LED helmet I built.</figcaption>
+    </figure>
+  </section>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 Vortex1. All rights reserved.</p>
-        </div>
-    </footer>
+  <section id="selected">
+    <h2 class="sec-title">Selected work</h2>
+    <div class="work-grid" id="work-grid"></div>
+  </section>
 
-    <script src="projects.js"></script>
-    <script src="app.js"></script>
+  <section id="all">
+    <h2 class="sec-title">Everything I've built <a href="log.html">Build log</a></h2>
+    <div class="index-wrap">
+      <table class="index">
+        <thead><tr><th>When</th><th>Project</th><th class="kind">Kind</th><th class="status">Status</th></tr></thead>
+        <tbody id="index-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec-title">Latest from the build log <a href="log.html">All entries</a></h2>
+    <div id="latest-log"></div>
+  </section>
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <span>&copy; 2026 Jones Anderson</span>
+    <nav aria-label="Footer">
+      <a href="mailto:ja@vortex1.dev">ja@vortex1.dev</a>
+      <a href="https://github.com/vortexcodes" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://coruscantventures.com" target="_blank" rel="noopener">Coruscant Ventures</a>
+      <a href="changelog.html">Changelog</a>
+      <a href="account.html">Gear accounts</a>
+    </nav>
+  </div>
+</footer>
+<script src="data/projects.js"></script>
+<script src="data/log.js"></script>
+<script src="site.js"></script>
 </body>
 </html>

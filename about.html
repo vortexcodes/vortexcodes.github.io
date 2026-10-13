@@ -1,77 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About - Vortex1 Portfolio</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/png" href="media/favicon.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="media/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<title>About | Jones Anderson</title>
+<meta name="description" content="About Jones Anderson, a student maker in the Bay Area.">
+<link rel="stylesheet" href="site.css">
 </head>
 <body>
-    <nav class="top-nav">
-        <div class="nav-container">
-            <a href="index.html" class="nav-logo">Vortex1</a>
-            <div class="nav-links">
-                <a href="index.html">Projects</a>
-                <a href="school.html">School</a>
-                <a href="frc.html">FRC</a>
-                <a href="about.html" class="active">About</a>
-                <a href="gcode-simulator.html">Simulator</a>
-                <a href="changelog.html">Changelog</a>
-                <a href="account.html">Account</a>
-            </div>
-        </div>
+<header class="site-head">
+  <div class="wrap">
+    <a class="wordmark" href="index.html">Jones Anderson <small>vortex1</small></a>
+    <nav class="site-nav" aria-label="Main"><a href="index.html">Work</a><a href="log.html">Build log</a><a href="school.html">School</a><a href="frc.html">FRC</a><a href="gcode-simulator.html">G-code simulator</a><a href="about.html" aria-current="page">About</a></nav>
+  </div>
+</header>
+<main class="wrap">
+  <div class="page-head"><h1>About</h1></div>
+  <div class="about">
+    <figure>
+      <img src="media/saomanysaos/IMG_3310.webp" alt="Jones at DEF CON 33 in front of the Badgelife sign, wearing SAO MANY SAOs">
+      <figcaption>At DEF CON 33, wearing SAO MANY SAOs.</figcaption>
+    </figure>
+    <div class="bio">
+      <p>I'm Jones Anderson, a student in the Bay Area. I got hooked on making when my brother got a 3D printer for Christmas, and I've gotten my hands on eight more since.</p>
+      <p>A friend told me about DEF CON, which got me into badges. My first one, SAO MANY SAOs, holds 25 add-ons at once; I sold it at DEF CON 33. Now I design PCBs, build printers, machine parts on CNC mills and lathes, and make LED helmets for Halloween.</p>
+      <p>I'm also on FRC team 5940 BREAD, where I work on fabrication and scouting data.</p>
+      <div class="contact">
+        <a class="btn primary" href="mailto:ja@vortex1.dev">Email me</a>
+        <a class="btn" href="https://github.com/vortexcodes" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <h2 class="sec-title">What I work with</h2>
+    <div class="shop">
+      <div><h3>3D printers</h3><p>Prusa XL, Bambu P1P, Voron 2.4, Voron V0.2, and a delta I built</p></div>
+      <div><h3>Machines</h3><p>Haas Super Mini Mill, Haas TL-1 lathe, ShopSabre CNC router, Bridgeport mill</p></div>
+      <div><h3>CAD and CAM</h3><p>Onshape, Fusion 360 CAM, CadQuery, OrcaSlicer</p></div>
+      <div><h3>Electronics</h3><p>KiCad, JLCPCB assembly, WLED and addressable LEDs, RP2040, soldering</p></div>
+      <div><h3>Code</h3><p>Python, JavaScript, Klipper configs, G-code</p></div>
+      <div><h3>Finishing</h3><p>Sanding, automotive primer, spray paint, 2K clear coat</p></div>
+    </div>
+  </section>
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <span>&copy; 2026 Jones Anderson</span>
+    <nav aria-label="Footer">
+      <a href="mailto:ja@vortex1.dev">ja@vortex1.dev</a>
+      <a href="https://github.com/vortexcodes" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://coruscantventures.com" target="_blank" rel="noopener">Coruscant Ventures</a>
+      <a href="changelog.html">Changelog</a>
+      <a href="account.html">Gear accounts</a>
     </nav>
-
-    <header>
-        <div class="container">
-            <h1>About Me</h1>
-            <p class="tagline">Maker • 3D Printing • LEDs • Electronics</p>
-        </div>
-    </header>
-
-    <main class="container">
-        <section class="bio-section">
-            <div class="bio-content">
-                <div class="bio-image-container">
-                    <img src="media/favicon.png" alt="Profile Photo" class="bio-image">
-                </div>
-
-                <div class="bio-text">
-                    <h2>Hi, I'm Jones JH Anderson</h2>
-                    <p>I'm a passionate maker and electronics enthusiast who loves bringing creative ideas to life through 3D printing, LEDs, and custom hardware projects.</p>
-
-                    <h3>What I Do</h3>
-                    <p>I specialize in creating unique electronic projects that combine design, engineering, and artistry. From LED wearables to custom PCB badges, I enjoy tackling challenging builds that push my skills and create something people can actually use and enjoy.</p>
-
-                    <h3>My Journey</h3>
-                    <p>My journey into making started with a curiosity about how things work and a desire to create something unique. Over time, I've developed skills in 3D printing, PCB design, soldering, programming, and various fabrication techniques.</p>
-
-                    <h3>Skills & Tools</h3>
-                    <ul class="skills-list">
-                        <li>3D Printing (Prusa XL, Bambu Labs P1P)</li>
-                        <li>PCB Design & Manufacturing</li>
-                        <li>LED Programming (WLED, Addressable RGB)</li>
-                        <li>Soldering & Electronics Assembly</li>
-                        <li>3D Modeling & CAD</li>
-                        <li>Painting & Finishing</li>
-                    </ul>
-
-                    <h3>Get In Touch</h3>
-                    <p>Interested in my work or have a project idea? Feel free to reach out!</p>
-                    <div class="contact-links">
-                        <a href="mailto:ja@vortex1.dev" class="contact-btn">Email Me</a>
-                        <a href="https://github.com/vortexcodes" class="contact-btn" target="_blank">GitHub</a>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 Vortex1. All rights reserved.</p>
-        </div>
-    </footer>
+  </div>
+</footer>
 </body>
 </html>
