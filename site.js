@@ -275,7 +275,7 @@
     data: function () { return RAW; }, projects: function () { return P; }
   };
 
-  function signedIn() { try { return !!localStorage.getItem('vx-gh-token'); } catch (e) { return false; } }
+  function signedIn() { try { return !!localStorage.getItem('vx-session'); } catch (e) { return false; } }
   Promise.all([
     fetch('data/projects.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }),
     fetch('data/log.json', { cache: 'no-cache' }).then(function (r) { return r.json(); })

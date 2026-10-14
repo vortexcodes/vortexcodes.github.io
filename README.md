@@ -4,7 +4,7 @@ My portfolio site, hosted on GitHub Pages.
 
 ## Editing from the site
 
-Click **Edit site** in the footer and paste a GitHub key (fine-grained token, this repo only, Contents: read and write). Then:
+Click **Edit site** in the footer and sign in (username `vortex1`). Then:
 
 - **Projects:** "New project" on the home page; "Edit project" on any project page. Upload photos, pick the cover, reorder, edit specs, details, links and the write-up, or delete the project.
 - **Build log:** "New entry" on the build log page, "Add log entry" on a project page, "Edit entry" under any entry.
@@ -12,6 +12,16 @@ Click **Edit site** in the footer and paste a GitHub key (fine-grained token, th
 
 Each save is one commit to `main`. GitHub Pages republishes about a minute later; while signed in you see the new version right away.
 Photos are resized to 1600 px JPEGs in the browser and saved to `media/work/` (projects) or `media/log/` (log entries).
+
+### The login server
+
+Sign-in goes through a Cloudflare Worker (`editor-worker/worker.js`, deployed as `vortex1-editor` on the route `vortex1.dev/editor-api/*`).
+It checks the password, holds the GitHub key, and only lets the editor change `data/*.json` and photos in `media/`.
+After 5 wrong passwords from one address (or 30 total) sign-in locks for an hour.
+
+- **Change the password:** Cloudflare → Workers → vortex1-editor → Settings → Variables and Secrets → edit `EDITOR_PASSWORD`. Every device gets signed out.
+- **GitHub key expired:** make a new fine-grained key (only this repo, Contents: read and write) and replace `GITHUB_TOKEN` there.
+- **Update the server code:** paste `editor-worker/worker.js` into the worker's code editor and deploy.
 
 ## Editing by hand
 
@@ -32,5 +42,6 @@ Photos are resized to 1600 px JPEGs in the browser and saved to `media/work/` (p
 | `tools.css` | Extra styles for the interactive pages |
 | `site.js` | Renders projects, the build log and the photo viewer |
 | `admin.js`, `admin.css` | The editor (only loads after you click Edit site or are signed in) |
+| `editor-worker/worker.js` | The login server (Cloudflare Worker) |
 | `data/projects.json`, `data/log.json` | All project and build log content |
 | `404.html` | Sends old links like `/sao-many-saos` to the right project page |

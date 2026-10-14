@@ -1,39 +1,42 @@
 // Site editor. Loaded by site.js when you're signed in or click "Edit site" in the footer.
-// Signing in stores a GitHub fine-grained token (this repo only, Contents: read and write) in this browser.
+// Sign-in goes through the login server in editor-worker/ (a Cloudflare Worker on vortex1.dev/editor-api),
+// which checks the password and holds the GitHub key. The browser only keeps a 30-day sign-in.
 // Every save is one commit to main; GitHub Pages republishes the site about a minute later.
 (function () {
   var OWNER = 'vortexcodes', REPO = 'vortexcodes.github.io', BRANCH = 'main';
-  var API = 'https://api.github.com/repos/' + OWNER + '/' + REPO;
-  var TOKEN_KEY = 'vx-gh-token', MODE_KEY = 'vx-edit', USER_KEY = 'vx-gh-user';
+  var EDITOR = '/editor-api';
+  var TOKEN_KEY = 'vx-session', MODE_KEY = 'vx-edit', USER_KEY = 'vx-user';
   var STATUSES = ['In progress', 'Finished', 'Shipped', 'Sold', 'Paused', 'Idea'];
   var el = Site.el;
 
   function store(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
   function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function token() { return load(TOKEN_KEY); }
+  store('vx-gh-token', null); store('vx-gh-user', null); // from the old GitHub-key sign-in
 
   var css = document.createElement('link');
   css.rel = 'stylesheet'; css.href = 'admin.css?v=1';
   document.head.appendChild(css);
 
-  /* ---------- GitHub API ---------- */
+  /* ---------- GitHub API (through the login server) ---------- */
   function api(path, opts) {
     opts = opts || {};
     var headers = {
-      Authorization: 'Bearer ' + (opts.token || token()),
+      Authorization: 'Bearer ' + token(),
       Accept: opts.raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28'
     };
     if (opts.body) headers['Content-Type'] = 'application/json';
-    return fetch(path.indexOf('https:') === 0 ? path : API + path, {
+    return fetch(EDITOR + '/gh' + path, {
       method: opts.method || 'GET', headers: headers, cache: 'no-store',
       body: opts.body ? JSON.stringify(opts.body) : undefined
     }).then(function (r) {
       if (!r.ok) return r.text().then(function (t) {
-        var err = new Error(r.status === 401 ? 'GitHub rejected the key. It may have expired.' :
-          r.status === 403 || r.status === 404 ? 'This key can\'t write to ' + REPO + '.' : 'GitHub error ' + r.status + '.');
+        var said; try { said = JSON.parse(t).error; } catch (e) {}
+        var err = new Error(r.status === 401 ? 'Your sign-in expired. Sign in again.' :
+          said || (r.status === 422 ? 'GitHub refused the change.' : 'Saving failed (error ' + r.status + '). Try again.'));
         err.status = r.status; err.detail = t; throw err;
-      });
+      }, function () { var e = new Error('Can\'t reach the editor server. Check your connection.'); throw e; });
       return opts.raw ? r.text() : r.json();
     });
   }
@@ -413,35 +416,31 @@
   }
 
   /* ---------- sign in ---------- */
-  var TOKEN_URL = 'https://github.com/settings/personal-access-tokens/new?name=vortex1.dev+editor&description=Edits+vortex1.dev+from+the+site&target_name=' + OWNER + '&expires_in=366&contents=write';
   function signIn() {
-    var key = text('', { type: 'password', autocomplete: 'off', spellcheck: 'false', placeholder: 'github_pat_…' });
+    var user = text('', { autocomplete: 'username', autocapitalize: 'none', spellcheck: 'false' });
+    var pass = text('', { type: 'password', autocomplete: 'current-password' });
     var go = el('button', { type: 'submit', class: 'btn primary', text: 'Sign in' });
-    var steps = el('ol', { class: 'ed-steps' }, [
-      el('li', null, [el('a', { href: TOKEN_URL, target: '_blank', rel: 'noopener', text: 'Make a GitHub key' }), ' (opens GitHub, already filled in).']),
-      el('li', { text: 'Under Repository access, choose "Only select repositories" and pick ' + REPO + '.' }),
-      el('li', { text: 'Check that Contents is set to "Read and write", then Generate token.' }),
-      el('li', { text: 'Copy the key and paste it below. Do this once on each browser you edit from.' })
-    ]);
-    var s = sheet('Sign in to edit', [
-      el('p', { text: 'Editing saves straight to the site\'s GitHub repo, so signing in uses a GitHub key that can only change this one repo.' }),
-      steps, field('GitHub key', key, 'Kept in this browser only. Sign out removes it.')
-    ], [el('span', { class: 'ed-spacer' }), go]);
+    var s = sheet('Sign in to edit', [field('Username', user), field('Password', pass)], [el('span', { class: 'ed-spacer' }), go]);
     go.onclick = function () {
-      var t = key.value.trim();
-      if (!t) return s.msg('Paste your key first.', true), key.focus();
-      busy([go], true); s.msg('Checking the key…');
-      api(API, { token: t }).then(function (repo) {
-        if (!repo.permissions || !repo.permissions.push) throw new Error('That key can read the repo but not change it. Set Contents to "Read and write".');
-        return api('https://api.github.com/user', { token: t }).then(function (u) { return u.login; }, function () { return OWNER; });
-      }).then(function (login) {
-        store(TOKEN_KEY, t); store(USER_KEY, login); store(MODE_KEY, '1');
+      var u = user.value.trim();
+      if (!u || !pass.value) return s.msg('Enter your username and password.', true), (u ? pass : user).focus();
+      busy([go], true); s.msg('Signing in…');
+      fetch(EDITOR + '/login', {
+        method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: pass.value })
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (d) {
+          if (!r.ok || !d.token) throw new Error(d.error || 'Sign-in failed (error ' + r.status + ').');
+          return d;
+        });
+      }, function () { throw new Error('Can\'t reach the editor server. Check your connection.'); }).then(function (d) {
+        store(TOKEN_KEY, d.token); store(USER_KEY, d.user); store(MODE_KEY, '1');
         s.dlg.close();
         if (location.hash === '#edit') history.replaceState(null, '', location.pathname + location.search);
         boot();
-      }, function (e) { busy([go], false); s.msg(e.message, true); });
+      }, function (e) { busy([go], false); s.msg(e.message, true); pass.select(); });
     };
-    key.focus();
+    user.focus();
   }
   function signOut() {
     store(TOKEN_KEY, null); store(USER_KEY, null); store(MODE_KEY, null);
