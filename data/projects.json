@@ -57,7 +57,7 @@
       ],
       "facts": {
         "Standard": "SAO v1.69bis, 25 ports",
-        "Power": "2 × 18650, charged over USB or barrel jack",
+        "Power": "2 \u00d7 18650, charged over USB or barrel jack",
         "SAO rail": "About 300 mA at 3.3 V, fused",
         "Lights": "White ARGB edge LEDs, driven by the SmartAO",
         "Sold": "DEF CON 33 and Hacker Warehouse"
@@ -129,7 +129,9 @@
       "cover": "media/work/mac-mini-case-2.jpg",
       "photos": [
         "media/work/mac-mini-case-2.jpg",
-        "media/work/mac-mini-case-1.jpg"
+        "media/work/mac-mini-case-1.jpg",
+        "media/log/2026-10-13-mac-mini-case-1.jpg",
+        "media/log/2026-10-13-mac-mini-case-2.jpg"
       ],
       "facts": {
         "Machine": "Haas Super Mini Mill",
@@ -262,8 +264,8 @@
         "Songs": "Happy Birthday, the Imperial March"
       },
       "details": [
-        "Notes come from carriage speed: frequency ÷ steps per mm",
-        "Microstepping drops from 16× to 4× during playback for more volume",
+        "Notes come from carriage speed: frequency \u00f7 steps per mm",
+        "Microstepping drops from 16\u00d7 to 4\u00d7 during playback for more volume",
         "Percussion is a short, fast Z move; direction alternates so Z doesn't drift",
         "Separate 10-second tuning files for each note, checked with a phone tuner"
       ]
@@ -277,7 +279,7 @@
       "status": "Finished",
       "summary": "A four-color 3D-printed terrain map of a canoe route through the Sylvania Wilderness, generated from my CalTopo track.",
       "facts": {
-        "Size": "115 × 81 mm",
+        "Size": "115 \u00d7 81 mm",
         "Colors": "Ground, water, route, labels",
         "Data": "CalTopo track, AWS terrain tiles, OpenStreetMap lakes"
       }
