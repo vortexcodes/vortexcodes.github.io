@@ -33,6 +33,7 @@ body.has-edit-bar { padding-bottom: 64px; }
 .eb-who { opacity: 0.75; }
 .eb-msg { flex: 1; min-width: 0; }
 .eb-link { margin-left: auto; font: inherit; background: none; border: 0; color: var(--paper); text-decoration: underline; cursor: pointer; padding: 6px 0; }
+.eb-link + .eb-link { margin-left: 0; }
 
 /* Edit sheet */
 .ed-sheet {
@@ -44,7 +45,7 @@ body.has-edit-bar { padding-bottom: 64px; }
 .ed-sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 24px; border-bottom: 1px solid var(--rule); }
 .ed-sheet-head h2 { font: 800 var(--step-2)/1 var(--display); margin: 0; }
 .ed-close { font: inherit; background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; }
-.ed-sheet-body { overflow-y: auto; padding: 20px 24px 28px; display: grid; gap: 18px; }
+.ed-sheet-body { overflow-y: auto; padding: 20px 24px 28px; display: grid; gap: 18px; align-content: start; }
 .ed-sheet-body > p { margin: 0; }
 .ed-sheet-foot { border-top: 1px solid var(--rule); padding: 14px 24px; display: grid; gap: 10px; background: var(--paper); }
 .ed-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -75,6 +76,7 @@ body.has-edit-bar { padding-bottom: 64px; }
 .ed-pairs > div:first-child { display: grid; gap: 8px; width: 100%; }
 .ed-pair { display: grid; grid-template-columns: 1fr 1.6fr auto; gap: 8px; }
 .ed-x { font: inherit; font-size: var(--step--1); background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; }
+.ed-hint .ed-x { padding: 0; }
 
 .ed-photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
 .ed-photo { margin: 0; position: relative; border: 1.5px solid var(--rule); border-radius: 3px; overflow: hidden; background: var(--paper); }
