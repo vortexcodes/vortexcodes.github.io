@@ -42,6 +42,16 @@
   function hrs(n) { return (Math.round(n * 10) / 10).toString(); }
   function logFor(slug) { return L.filter(function (e) { return e.project === slug; }); }
   function editing() { return !!(window.SiteEdit && window.SiteEdit.on()); }
+  // Hidden projects, and their log entries, only show while you're signed in with editing on.
+  function shown() { return editing() ? P : P.filter(function (p) { return !p.hidden; }); }
+  function shownLog() { return editing() ? L : L.filter(function (e) { var p = bySlug[e.project]; return !(p && p.hidden); }); }
+  function hiddenTag(p) { return p.hidden ? el('span', { class: 'tag-hidden', text: 'Hidden' }) : null; }
+  function flagBtns(p) {
+    return [
+      editBtn(p.featured ? '★ Starred' : '☆ Star', function () { SiteEdit.toggleFlag(p, 'featured', this); }, p.featured ? 'on' : ''),
+      editBtn(p.hidden ? 'Unhide' : 'Hide', function () { SiteEdit.toggleFlag(p, 'hidden', this); }, p.hidden ? 'on' : '')
+    ];
+  }
   function editBtn(label, fn, cls) {
     return el('button', { type: 'button', class: 'edit-btn' + (cls ? ' ' + cls : ''), text: label, onclick: fn });
   }
@@ -102,19 +112,21 @@
 
   /* ---------- home ---------- */
   function renderHome() {
+    var V = shown();
     var grid = clear(document.getElementById('work-grid'));
-    if (grid) P.filter(function (p) { return p.featured; }).forEach(function (p) {
-      grid.appendChild(el('a', { class: 'item', href: url(p) }, [
+    if (grid) V.filter(function (p) { return p.featured; }).forEach(function (p) {
+      grid.appendChild(el('a', { class: 'item' + (p.hidden ? ' is-hidden' : ''), href: url(p) }, [
         el('div', { class: 'shot' }, [p.cover ? img(p.cover, p.name, true) : null]),
-        el('h3', { text: p.name }),
+        el('h3', null, [p.name, hiddenTag(p)]),
         el('p', { text: [p.when, (p.kind || '').toLowerCase()].filter(Boolean).join(', ') })
       ]));
     });
     var body = clear(document.getElementById('index-body'));
-    if (body) P.forEach(function (p) {
-      body.appendChild(el('tr', null, [
+    if (body) V.forEach(function (p) {
+      body.appendChild(el('tr', { class: p.hidden ? 'is-hidden' : null }, [
         el('td', { text: p.when }),
-        el('td', null, [el('a', { href: url(p), text: p.name }), el('span', { class: 'sum', text: p.summary })]),
+        el('td', null, [el('a', { href: url(p), text: p.name }), hiddenTag(p), el('span', { class: 'sum', text: p.summary }),
+          editing() ? el('span', { class: 'row-tools' }, flagBtns(p)) : null]),
         el('td', { class: 'kind', text: p.kind }),
         el('td', { class: 'status' }, [el('span', { class: 'status-dot', 'data-s': p.status }), p.status || ''])
       ]));
@@ -129,7 +141,8 @@
       if (editing()) tools.appendChild(editBtn('New project', function () { SiteEdit.editProject(null); }, 'primary'));
     }
     var latest = clear(document.getElementById('latest-log'));
-    if (latest) latest.appendChild(L.length ? logList(L.slice(0, 3)) : emptyLog());
+    var LV = shownLog();
+    if (latest) latest.appendChild(LV.length ? logList(LV.slice(0, 3)) : emptyLog());
   }
 
   /* ---------- project page ---------- */
@@ -138,7 +151,8 @@
     if (!root) return;
     var slug = new URLSearchParams(location.search).get('p') || '';
     var p = bySlug[slug] || bySlug[RAW.oldSlugs[slug]];
-    if (!p) {
+    var V = shown();
+    if (!p || V.indexOf(p) < 0) {
       document.title = 'Project not found | Jones Anderson';
       root.appendChild(el('div', { class: 'page-head' }, [
         el('h1', { text: 'Not found' }),
@@ -154,7 +168,8 @@
     if (editing()) head.appendChild(el('div', { class: 'edit-row' }, [
       editBtn('Edit project', function () { SiteEdit.editProject(p); }, 'primary'),
       editBtn('Add log entry', function () { SiteEdit.editEntry(null, p.slug); })
-    ]));
+    ].concat(flagBtns(p))));
+    if (p.hidden) head.appendChild(el('p', { class: 'hidden-note', text: 'Hidden. Visitors get "Not found" here and the project is left off every list. Only you see it, while signed in.' }));
     root.appendChild(head);
 
     var gal = el('div', { class: 'proj-gal' });
@@ -178,13 +193,13 @@
     var rows = [['Made by', 'Jones Anderson'], ['When', p.when], ['Kind', p.kind], ['Status', p.status]];
     Object.keys(p.facts || {}).forEach(function (k) { rows.push([k, p.facts[k]]); });
     rows.forEach(function (r) { if (r[1]) { dl.appendChild(el('dt', { text: r[0] })); dl.appendChild(el('dd', { text: r[1] })); } });
-    var idx = P.indexOf(p) + 1;
+    var idx = V.indexOf(p) + 1;
     var tHours = entries.reduce(function (s, e) { return s + (+e.hours || 0); }, 0);
     var side = el('aside', { class: 'proj-side' }, [el('div', { class: 'proj-side-in' }, [
       el('div', { class: 'titleblock' }, [
         el('div', { class: 'tb-name', text: p.name }), dl,
         el('div', { class: 'tb-foot' }, [
-          el('span', { text: 'Sheet ' + idx + ' of ' + P.length }),
+          el('span', { text: 'Sheet ' + idx + ' of ' + V.length }),
           el('span', { text: entries.length ? hrs(tHours) + ' h logged' : 'vortex1.dev' })
         ])
       ])
@@ -197,7 +212,7 @@
 
     root.appendChild(el('div', { class: 'proj-body' }, [gal, side, prose.childNodes.length ? prose : null]));
 
-    var prev = P[P.indexOf(p) - 1], next = P[P.indexOf(p) + 1];
+    var prev = V[idx - 2], next = V[idx];
     var nav = el('nav', { class: 'proj-nav', 'aria-label': 'More projects' });
     if (prev) nav.appendChild(el('a', { href: url(prev) }, [el('span', { text: 'Newer' }), el('strong', { text: prev.name })]));
     if (next) nav.appendChild(el('a', { class: 'next', href: url(next) }, [el('span', { text: 'Older' }), el('strong', { text: next.name })]));
@@ -234,7 +249,7 @@
     var sum = document.getElementById('log-summary');
     var keep = sel.value;
     while (sel.options.length > 1) sel.remove(1);
-    var used = P.filter(function (p) { return logFor(p.slug).length; });
+    var used = shown().filter(function (p) { return logFor(p.slug).length; });
     used.forEach(function (p) { sel.appendChild(el('option', { value: p.slug, text: p.name })); });
     sel.value = used.some(function (p) { return p.slug === keep; }) ? keep : '';
     var tools = document.getElementById('log-edit');
@@ -242,7 +257,7 @@
     clear(tools);
     if (editing()) tools.appendChild(editBtn('New entry', function () { SiteEdit.editEntry(null, sel.value); }, 'primary'));
     function draw() {
-      var list = sel.value ? logFor(sel.value) : L;
+      var list = sel.value ? logFor(sel.value) : shownLog();
       var h = list.reduce(function (s, e) { return s + (+e.hours || 0); }, 0);
       var n = new Set(list.map(function (e) { return e.project; })).size;
       sum.textContent = list.length
@@ -262,7 +277,7 @@
   function loadEditor(then) {
     if (window.SiteEdit) return then && then();
     var s = document.createElement('script');
-    s.src = 'admin.js?v=2'; s.onload = function () { then && then(); };
+    s.src = 'admin.js?v=3'; s.onload = function () { then && then(); };
     document.body.appendChild(s);
   }
   var footNav = document.querySelector('.site-foot nav');

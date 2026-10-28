@@ -15,6 +15,7 @@ The password locks the GitHub key with PBKDF2 + AES-GCM and saves the locked cop
 Once signed in:
 
 - **Projects:** "New project" on the home page; "Edit project" on any project page. Upload photos, pick the cover, reorder, edit specs, details, links and the write-up, or delete the project.
+- **Star / Hide:** buttons under each project in the home page list and on each project page. Starred projects show in Selected work. Hidden projects (and their log entries) disappear from the public site; you still see them, marked Hidden, while signed in. Hidden only means not shown: the text is still in the public `data/projects.json`.
 - **Build log:** "New entry" on the build log page, "Add log entry" on a project page, "Edit entry" under any entry.
 - **Editing on / off** in the bar at the bottom hides the edit buttons so you can see the page as visitors do.
 
@@ -23,7 +24,7 @@ Photos are resized to 1600 px JPEGs in the browser and saved to `media/work/` (p
 
 ## Editing by hand
 
-- **A project:** add an object to `projects` in `data/projects.json`. `sort` (YYYY-MM) sets the order, `featured: true` puts it in Selected work.
+- **A project:** add an object to `projects` in `data/projects.json`. `sort` (YYYY-MM) sets the order, `featured: true` puts it in Selected work, `hidden: true` keeps it off the public site.
 - **A build log entry:** add an object to `data/log.json` (id, date, project slug, title, hours, text, photos). Entries are written in my own words.
 - **A changelog line:** add it at the top of `changelog.html`.
 

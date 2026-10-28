@@ -13,7 +13,7 @@
   function token() { return load(TOKEN_KEY); }
 
   var css = document.createElement('link');
-  css.rel = 'stylesheet'; css.href = 'admin.css?v=2';
+  css.rel = 'stylesheet'; css.href = 'admin.css?v=3';
   document.head.appendChild(css);
 
   /* ---------- GitHub API ---------- */
@@ -286,6 +286,7 @@
     var kind = text(p.kind, { list: 'ed-kinds', placeholder: 'Electronics' });
     var status = text(p.status, { list: 'ed-statuses' });
     var featured = el('input', { type: 'checkbox' }); featured.checked = !!p.featured;
+    var hidden = el('input', { type: 'checkbox' }); hidden.checked = !!p.hidden;
     var summary = area(p.summary, 3, { placeholder: 'One or two sentences: what it is and what makes it interesting.' });
     var photos = photoField(p.photos, { cover: p.cover || null });
     var facts = pairRows(Object.keys(p.facts || {}).map(function (k) { return [k, p.facts[k]]; }), 'Label', 'Value', 'Controller', 'ESP32-S3');
@@ -312,7 +313,8 @@
         field('Kind', kind),
         field('Status', status)
       ]),
-      el('label', { class: 'ed-check' }, [featured, ' Show in Selected work on the home page']),
+      el('label', { class: 'ed-check' }, [featured, ' Star: show in Selected work on the home page']),
+      el('label', { class: 'ed-check' }, [hidden, ' Hide: only you see it, while signed in']),
       field('Summary', summary),
       el('fieldset', { class: 'ed-set' }, [el('legend', { text: 'Photos' }), el('p', { class: 'ed-hint', text: 'First photo is the cover unless you pick one. Photos are resized to 1600 px before upload.' }), photos.node]),
       el('fieldset', { class: 'ed-set' }, [el('legend', { text: 'Specs' }), el('p', { class: 'ed-hint', text: 'Shown in the title block next to the photos.' }), facts.node]),
@@ -332,13 +334,13 @@
       var factsObj = {}; facts.value().forEach(function (kv) { factsObj[kv[0]] = kv[1]; });
       var out = Object.assign({}, p, {
         slug: isNew ? sl : p.slug, name: n, sort: sort.value, when: when.value.trim() || monthLabel(sort.value),
-        kind: kind.value.trim(), status: status.value.trim(), featured: featured.checked,
+        kind: kind.value.trim(), status: status.value.trim(), featured: featured.checked, hidden: hidden.checked,
         summary: summary.value.trim(), cover: photos.cover(), photos: photos.paths(), facts: factsObj,
         details: details.value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean),
         links: links.value().map(function (kv) { return { label: kv[0], href: kv[1] }; }),
         writeup: textToWriteup(writeup.value), note: note.value.trim()
       });
-      ['writeup', 'note', 'cover', 'kind', 'status'].forEach(function (k) { if (!out[k]) delete out[k]; });
+      ['writeup', 'note', 'cover', 'kind', 'status', 'hidden'].forEach(function (k) { if (!out[k]) delete out[k]; });
       ['links', 'details'].forEach(function (k) { if (!out[k].length) delete out[k]; });
       if (!Object.keys(out.facts).length) delete out.facts;
       busy([saveBtn, del], true); s.msg('Saving…');
@@ -354,6 +356,27 @@
       }, function (e) { busy([saveBtn, del], false); s.msg(e.message, true); });
     };
     name.focus();
+  }
+
+  /* ---------- star / hide ---------- */
+  // One click from the project list or page. Starred (featured) projects show in Selected work;
+  // hidden ones are left off the public site.
+  var FLAGS = {
+    featured: ['Star project: ', 'Unstar project: ', ' is starred.', ' is unstarred.'],
+    hidden: ['Hide project: ', 'Unhide project: ', ' is hidden.', ' is public again.']
+  };
+  function toggleFlag(p, key, btn) {
+    var on = !p[key], f = FLAGS[key];
+    if (btn) btn.disabled = true;
+    if (barMsg) barMsg.textContent = 'Saving…';
+    save((on ? f[0] : f[1]) + p.name, function (d) {
+      var x = d.projects.find(function (x) { return x.slug === p.slug; });
+      if (!x) throw new Error('This project was deleted somewhere else. Reload the page.');
+      if (on) x[key] = true; else delete x[key];
+    }).then(function () { done(p.name + (on ? f[2] : f[3])); }, function (e) {
+      if (btn) btn.disabled = false;
+      if (barMsg) barMsg.textContent = e.message;
+    });
   }
 
   /* ---------- log entry editor ---------- */
@@ -613,5 +636,5 @@
     });
   }
 
-  window.SiteEdit = { boot: boot, on: on, open: function () { token() ? boot() : signIn(); }, editProject: editProject, editEntry: editEntry };
+  window.SiteEdit = { boot: boot, on: on, open: function () { token() ? boot() : signIn(); }, editProject: editProject, editEntry: editEntry, toggleFlag: toggleFlag };
 })();
