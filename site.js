@@ -262,7 +262,7 @@
   function loadEditor(then) {
     if (window.SiteEdit) return then && then();
     var s = document.createElement('script');
-    s.src = 'admin.js?v=1'; s.onload = function () { then && then(); };
+    s.src = 'admin.js?v=2'; s.onload = function () { then && then(); };
     document.body.appendChild(s);
   }
   var footNav = document.querySelector('.site-foot nav');

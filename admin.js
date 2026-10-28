@@ -13,7 +13,7 @@
   function token() { return load(TOKEN_KEY); }
 
   var css = document.createElement('link');
-  css.rel = 'stylesheet'; css.href = 'admin.css?v=1';
+  css.rel = 'stylesheet'; css.href = 'admin.css?v=2';
   document.head.appendChild(css);
 
   /* ---------- GitHub API ---------- */
@@ -412,33 +412,157 @@
     (isNew ? title : body).focus();
   }
 
+  /* ---------- password ---------- */
+  // data/login.json holds the GitHub key locked with your password (PBKDF2 + AES-GCM), so any
+  // browser can sign in with just the password. The file is public, so the password has to be strong.
+  var LOGIN_PATH = 'data/login.json', ITER = 600000, MIN_PW = 10;
+  function b64(buf) { return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))); }
+  function unb64(s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); }
+  function deriveKey(pw, salt, iter) {
+    if (!(window.crypto && crypto.subtle)) return Promise.reject(new Error('Password sign-in only works on https://vortex1.dev.'));
+    return crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']).then(function (k) {
+      return crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: salt, iterations: iter }, k,
+        { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    });
+  }
+  function lock(tok, pw) {
+    var salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    return deriveKey(pw, salt, ITER).then(function (k) {
+      return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, k, new TextEncoder().encode(tok));
+    }).then(function (ct) { return { v: 1, kdf: 'PBKDF2-SHA256', iter: ITER, salt: b64(salt), iv: b64(iv), key: b64(ct) }; });
+  }
+  function unlock(box, pw) {
+    return deriveKey(pw, unb64(box.salt), box.iter || ITER).then(function (k) {
+      return crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(box.iv) }, k, unb64(box.key))
+        .catch(function () { throw new Error('Wrong password.'); });
+    }).then(function (pt) { return new TextDecoder().decode(pt); });
+  }
+  // Signed out: read the locked key from the site, or from the repo if Pages hasn't caught up yet.
+  function loginBox() {
+    function get(u) { return fetch(u, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }); }
+    return get(LOGIN_PATH).catch(function () { return null; }).then(function (b) {
+      return b || get('https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/' + BRANCH + '/' + LOGIN_PATH).catch(function () { return null; });
+    });
+  }
+  function loginSha() {
+    return api('/contents/' + LOGIN_PATH + '?ref=' + BRANCH).then(function (f) { return f.sha; }, function (e) {
+      if (e.status === 404) return null; throw e;
+    });
+  }
+  function setPassword(pw) {
+    return Promise.all([lock(token(), pw), loginSha()]).then(function (r) {
+      var body = { message: 'Update the editor password', branch: BRANCH, content: btoa(JSON.stringify(r[0], null, 2) + '\n') };
+      if (r[1]) body.sha = r[1];
+      return api('/contents/' + LOGIN_PATH, { method: 'PUT', body: body });
+    });
+  }
+  function checkPassword(a, b) {
+    if (a.value.length < MIN_PW) return a.focus(), 'Use at least ' + MIN_PW + ' characters.';
+    if (a.value !== b.value) return b.focus(), 'The two passwords don\'t match.';
+  }
+  function passwordFields(label) {
+    var a = text('', { type: 'password', autocomplete: 'new-password', minlength: MIN_PW });
+    var b = text('', { type: 'password', autocomplete: 'new-password' });
+    return { a: a, b: b, nodes: [el('div', { class: 'ed-grid' }, [field(label, a), field('Same password again', b)])] };
+  }
+  var PW_HELP = 'Your GitHub key gets saved on the site, locked with this password. The locked copy is public, ' +
+    'so use at least ' + MIN_PW + ' characters you don\'t use anywhere else. A few random words works well.';
+
+  function passwordSheet(exists) {
+    var f = passwordFields(exists ? 'New password' : 'Password');
+    var saveBtn = el('button', { type: 'submit', class: 'btn primary', text: 'Save password' });
+    var off = exists ? confirmBtn('Turn off password sign-in', 'Click again to turn off', function (b) {
+      busy([saveBtn, b], true); s.msg('Turning off…');
+      loginSha().then(function (sha) {
+        if (sha) return api('/contents/' + LOGIN_PATH, { method: 'DELETE', body: { message: 'Turn off password sign-in', sha: sha, branch: BRANCH } });
+      }).then(function () { done('Password sign-in is off.'); s.dlg.close(); }, function (e) { busy([saveBtn, b], false); s.msg(e.message, true); });
+    }) : null;
+    var s = sheet('Password sign-in', [
+      el('p', { text: exists ? 'Password sign-in is on. Any browser can sign in at vortex1.dev/login with your password.' :
+        'Set a password and any browser (your phone, a school laptop) can sign in at vortex1.dev/login with just that.' }),
+      el('p', { class: 'ed-hint', text: PW_HELP + (exists ? ' Saving also refreshes the key with the one this browser is using.' : '') })
+    ].concat(f.nodes), [off, el('span', { class: 'ed-spacer' }), saveBtn]);
+    saveBtn.onclick = function () {
+      var bad = checkPassword(f.a, f.b);
+      if (bad) return s.msg(bad, true);
+      busy([saveBtn, off], true); s.msg('Saving…');
+      setPassword(f.a.value).then(function () { done('Password saved.'); s.dlg.close(); },
+        function (e) { busy([saveBtn, off], false); s.msg(e.message, true); });
+    };
+    f.a.focus();
+  }
+
   /* ---------- sign in ---------- */
   var TOKEN_URL = 'https://github.com/settings/personal-access-tokens/new?name=vortex1.dev+editor&description=Edits+vortex1.dev+from+the+site&target_name=' + OWNER + '&expires_in=366&contents=write';
+  // Resolves to the GitHub login if the key can change the repo.
+  function checkKey(t) {
+    return api(API, { token: t }).then(function (repo) {
+      if (!repo.permissions || !repo.permissions.push) throw new Error('That key can read the repo but not change it. Set Contents to "Read and write".');
+      return api('https://api.github.com/user', { token: t }).then(function (u) { return u.login; }, function () { return OWNER; });
+    });
+  }
+  function signedIn(t, login) {
+    store(TOKEN_KEY, t); store(USER_KEY, login); store(MODE_KEY, '1');
+    if (location.hash === '#edit') history.replaceState(null, '', location.pathname + location.search);
+    boot();
+  }
   function signIn() {
+    loginBox().then(function (box) { if (box) passwordSignIn(box); else keySignIn(false); });
+  }
+  function passwordSignIn(box) {
+    var pw = text('', { type: 'password', autocomplete: 'current-password' });
+    var go = el('button', { type: 'submit', class: 'btn primary', text: 'Sign in' });
+    var s = sheet('Sign in to edit', [
+      el('input', { type: 'text', name: 'username', autocomplete: 'username', value: OWNER, hidden: '' }),
+      field('Password', pw),
+      el('p', { class: 'ed-hint' }, ['Forgot it, or your GitHub key expired? ',
+        el('button', { type: 'button', class: 'ed-x', text: 'Sign in with a GitHub key', onclick: function () { s.dlg.close(); keySignIn(true); } })])
+    ], [el('span', { class: 'ed-spacer' }), go]);
+    go.onclick = function () {
+      if (!pw.value) return s.msg('Type your password.', true), pw.focus();
+      busy([go], true); s.msg('Checking…');
+      var t;
+      unlock(box, pw.value).then(function (k) { t = k; return checkKey(t); }).then(function (login) {
+        s.dlg.close(); signedIn(t, login);
+      }, function (e) {
+        busy([go], false); pw.select();
+        s.msg(e.status === 401 ? 'Right password, but the saved GitHub key expired. Sign in with a new GitHub key and set the password again.' : e.message, true);
+      });
+    };
+    pw.focus();
+  }
+  function keySignIn(hasPassword) {
     var key = text('', { type: 'password', autocomplete: 'off', spellcheck: 'false', placeholder: 'github_pat_…' });
     var go = el('button', { type: 'submit', class: 'btn primary', text: 'Sign in' });
     var steps = el('ol', { class: 'ed-steps' }, [
       el('li', null, [el('a', { href: TOKEN_URL, target: '_blank', rel: 'noopener', text: 'Make a GitHub key' }), ' (opens GitHub, already filled in).']),
       el('li', { text: 'Under Repository access, choose "Only select repositories" and pick ' + REPO + '.' }),
       el('li', { text: 'Check that Contents is set to "Read and write", then Generate token.' }),
-      el('li', { text: 'Copy the key and paste it below. Do this once on each browser you edit from.' })
+      el('li', { text: 'Copy the key and paste it below.' })
     ]);
+    var f = passwordFields(hasPassword ? 'New password (optional)' : 'Password (optional)');
     var s = sheet('Sign in to edit', [
       el('p', { text: 'Editing saves straight to the site\'s GitHub repo, so signing in uses a GitHub key that can only change this one repo.' }),
-      steps, field('GitHub key', key, 'Kept in this browser only. Sign out removes it.')
+      steps, field('GitHub key', key, 'Kept in this browser. Sign out removes it.'),
+      el('fieldset', { class: 'ed-set' }, [el('legend', { text: 'Sign in with a password next time' }),
+        el('p', { class: 'ed-hint', text: (hasPassword ? 'Fill this in to replace the saved key and password. Leave it blank to keep them. ' :
+          'Set one and other browsers only need the password, not a key. ') + PW_HELP })].concat(f.nodes))
     ], [el('span', { class: 'ed-spacer' }), go]);
     go.onclick = function () {
-      var t = key.value.trim();
+      var t = key.value.trim(), pw = f.a.value || f.b.value;
       if (!t) return s.msg('Paste your key first.', true), key.focus();
+      var bad = pw && checkPassword(f.a, f.b);
+      if (bad) return s.msg(bad, true);
       busy([go], true); s.msg('Checking the key…');
-      api(API, { token: t }).then(function (repo) {
-        if (!repo.permissions || !repo.permissions.push) throw new Error('That key can read the repo but not change it. Set Contents to "Read and write".');
-        return api('https://api.github.com/user', { token: t }).then(function (u) { return u.login; }, function () { return OWNER; });
-      }).then(function (login) {
-        store(TOKEN_KEY, t); store(USER_KEY, login); store(MODE_KEY, '1');
-        s.dlg.close();
-        if (location.hash === '#edit') history.replaceState(null, '', location.pathname + location.search);
-        boot();
+      checkKey(t).then(function (login) {
+        if (!pw) return s.dlg.close(), signedIn(t, login);
+        store(TOKEN_KEY, t); s.msg('Saving your password…');
+        return setPassword(f.a.value).then(function () {
+          s.dlg.close(); signedIn(t, login); done('Password saved.');
+        }, function (e) {
+          s.dlg.close(); signedIn(t, login);
+          if (barMsg) barMsg.textContent = 'Signed in, but the password didn\'t save: ' + e.message;
+        });
       }, function (e) { busy([go], false); s.msg(e.message, true); });
     };
     key.focus();
@@ -471,6 +595,10 @@
       toggle,
       el('span', { class: 'eb-who', text: 'Signed in as ' + (load(USER_KEY) || OWNER) }),
       barMsg,
+      el('button', { type: 'button', class: 'eb-link', text: 'Password', onclick: function () {
+        barMsg.textContent = '';
+        loginSha().then(function (sha) { passwordSheet(!!sha); }, function (e) { barMsg.textContent = e.message; });
+      } }),
       el('button', { type: 'button', class: 'eb-link', text: 'Sign out', onclick: signOut })
     ]));
   }
