@@ -16,6 +16,18 @@ button.btn { font: inherit; font-weight: 700; cursor: pointer; }
 .edit-btn.primary { border-style: solid; background: var(--accent); color: #fff; }
 .edit-btn:hover { filter: brightness(1.06); }
 .entry .edit-row { margin: 12px 0 0; }
+.edit-btn.on:not(.primary) { border-style: solid; border-color: var(--brass); background: transparent; color: var(--brass); }
+.edit-btn:disabled { opacity: 0.5; cursor: progress; }
+
+/* Starring and hiding projects */
+.row-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.row-tools .edit-btn { padding: 6px 10px; }
+.tag-hidden {
+  display: inline-block; margin-left: 8px; padding: 3px 7px; border: 1px solid var(--muted); border-radius: 2px;
+  font: 700 0.75rem/1 var(--body); color: var(--muted); vertical-align: 3px; letter-spacing: 0;
+}
+.index tr.is-hidden td > a, .index tr.is-hidden .sum, .index tr.is-hidden td:first-child, .item.is-hidden .shot { opacity: 0.55; }
+.hidden-note { margin: 0 0 18px; padding: 10px 14px; border: 1.5px dashed var(--muted); border-radius: 3px; color: var(--ink-2); font-size: var(--step--1); }
 
 /* Bar pinned to the bottom while signed in */
 body.has-edit-bar { padding-bottom: 64px; }
