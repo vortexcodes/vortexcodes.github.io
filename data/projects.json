@@ -189,18 +189,19 @@
       "slug": "voron-24",
       "name": "Voron 2.4",
       "sort": "2024-09",
-      "when": "Fall 2024",
+      "when": "Summer 2024",
       "kind": "Printers",
       "status": "Finished",
       "featured": true,
-      "summary": "A Voron 2.4 CoreXY printer I built from the frame up, with blue printed parts.",
+      "summary": "A Voron 2.4 CoreXY printer I built over the the corse of 3 months with a custom extruder mount and my own version of klipper running to allow non plainer 3d printing",
       "cover": "media/work/voron-24-1.jpg",
       "photos": [
         "media/work/voron-24-1.jpg"
       ],
       "facts": {
         "Kinematics": "CoreXY with a flying gantry",
-        "Firmware": "Klipper"
+        "Firmware": "Klipper",
+        "Controller": "Octopus v3"
       }
     },
     {
