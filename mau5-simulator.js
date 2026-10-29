@@ -86,7 +86,7 @@ const shellMat = new THREE.MeshStandardMaterial({
   transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false,
 });
 let bodyMesh = null;
-new GLTFLoader().load('mau5/helmet.glb', (g) => {
+new GLTFLoader().load('mau5/helmet.glb?v=3b3e687798', (g) => {
   bodyMesh = g.scene;
   bodyMesh.rotation.x = -Math.PI / 2;
   bodyMesh.traverse((o) => { if (o.isMesh) { o.material = shellMat; o.renderOrder = 0; } });
