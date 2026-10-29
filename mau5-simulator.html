@@ -4,49 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mau5head simulator | Jones Anderson</title>
+    <meta name="description" content="Every effect from my deadmau5 helmet, on the real 622-LED map inside the helmet's CAD, driven by your own music.">
     <link rel="icon" type="image/png" href="media/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
     <link rel="stylesheet" href="site.css">
-    <link rel="stylesheet" href="tools.css">
     <style>
-        .sim-wrap { display:grid; grid-template-columns:340px 1fr; gap:16px;
-            padding:16px 20px; max-width:1600px; margin:0 auto;
-            height:calc(100vh - 60px - 80px); min-height:620px; }
-        @media (max-width:1000px){ .sim-wrap{ grid-template-columns:1fr; height:auto; } }
-        .sim-panel { background:#111; border:1px solid #1f1f1f; border-radius:10px;
-            display:flex; flex-direction:column; overflow:hidden; }
-        .sim-panel h2 { font-size:.85rem; text-transform:uppercase; letter-spacing:1px;
-            color:#00ff88; padding:10px 14px; border-bottom:1px solid #1f1f1f; margin:0; }
-        .sim-body { padding:12px 14px; overflow-y:auto; }
-        #view { width:100%; height:100%; min-height:520px; }
-        #view canvas { display:block; border-radius:10px; }
-        #grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
-        #grid button { background:#17171f; border:1px solid #242430; color:#ddd;
-            border-radius:7px; padding:7px 4px; font:inherit; font-size:.72rem;
-            cursor:pointer; }
-        #grid button:hover { border-color:#00ff88; }
-        #grid button.on { background:#00ff88; color:#06110b; border-color:#00ff88;
-            font-weight:700; }
-        .simrow { display:flex; gap:8px; align-items:center; margin:7px 0;
-            font-size:.78rem; color:#9a9aa8; }
-        .simrow span { min-width:74px; }
-        .simrow input[type=range] { flex:1; }
-        .simrow input[type=text] { flex:1; background:#15151c; color:#eee;
-            border:1px solid #242430; border-radius:6px; padding:5px; font:inherit; }
-        .btnrow { display:flex; gap:6px; margin:8px 0; }
-        .btnrow button, .btnrow select { flex:1; background:#17171f; color:#ddd;
-            border:1px solid #242430; border-radius:7px; padding:8px 6px;
-            font:inherit; font-size:.78rem; cursor:pointer; }
-        .btnrow button.on { background:#00ff88; color:#06110b; font-weight:700; }
-        .btnrow button[disabled] { opacity:.4; cursor:default; }
-        .stats { display:flex; flex-wrap:wrap; gap:12px; font-size:.75rem;
-            color:#8a8a99; padding:8px 14px; border-top:1px solid #1f1f1f;
-            font-variant-numeric:tabular-nums; }
-        .stats b { color:#eee; }
-        .why { font-size:.74rem; color:#8a8a99; line-height:1.5; margin-top:8px; }
-        hr.sep { border:0; border-top:1px solid #1f1f1f; margin:12px 0; }
+        /* The page is a drawing sheet like every other page here: the
+           3D view is a plate on it, with a title strip, and the controls
+           are title blocks.  Only the plate is dark, because LEDs need a
+           dark room to look like LEDs. */
+        .sim { display: grid; grid-template-columns: minmax(0, 1fr) 340px;
+            gap: clamp(20px, 3vw, 40px); align-items: start; padding-bottom: 80px; }
+        @media (max-width: 960px) { .sim { grid-template-columns: minmax(0, 1fr); } }
+
+        .plate { margin: 0; border: 1.5px solid var(--ink); background: #0b0d10;
+            position: sticky; top: 20px; }
+        @media (max-width: 960px) { .plate { position: static; } }
+        #view { height: min(74vh, 780px); min-height: 380px; position: relative; }
+        #view canvas { display: block; }
+        #hint { position: absolute; left: 12px; bottom: 10px; color: #8f98a2;
+            font-size: var(--step--1); pointer-events: none; }
+        .plate-foot { display: flex; flex-wrap: wrap; justify-content: space-between;
+            gap: 6px 18px; padding: 8px 12px; border-top: 1.5px solid var(--ink);
+            background: var(--surface); color: var(--brass); font-size: var(--step--1);
+            font-variant-numeric: tabular-nums; }
+        .plate-foot b { color: var(--ink); }
+        .plate-foot .readout { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+
+        .deck { display: grid; gap: 20px; }
+        .deck > section + section { margin-top: 0; }   /* site.css spaces page sections */
+        .deck .titleblock { min-width: 0; }
+        .tb-body { padding: 12px 14px; display: grid; gap: 10px; }
+        .tb-body p { margin: 0; }
+        .seg { display: flex; gap: 6px; }
+        .seg > * { flex: 1; min-width: 0; }
+
+        .deck button { font: 700 var(--step--1)/1.2 var(--body); color: var(--ink);
+            background: transparent; border: 1.5px solid var(--ink); border-radius: 3px;
+            padding: 8px 10px; cursor: pointer; }
+        .deck button:hover { background: var(--ink); color: var(--paper); }
+        .deck button.on, .deck button.on:hover { background: var(--accent);
+            border-color: var(--accent); color: var(--surface); }
+        .deck button[disabled], .deck button[disabled]:hover { opacity: .4;
+            cursor: default; background: transparent; color: var(--ink); }
+        .deck select { width: 100%; }
+
+        #grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+        #grid button { font-weight: 400; border: 1px solid var(--rule); padding: 7px 4px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #grid button:hover { background: transparent; color: var(--ink); border-color: var(--ink); }
+        #grid button.on { border-color: var(--accent); }
+
+        .kv { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: 4px 10px;
+            margin: 0; font-variant-numeric: tabular-nums; }
+        .kv dt { color: var(--muted); }
+        .kv dd { margin: 0; color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
+
+        .row { display: flex; gap: 10px; align-items: center; color: var(--ink-2); }
+        .row > span:first-child { min-width: 4.5rem; color: var(--muted); }
+        .row input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
+        .row input[type=text] { flex: 1; min-width: 0; font: inherit; color: var(--ink);
+            background: var(--surface); border: 1.5px solid var(--ink); border-radius: 3px;
+            padding: 5px 8px; }
+        .row input[type=color] { width: 44px; height: 28px; border: 1.5px solid var(--ink);
+            border-radius: 3px; background: var(--surface); padding: 2px; }
+        .row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
+        .why { color: var(--ink-2); }
+        .why:empty { display: none; }
+        #params:empty { display: none; }
     </style>
 </head>
 <body>
@@ -59,66 +86,88 @@
 
     <div class="wrap page-head">
         <h1>Mau5head simulator</h1>
-        <p>All <span id="npresets">37</span> effects from my deadmau5 helmet, running on the real
-        <span id="leds">622</span>-LED map, in your browser. Drop in a song and the effects follow
-        it — the same analysis the helmet uses. Nothing is uploaded; the audio never leaves this page.</p>
+        <p>All <span id="npresets">37</span> effects from my deadmau5 helmet, lit on the real
+        <span id="leds">622</span>-LED map inside the helmet's own CAD. Play a song and the effects
+        follow it, using the same analysis the helmet runs. The audio never leaves this page.</p>
     </div>
 
-    <div class="sim-wrap">
-      <div class="sim-panel">
-        <h2>Controls</h2>
-        <div class="sim-body">
-          <div class="btnrow">
-            <button id="afile">play a track</button>
-            <button id="amic">listen</button>
-            <button id="aoff" class="on">silence</button>
+    <main class="wrap sim">
+      <figure class="plate">
+        <div id="view"><span id="hint">drag to orbit · scroll to zoom</span></div>
+        <figcaption class="plate-foot">
+          <span class="readout">
+            <span><b id="ma">0</b> mA</span>
+            <span><b id="w">0.0</b> W</span>
+            <span>heat <b id="heat">—</b></span>
+            <span><b id="fps">0</b> fps</span>
+          </span>
+          <span>622 LEDs · CAD: mau5head v2</span>
+        </figcaption>
+      </figure>
+
+      <aside class="deck">
+        <section class="titleblock">
+          <div class="tb-name">Music</div>
+          <div class="tb-body">
+            <div class="seg">
+              <button id="afile">Play a song</button>
+              <button id="amic">Listen</button>
+              <button id="aoff" class="on">Silence</button>
+            </div>
+            <input id="apick" type="file" accept="audio/*" hidden>
+            <dl class="kv">
+              <dt>driving</dt><dd id="asrc">nothing</dd>
+              <dt>level</dt><dd><span id="alvl">—</span> · pitch <span id="apitch">—</span> · <span id="abpm">—</span> bpm</dd>
+            </dl>
+            <div class="row"><span>volume</span>
+              <input id="vol" type="range" min="0" max="100" value="80"></div>
+            <p class="why note" id="why"></p>
           </div>
-          <input id="apick" type="file" accept="audio/*" hidden>
-          <div class="simrow"><span>driving</span><b id="asrc">nothing</b></div>
-          <div class="simrow"><span>level</span><b id="alvl">—</b>
-            <span style="min-width:40px">pitch</span><b id="apitch">—</b>
-            <span style="min-width:34px">bpm</span><b id="abpm">—</b></div>
-          <div class="why" id="why"></div>
+        </section>
 
-          <hr class="sep">
-          <div class="btnrow">
-            <select id="showpick"><option value="">— a built show —</option></select>
+        <section class="titleblock">
+          <div class="tb-name">Shows</div>
+          <div class="tb-body">
+            <select id="showpick"><option value="">— a show I built —</option></select>
+            <div class="seg">
+              <button id="showgo" disabled>Start</button>
+              <button id="showpp" disabled>Pause</button>
+              <button id="showsilent" disabled>Lights only</button>
+            </div>
+            <dl class="kv">
+              <dt>now</dt><dd id="cue">rainbow</dd>
+              <dt>at</dt><dd id="clock">—</dd>
+            </dl>
+            <p class="note" id="showat">Each show was choreographed to one song. Start plays
+            your copy of it; the first time, you pick the file and this browser keeps it.</p>
           </div>
-          <div class="simrow"><span>now</span><b id="cue">rainbow</b></div>
-          <div class="simrow"><span>at</span><b id="clock"></b></div>
+        </section>
 
-          <hr class="sep">
-          <div id="grid"></div>
+        <section class="titleblock">
+          <div class="tb-name">Effects</div>
+          <div class="tb-body">
+            <div id="grid"></div>
+            <div id="params" class="tb-body" style="padding:0"></div>
+          </div>
+        </section>
 
-          <hr class="sep">
-          <div id="params"></div>
-
-          <hr class="sep">
-          <div class="simrow"><span>brightness</span>
-            <input id="bri" type="range" min="10" max="100" value="100"></div>
-          <div class="simrow"><span>spin</span>
-            <input id="spin" type="checkbox" checked style="width:18px;height:18px">
-            <button id="reset" style="margin-left:auto;background:#17171f;color:#ddd;
-              border:1px solid #242430;border-radius:7px;padding:6px 10px;
-              font:inherit;font-size:.74rem;cursor:pointer">recentre</button></div>
-          <div class="why">Drag to orbit, scroll to zoom. The power figures are real:
-            the same guard runs here as on the helmet, holding it under
-            <b id="budget">1000</b> mA of LED current and rationing brightness
-            over time so a long show cannot cook it.</div>
-        </div>
-        <div class="stats">
-          <span><b id="fps">0</b> fps</span>
-          <span><b id="ma">0</b> mA</span>
-          <span><b id="w">0</b> W</span>
-          <span>heat <b id="heat">—</b></span>
-        </div>
-      </div>
-
-      <div class="sim-panel">
-        <h2>622 LEDs, where the camera found them</h2>
-        <div id="view"></div>
-      </div>
-    </div>
+        <section class="titleblock">
+          <div class="tb-name">View</div>
+          <div class="tb-body">
+            <div class="row"><span>brightness</span>
+              <input id="bri" type="range" min="10" max="100" value="100"></div>
+            <div class="row"><span>helmet</span>
+              <input id="body" type="checkbox" checked>
+              <span style="min-width:0">spin</span>
+              <input id="spin" type="checkbox" checked>
+              <button id="reset" style="margin-left:auto">Recentre</button></div>
+            <p class="note">The power numbers are real: the same guard runs here as on
+            the helmet, holding it under <b id="budget">1000</b> mA of LED current and
+            rationing brightness over time so a long show cannot cook it.</p>
+          </div>
+        </section>
+      </aside>
+    </main>
 
     <footer class="site-foot">
       <div class="wrap">

@@ -482,7 +482,74 @@ function LiveMusic(an) {
   };
 }
 
-const api = { Analyser, LiveMusic, AutoGain };
+// ----------------------------------------------------------------------
+// TrackCache -- the song for each show, kept on this device.
+//
+// A show is half a show without its track, and the track cannot come
+// with it: the controller has a megabyte or two of flash, and the
+// songs are not ours to put on a web server.  So the first time a show
+// is started the page asks for the file, and keeps it in IndexedDB
+// under the show's name.  After that, starting the show is the whole
+// interaction -- the song plays and the lights follow it.
+//
+// IndexedDB works on plain http, which matters: the controller cannot
+// serve anything else.  Storage is per origin, so the controller's own
+// access point and the home network are two caches, and a browser may
+// evict either under pressure; a miss just asks again.
+// ----------------------------------------------------------------------
+class TrackCache {
+  constructor(name) {
+    this.name = name || 'mau5-tracks';
+    this.db = null;
+  }
+
+  _open() {
+    if (this.db) return Promise.resolve(this.db);
+    return new Promise((res, rej) => {
+      if (typeof indexedDB === 'undefined') {
+        rej(new Error('this browser keeps no files for pages'));
+        return;
+      }
+      const req = indexedDB.open(this.name, 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('tracks');
+      req.onsuccess = () => { this.db = req.result; res(this.db); };
+      req.onerror = () => rej(req.error);
+    });
+  }
+
+  async _tx(mode, fn) {
+    const db = await this._open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('tracks', mode);
+      const out = fn(tx.objectStore('tracks'));
+      tx.oncomplete = () => res(out && 'result' in out ? out.result : undefined);
+      tx.onerror = () => rej(tx.error);
+      tx.onabort = () => rej(tx.error);
+    });
+  }
+
+  // A File back, or null.  Never throws: no cache is the same as a miss.
+  async get(show) {
+    try {
+      const rec = await this._tx('readonly', (st) => st.get(show));
+      if (!rec || !rec.blob) return null;
+      return new File([rec.blob], rec.name || show, { type: rec.blob.type });
+    } catch (e) { return null; }
+  }
+
+  async put(show, file) {
+    try {
+      await this._tx('readwrite', (st) => st.put({ name: file.name, blob: file }, show));
+      return true;
+    } catch (e) { return false; }   // full, private mode, or no IndexedDB
+  }
+
+  async forget(show) {
+    try { await this._tx('readwrite', (st) => st.delete(show)); } catch (e) {}
+  }
+}
+
+const api = { Analyser, LiveMusic, AutoGain, TrackCache };
 root.MAU5 = Object.assign(root.MAU5 || {}, api);
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 
