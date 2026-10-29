@@ -219,7 +219,8 @@
       ],
       "facts": {
         "Process": "3D printed and painted"
-      }
+      },
+      "hidden": true
     },
     {
       "slug": "revan-costume",
