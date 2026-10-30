@@ -90,6 +90,9 @@ function makeHelmet(data) {
     nx: data.nx, ny: data.ny, nfa: data.nfa, nel: data.nel,
     u: data.u, fa: data.fa, group: data.group, xyz: data.xyz,
     ea: data.ea, er: data.er,
+    // ear tube 0..2 and height up it 0..1; -1 on the shell (mau5engine)
+    tube: data.tube || new Int16Array(n).fill(-1),
+    along: data.along || new Float32Array(n).fill(-1),
   };
   const mk = () => new Uint8Array(n);
   h.shell = mk(); h.ear1 = mk(); h.ear2 = mk();
@@ -492,17 +495,44 @@ def('eyes', { color: [0, 255, 255], period: 5.0, size: 58.0, y: 95.0,
 
 def('matrix', { color: [0, 255, 70], columns: 24, speed: 0.55, tail: 0.30 },
   function (h, t, music, out) {
-    const nc = this.p.columns, c = this.p.color, tail = this.p.tail;
+    const c = this.p.color, tail = this.p.tail, n = h.n;
+    const col = new Int32Array(n);
+    let strips = false;
+    for (let i = 0; i < n; i++) {
+      col[i] = h.shell[i] ? h.group[i] : -1;
+      if (h.shell[i] && h.group[i] >= 0) strips = true;
+    }
+    if (!strips) {                                  // no strips: azimuth bins
+      const nb = Math.trunc(this.p.columns);
+      for (let i = 0; i < n; i++)
+        col[i] = h.shell[i] ? clamp(Math.trunc(h.nfa[i] * nb), 0, nb - 1) : -1;
+    }
+    let first = -1;
+    for (let i = 0; i < n; i++) if (col[i] > first) first = col[i];
+    first += 1;                                     // ear tubes after the strips
+    const pos = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+      if (h.tube[i] >= 0) {
+        col[i] = first + h.tube[i] + 3 * (h.ear2[i] ? 1 : 0);
+        pos[i] = 1.0 - h.along[i];
+      } else {
+        pos[i] = 1.0 - h.nel[i];                    // 0 at the top
+      }
+    }
+    let nc = 0;
+    for (let i = 0; i < n; i++) if (col[i] + 1 > nc) nc = col[i] + 1;
     const head = new Float64Array(nc);
     for (let b = 0; b < nc; b++) {
       const seed = hashSin(b * 78.233);
       head[b] = pmod(t * this.p.speed * (0.6 + seed) + seed, 1.4) - 0.2;
     }
-    for (let i = 0; i < h.n; i++) {
-      if (!h.shell[i]) { out[i * 3] = out[i * 3 + 1] = out[i * 3 + 2] = 0; continue; }
-      const col = clamp(Math.trunc(h.nfa[i] * nc), 0, nc - 1);
-      const d = (1.0 - h.nel[i]) - head[col];
-      const k = d >= 0 ? Math.exp(-d / tail) : 0;
+    for (let i = 0; i < n; i++) {
+      let k = 0;
+      if (col[i] >= 0) {
+        const d = head[col[i]] - pos[i];
+        if (d >= 0) k = Math.exp(-d / tail);
+      }
+      if (h.rims[i]) k = 0.08;
       out[i * 3] = k * c[0]; out[i * 3 + 1] = k * c[1]; out[i * 3 + 2] = k * c[2];
     }
   });
@@ -840,6 +870,40 @@ def('bloom', { rings: 2, width: 0.20, span: 0.35, sat: 1.0, floor: 0.05 },
       }
       const c = hsv(hue, this.p.sat, clamp(base * k, 0, 1));
       out[i * 3] = c[0]; out[i * 3 + 1] = c[1]; out[i * 3 + 2] = c[2];
+    }
+  });
+
+def('blades', { color: [0, 170, 255], tip: [255, 255, 255], bed: [0, 8, 18],
+                period: 1.935, rise: 0.35, keep: 0.18 },
+  function (h, t, music, out) {
+    const c = this.p.color, tip = this.p.tip, bed = this.p.bed;
+    const rise = this.p.rise, keep = this.p.keep;
+    const cyc = pmod(t / this.p.period, 1.0) * 4.0;
+    const slot = Math.trunc(cyc), p = cyc - slot;
+    fill(out, h.n, bed);
+    if (slot < 3) {
+      const front = Math.min(p / rise, 1.0);
+      const level = 1.0 - (1.0 - keep) * Math.min(Math.max((p - rise) / (1.0 - rise), 0.0), 1.0);
+      for (let i = 0; i < h.n; i++) {
+        const tb = h.tube[i];
+        if (tb >= 0 && tb < slot) {
+          for (let k = 0; k < 3; k++) out[i * 3 + k] = c[k] * keep;
+        } else if (tb === slot && h.along[i] <= front) {
+          const hot = clamp(1.0 - (front - h.along[i]) / 0.15, 0, 1) * (p < rise ? 1.0 : 0.0);
+          for (let k = 0; k < 3; k++)
+            out[i * 3 + k] = (1 - hot) * (c[k] * level) + hot * (tip[k] * level);
+        }
+        if (h.rims[i]) for (let k = 0; k < 3; k++) out[i * 3 + k] = c[k] * 0.10;
+      }
+    } else {
+      const k = 1.0 - p;
+      for (let i = 0; i < h.n; i++) {
+        for (let j = 0; j < 3; j++) {
+          if (h.tube[i] >= 0) out[i * 3 + j] = 0.5 * (c[j] + tip[j]) * k;
+          else if (h.rims[i]) out[i * 3 + j] = tip[j] * k * k;
+          else if (h.shell[i]) out[i * 3 + j] = bed[j] + c[j] * 0.30 * k * k;
+        }
+      }
     }
   });
 

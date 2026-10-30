@@ -190,7 +190,9 @@ function tick() {
     frame.fill(0);
     state.inst.render(helmet, t, state.music, frame);
   }
-  const rep = guard.apply(frame, frame, now / 1000);
+  // a show's beat pulse goes on after the guard, which would flatten it
+  const rep = guard.apply(frame, frame, now / 1000,
+                          state.show && st !== null ? state.show.gain : 1);
   // A display lift, and only a display lift.  The guard holds the
   // helmet to about a tenth of full white, which on a real LED is
   // still plainly bright and on a screen is nearly black -- the eye
@@ -315,7 +317,12 @@ function matchShow(filename) {
     const s = n / (A.size + B.size - n || 1);
     if (s > score) { score = s; best = name; }
   }
-  return score >= 0.5 ? best : '';
+  if (score >= 0.5) return best;
+  // A bare file name is shorter than a title -- "leavemealone.mp3" --
+  // so failing that, the one show whose title holds every word of it.
+  if (![...B].some(w => w.length >= 5)) return '';
+  const all = Object.keys(D.shows || {}).filter(n => [...B].every(w => words(n).has(w)));
+  return all.length === 1 ? all[0] : '';
 }
 
 // One entry point for every song, however it arrived.  `forShow` is

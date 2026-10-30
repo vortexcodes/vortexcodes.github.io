@@ -547,6 +547,14 @@ class TrackCache {
   async forget(show) {
     try { await this._tx('readwrite', (st) => st.delete(show)); } catch (e) {}
   }
+
+  // Which shows have a song here, without reading any of the songs.
+  async keys() {
+    try {
+      const k = await this._tx('readonly', (st) => st.getAllKeys());
+      return Array.isArray(k) ? k : [];
+    } catch (e) { return []; }
+  }
 }
 
 const api = { Analyser, LiveMusic, AutoGain, TrackCache };
