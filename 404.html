@@ -6,7 +6,9 @@
 <script>
   // Old project links (vortex1.dev/sao-many-saos) go to the new project page.
   var slug = location.pathname.replace(/^\/|\/$/g, '');
-  fetch('/data/projects.json').then(function (r) { return r.json(); }).then(function (d) {
+  // Missing pages on Emma & Alisa's site (and typos of its name) go to their home page.
+  if (/^emma(-?and)?-?alisa(\/|$)/i.test(slug)) location.replace('/emma-and-alisa/');
+  else fetch('/data/projects.json').then(function (r) { return r.json(); }).then(function (d) {
     var known = d.projects.some(function (p) { return p.slug === slug; }) || (d.oldSlugs || {})[slug];
     location.replace(known ? '/project.html?p=' + encodeURIComponent(slug) : '/');
   }).catch(function () { location.replace('/'); });
