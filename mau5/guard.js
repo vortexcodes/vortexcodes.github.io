@@ -99,7 +99,9 @@ class PowerGuard {
   // the buffer that gets sent; they may be the same array, in which
   // case the "was it lit before the ceiling" test uses the clipped
   // value, exactly as the Python does when handed its own output.
-  apply(asked, out, now) {
+  // gain (at most 1) is applied after every limit -- the beat pulse; see
+  // PowerGuard.apply in mau5power.py for why it cannot go in the frame
+  apply(asked, out, now, gain) {
     const n = this.count;
     if (out !== asked) out.set(asked.subarray(0, n * 3));
     for (let i = 0; i < n * 3; i++) out[i] = clamp(out[i], 0, 255);
@@ -165,6 +167,8 @@ class PowerGuard {
       governed = true;
     }
 
+    const g = gain === undefined ? 1.0 : Math.min(Math.max(gain, 0.0), 1.0);
+    if (g < 1.0) for (let i = 0; i < n * 3; i++) out[i] *= g;
     const final = this.frameMa(out);
     if (this.thermal) this.thermal.update(final * 12.0 / 1000.0, now);
     // Python's apply returns uint8, which truncates rather than rounds.

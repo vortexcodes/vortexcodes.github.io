@@ -64,6 +64,7 @@ class ShowPlayer {
     this.fade = show.fade || 0;
     this.accent = !!show.accent;
     this.pulse = show.pulse === undefined ? 0.22 : show.pulse;
+    this.gain = 1.0;          // the beat pulse, for the sender to apply after the guard
     this.dyn = show.dynamics === undefined ? 0.72 : show.dynamics;
     this.dynGamma = show.dynamics_gamma === undefined ? 0.7 : show.dynamics_gamma;
     // The laptop decides this from how well the tempo estimate locked
@@ -144,6 +145,7 @@ class ShowPlayer {
 
   frame(t, music, out) {
     this._at = 0;
+    this.gain = 1.0;
     const cur = this.cueAt(t);
     if (!cur) { out.fill(0); return null; }
     this.renderCue(cur, t, music, out);
@@ -174,10 +176,13 @@ class ShowPlayer {
         const k = (1 - this.dyn) + this.dyn * Math.pow(Math.max(e, 0), this.dynGamma);
         for (let q = 0; q < out.length; q++) out[q] *= k;
       }
+      // Not multiplied in: the guard flattens a lift on anything loud.
+      // Handed over as `gain`, at most 1, for the sender to apply after
+      // the guard (mau5show.Player.frame has the whole story).
       if (this.pulse > 0 && lvl >= 1) {
         const k = Math.pow(Math.max(0, 1 - ph * 3), 2);
-        const m = 1 + this.pulse * (0.4 + 0.3 * lvl) * k;
-        for (let q = 0; q < out.length; q++) out[q] *= m;
+        const amp = this.pulse * (0.4 + 0.3 * lvl);
+        this.gain = (1 + amp * k) / (1 + amp);
       }
       if (this.accent && lvl >= 2 && music.isDownbeat(t)) {
         const k = Math.max(0, 1 - ph * 6) * 0.45;
