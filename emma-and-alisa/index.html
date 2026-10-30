@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emma &amp; Alisa</title>
+<meta name="description" content="Emma and Alisa's website.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+<style>
+  /* Starter page. Emma and Alisa: change anything here, or ask Claude to replace it all. */
+  :root {
+    --bg: #fff6f0;
+    --bg-2: #f3ecff;
+    --ink: #2b2233;
+    --muted: #6d6177;
+    --accent: #d6336c;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1b1520; --bg-2: #141a2a; --ink: #f4eef8; --muted: #b3a8bd; --accent: #ff7aa8;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1b1520; --bg-2: #141a2a; --ink: #f4eef8; --muted: #b3a8bd; --accent: #ff7aa8;
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 32px 16px;
+    background: linear-gradient(135deg, var(--bg), var(--bg-2));
+    color: var(--ink);
+    font: 400 1.125rem/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+    text-align: center;
+  }
+  h1 {
+    margin: 0 0 12px;
+    font-size: clamp(3rem, 14vw, 7rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  h1 span { color: var(--accent); }
+  p { margin: 0 auto; max-width: 32ch; color: var(--muted); }
+  footer { margin-top: 48px; font-size: 0.875rem; color: var(--muted); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Emma <span>&amp;</span> Alisa</h1>
+  <p>Our site is on its way. We're building it right now, so check back soon.</p>
+  <footer>Hosted on <a href="/">vortex1.dev</a></footer>
+</main>
+</body>
+</html>

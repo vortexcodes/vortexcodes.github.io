@@ -45,3 +45,4 @@ Photos are resized to 1600 px JPEGs in the browser and saved to `media/work/` (p
 | `data/login.json` | The editor's GitHub key, locked with the password (only there once a password is set) |
 | `login/` | vortex1.dev/login, opens the editor sign-in |
 | `404.html` | Sends old links like `/sao-many-saos` to the right project page |
+| `emma-and-alisa/` | Emma and Alisa's own site at vortex1.dev/emma-and-alisa. Theirs to change; rules for Claude in its `CLAUDE.md` |
