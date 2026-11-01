@@ -39,9 +39,20 @@
 // flat.  8192 points gives 5.4 Hz bins, which resolves a semitone
 // down to about 90 Hz, at a window of 186 ms that harmony does not
 // move inside anyway.
+const SILENCE = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=';
 const FFT_FAST = 1024;              // level, flux, bands
 const FFT_SLOW = 8192;              // pitch, centroid
 const TICK_MS = 20;                 // 50 Hz analysis, independent of render
+
+// A level is a meter, not a sample: up at once, down gently.  Raw, a
+// band could jump by a third of its height between two 20 ms ticks, and
+// on the helmet an equaliser driven by that twitched like a fault --
+// the owner's word was jitter, and it showed on eq far more than on the
+// presets that do not listen.  Per analysis tick: RISE of the way up,
+// FALL of the way down, so a drop takes about 150 ms to settle.
+const RISE = 0.7;
+const FALL = 0.12;
+function meter(prev, v) { return prev + (v - prev) * (v > prev ? RISE : FALL); }
 const PITCH_LO = 120, PITCH_HI = 2000;
 const BAND_LO = 40, BAND_HI = 12000;
 
@@ -54,9 +65,17 @@ function fract(x) { const r = x % 1; return r < 0 ? r + 1 : r; }
 // reading is placed between them.  Both ends move slowly, and the
 // quiet one moves up faster than it moves down, so a gap between
 // tracks does not spend thirty seconds re-learning the room.
+//
+// `minWin` is the narrowest the window may get, in dB.  9 suits the
+// level and the three named bands, which average many bins.  The eq's
+// bands are as narrow as one bin, whose power jitters by several dB on
+// steady music; emulated on Strobe with real dB, an 18 dB floor took the
+// tick-to-tick jitter from 0.025-0.042 of the bar to 0.015-0.027 and
+// left every band using 0.45-0.85 of its height.
 class AutoGain {
-  constructor(lo, hi) {
+  constructor(lo, hi, minWin) {
     this.lo = lo; this.hi = hi; this.init = false;
+    this.minWin = minWin === undefined ? 9 : minWin;
   }
   push(db) {
     if (!this.init) { this.lo = db - 6; this.hi = db + 6; this.init = true; }
@@ -64,7 +83,7 @@ class AutoGain {
     else this.lo += 0.02;                        // creep up when it is quiet
     if (db > this.hi) this.hi += (db - this.hi) * 0.25;
     else this.hi -= 0.05;
-    if (this.hi - this.lo < 9) this.hi = this.lo + 9;   // never amplify noise
+    if (this.hi - this.lo < this.minWin) this.hi = this.lo + this.minWin;   // never amplify noise
     return clamp((db - this.lo) / (this.hi - this.lo), 0, 1);
   }
 }
@@ -75,6 +94,10 @@ class Analyser {
     this.node = null;
     this.src = null;
     this.el = null;
+    // The one element every file plays through, see useFile.
+    this.fileEl = null;
+    this.fileSrc = null;
+    this.unlocked = false;
     this.stream = null;
     this.timer = null;
     this.kind = 'none';
@@ -137,6 +160,7 @@ class Analyser {
       this.slow.smoothingTimeConstant = 0.5;
       this.node.connect(this.slow);   // the long window hangs off the short
       this.freq = new Uint8Array(this.node.frequencyBinCount);
+      this.db = new Float32Array(this.node.frequencyBinCount);
       this.sfreq = new Uint8Array(this.slow.frequencyBinCount);
       this.time = new Uint8Array(this.node.fftSize);
     }
@@ -209,16 +233,50 @@ class Analyser {
     this._start();
   }
 
+  // The audio element for files, made once and kept.  A phone only lets an
+  // element start itself once a tap has started it, so a song following another
+  // with nobody touching anything has to be the same element, and it can only
+  // be wired into the graph once anyway.
+  _fileEl() {
+    if (!this.fileEl) {
+      const ctx = this._ctx();
+      const el = new Audio();
+      el.crossOrigin = 'anonymous';
+      el.loop = false;
+      this.fileEl = el;
+      this.fileSrc = ctx.createMediaElementSource(el);
+    }
+    return this.fileEl;
+  }
+
+  // Called straight from a tap, before anything is awaited: the tap is what
+  // gives the element and the audio context the right to play later on, and
+  // on an iPhone it does not last through a trip to the song store.
+  unlock() {
+    const ctx = this._ctx();
+    if (ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} }
+    if (this.unlocked || this.el) return;
+    this.unlocked = true;
+    const el = this._fileEl();
+    el.src = SILENCE;
+    const p = el.play();
+    if (p && p.catch) p.catch(() => {});
+  }
+
   async useFile(file) {
     this.stop();
     const ctx = this._ctx();
-    const el = new Audio();
+    const el = this._fileEl();
     el.src = URL.createObjectURL(file);
-    el.loop = false;
-    el.crossOrigin = 'anonymous';
-    this.src = ctx.createMediaElementSource(el);
+    this.src = this.fileSrc;
     this.src.connect(this.node);
-    this.node.connect(ctx.destination);   // the phone still plays it
+    // The phone still plays it -- straight from the source, never from
+    // the analyser.  This was node -> speakers, and stop() only unplugs
+    // the source, so the analyser stayed wired to the speaker and the
+    // next 'listen' played the microphone out loud, with echo
+    // cancellation off: a howl, and presets following it.  Unplugged
+    // with the source, the speaker path cannot outlive the file.
+    this.src.connect(ctx.destination);
     this.el = el;
     this.kind = 'file';
     el.volume = this.volume;
@@ -240,6 +298,7 @@ class Analyser {
   stop() {
     if (this.timer) { clearInterval(this.timer); this.timer = null; }
     if (this.el) {
+      this.el.onended = this.el.onerror = this.el.onpause = null;
       try { this.el.pause(); URL.revokeObjectURL(this.el.src); } catch (e) {}
       this.el = null;
     }
@@ -256,7 +315,22 @@ class Analyser {
   sample() {
     const node = this.node, ctx = this.ctx;
     if (!node) return;
-    node.getByteFrequencyData(this.freq);
+    // The spectrum in real dB, which the bands need: the byte version
+    // is the same dB squeezed into -100..-30 and clipped, and a mastered
+    // track sits at the -30 end -- the bass bins at 255 on 23 % of ticks
+    // through Strobe's drop in one emulation, 40-52 % in another.  The
+    // bytes the onset detector was tuned on are made from it
+    // with the Web Audio spec's own formula, rather than asked for in a
+    // second call, which some engines answer by smoothing the spectrum
+    // twice.
+    node.getFloatFrequencyData(this.db);
+    {
+      const lo = node.minDecibels, sc = 255 / (node.maxDecibels - node.minDecibels);
+      for (let i = 0; i < this.db.length; i++) {
+        const b = Math.floor(sc * (this.db[i] - lo));
+        this.freq[i] = b > 255 ? 255 : (b > 0 ? b : 0);    // -Infinity and NaN too
+      }
+    }
     node.getByteTimeDomainData(this.time);
     this.slow.getByteFrequencyData(this.sfreq);
 
@@ -339,16 +413,17 @@ class Analyser {
     const EDGES = { bass: [30, 170], mid: [170, 2200], high: [2200, 10000] };
     for (const name of ['bass', 'mid', 'high']) {
       const [lo, hi] = EDGES[name];
-      let s = 0, c = 0;
+      let i0 = 0, i1 = 0;
       for (let i = 1; i < bins; i++) {
         const f = i * hz;
         if (f < lo) continue;
         if (f > hi) break;
-        s += this.freq[i] / 255; c++;
+        if (!i0) i0 = i;
+        i1 = i + 1;
       }
-      const m = c ? s / c : 0;
-      const e = this._b3gain[name].push(20 * Math.log10(m + 1e-4));
-      this.b3[name] = e;
+      const e = this._b3gain[name].push(i1 > i0 ? this._bandDb(i0, i1) : -140);
+      // the energy is metered; the punch below is the raw edge, on purpose
+      this.b3[name] = meter(this.b3[name], e);
       const d = e - this._b3prev[name];
       this._b3prev[name] = e;
       this.p3[name] = Math.max(d > 0 ? d * 6 : 0, this.p3[name] * 0.86);
@@ -414,6 +489,24 @@ class Analyser {
     return this._bandVal[nb] || new Float64Array(nb).fill(0.5);
   }
 
+  // A band's loudness in dB: the mean power of its bins.  Power, not
+  // dB, is what adds up -- a band is as loud as the energy in it.  The
+  // analyser reports silence as -Infinity, so -140 is the floor.
+  //
+  // This used to take 20*log10 of the byte spectrum, which is already
+  // dB: a log of a log, flattening the loud bands and blowing up the
+  // quiet ones, against an AutoGain whose 9 dB window was chosen for
+  // real dB.  Emulated on Strobe, the bass bars moved over a third of
+  // their height while the top band slammed the whole of it.
+  _bandDb(lo, hi) {
+    let p = 0;
+    for (let i = lo; i < hi; i++) {
+      const d = this.db[i];
+      if (d > -140) p += Math.pow(10, d / 10);
+    }
+    return 10 * Math.log10(p / (hi - lo) + 1e-14);
+  }
+
   _bands(nb) {
     let edges = this._bandCache[nb];
     const bins = this.freq ? this.freq.length : 0;
@@ -421,25 +514,33 @@ class Analyser {
     if (!edges) {
       const hz = this.ctx.sampleRate / 2 / bins;
       edges = new Int32Array(nb + 1);
+      // No two bands on one bin.  Log-spaced from 40 Hz, the bottom
+      // edges are closer together than the 43-47 Hz a 1024-point FFT
+      // resolves, and the two leftmost eq bars were both bin 1 -- always
+      // identical.  Each edge is now at least one bin past the last, so
+      // the lowest bands are one bin each and still their own.
       for (let b = 0; b <= nb; b++) {
         const f = BAND_LO * Math.pow(BAND_HI / BAND_LO, b / nb);
-        edges[b] = clamp(Math.round(f / hz), 1, bins - 1);
+        let e = Math.round(f / hz);
+        if (b > 0 && e <= edges[b - 1]) e = edges[b - 1] + 1;
+        edges[b] = clamp(e, 1, bins - 1);
       }
       this._bandCache[nb] = edges;
       this._bandGain = this._bandGain || {};
       this._bandGain[nb] = [];
-      for (let b = 0; b < nb; b++) this._bandGain[nb].push(new AutoGain(-60, -20));
+      this._bandMeter = this._bandMeter || {};
+      this._bandMeter[nb] = new Float64Array(nb);
+      for (let b = 0; b < nb; b++) this._bandGain[nb].push(new AutoGain(-60, -20, 18));
     }
     const out = new Float64Array(nb);
     for (let b = 0; b < nb; b++) {
-      let lo = edges[b], hi = Math.max(edges[b + 1], lo + 1), s = 0;
-      for (let i = lo; i < hi; i++) s += this.freq[i] / 255;
-      const m = s / (hi - lo);
+      const lo = edges[b], hi = Math.max(edges[b + 1], lo + 1);
       // Each band against its own history, because the top octave
       // carries a twentieth of the energy of the bass and would
       // otherwise never move -- the same reason band_curves normalises
       // per band on the laptop.
-      out[b] = this._bandGain[nb][b].push(20 * Math.log10(m + 1e-4));
+      const v = this._bandGain[nb][b].push(this._bandDb(lo, hi));
+      out[b] = this._bandMeter[nb][b] = meter(this._bandMeter[nb][b], v);
     }
     this._bandVal[nb] = out;
     return out;

@@ -86,9 +86,10 @@
 
     <div class="wrap page-head">
         <h1>Mau5head simulator</h1>
-        <p>All <span id="npresets">37</span> effects from my deadmau5 helmet, lit on the real
-        <span id="leds">622</span>-LED map inside the helmet's own CAD. Play a song and the effects
-        follow it, using the same analysis the helmet runs. The audio never leaves this page.</p>
+        <p>All <span id="npresets">37</span> effects from my deadmau5 helmet, on the real
+        <span id="leds">622</span>-LED map inside the helmet's CAD. Play any song and the effects follow it,
+        worked out live in your browser. Your audio stays on this page. There's a
+        <a href="project.html?p=mau5head-v2">write-up</a> on how it all works.</p>
     </div>
 
     <main class="wrap sim">
@@ -128,7 +129,7 @@
         <section class="titleblock">
           <div class="tb-name">Shows</div>
           <div class="tb-body">
-            <select id="showpick"><option value="">— a show I built —</option></select>
+            <select id="showpick"><option value="">pick a show</option></select>
             <div class="seg">
               <button id="showgo" disabled>Start</button>
               <button id="showpp" disabled>Pause</button>
@@ -182,16 +183,16 @@
       </div>
     </footer>
 
-    <script src="mau5/data.js?v=63ab6a8c95"></script>
-    <script src="mau5/engine.js?v=7ffff69687"></script>
-    <script src="mau5/guard.js?v=e4c3391dc7"></script>
-    <script src="mau5/audio.js?v=3388e44e37"></script>
-    <script src="mau5/show.js?v=e0a71651db"></script>
+    <script src="mau5/data.js?v=924b5de400"></script>
+    <script src="mau5/engine.js?v=d1d6aa2bc0"></script>
+    <script src="mau5/guard.js?v=11e06a078c"></script>
+    <script src="mau5/audio.js?v=8ca9adf5c2"></script>
+    <script src="mau5/show.js?v=204eac65a2"></script>
     <script type="importmap">
     { "imports": {
         "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
         "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
     </script>
-    <script type="module" src="mau5-simulator.js?v=0da1cd095b"></script>
+    <script type="module" src="mau5-simulator.js?v=8793e6b760"></script>
 </body>
 </html>
