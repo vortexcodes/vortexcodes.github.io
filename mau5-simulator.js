@@ -217,6 +217,7 @@ function tick() {
     }
     showButtons();
   }
+  drawScope();
   controls.autoRotate = state.spin;
   controls.update();
   renderer.render(scene, camera);
@@ -299,10 +300,146 @@ function buildParams(name) {
 // -------------------------------------------------------------- music
 function audioOn(kind) {
   state.music = kind === 'none' ? null : M.LiveMusic(an);
-  for (const [id, k] of [['afile','file'], ['amic','mic'], ['aoff','none']])
+  for (const [id, k] of [['afile','file'], ['atab','tab'], ['amic','mic'], ['aoff','none']])
     $(id).classList.toggle('on', kind === k);
-  setText('asrc', { file: 'the song', mic: 'the microphone', none: 'nothing' }[kind]);
+  setText('asrc', { file: 'the song', tab: 'your computer\'s audio', mic: 'the microphone',
+                    none: 'nothing' }[kind]);
   if (kind === 'none') { setText('alvl', '—'); setText('apitch', '—'); setText('abpm', '—'); }
+}
+
+// An effect that ignores music, with music just switched on, looks broken.
+const REACTIVE = ['spectrum', 'pitchwheel', 'bloom', 'eq', 'vu', 'beatpulse', 'heartbeat', 'sparkle'];
+function listening() {
+  if (!state.show && REACTIVE.indexOf(state.preset) < 0) choosePreset('spectrum');
+}
+
+// -------------------------------------------------------------- tuning
+// Each slider writes straight into the analyser, so a change shows on the next
+// tick.  Settings are kept per song, by name, in this browser.
+const TUNERS = [
+  ['bassTop', 'Bass up to', 60, 400, 5, v => v + ' Hz', 'Where bass stops and mid starts'],
+  ['highFrom', 'High from', 800, 6000, 50, v => (v / 1000).toFixed(2) + ' kHz', 'Where mid stops and high starts'],
+  ['rise', 'Attack', 0.1, 1, 0.01, v => v.toFixed(2), 'How fast a band jumps up. Higher is snappier'],
+  ['fall', 'Release', 0.02, 0.5, 0.01, v => v.toFixed(2), 'How fast a band falls back. Lower is smoother'],
+  ['window', 'Range', 6, 30, 1, v => v + ' dB', 'How wide the quiet-to-loud scale can shrink. Lower reacts more to small changes'],
+  ['contrast', 'Contrast', 0.4, 3, 0.05, v => v.toFixed(2), 'Above 1, only the loud moments light up. Below 1, everything stays lit'],
+  ['beatK', 'Beat threshold', 0.4, 3.5, 0.05, v => v.toFixed(2), 'How far above average a change must be to count as a beat. Raise it if it finds too many'],
+  ['beatGap', 'Beat gap', 0.08, 0.6, 0.01, v => Math.round(v * 1000) + ' ms', 'The least time between two beats. Raise it to ignore hi-hats'],
+];
+let tuneKey = 'mau5tune:default';
+
+function tuneShow() {
+  for (const [k, , , , , fmt] of TUNERS) {
+    const inp = $('t_' + k);
+    if (!inp) continue;
+    inp.value = an.tune[k];
+    $('o_' + k).textContent = fmt(an.tune[k]);
+  }
+}
+
+function tuneSave() {
+  try { localStorage.setItem(tuneKey, JSON.stringify(an.tune)); } catch (e) {}
+  setText('tunesaved', tuneKey === 'mau5tune:default' ? ''
+          : 'Saved in this browser for ' + tuneKey.slice(9) + '.');
+}
+
+// The settings for this song, if it has been tuned here before.
+function tuneFor(name) {
+  tuneKey = 'mau5tune:' + (name || 'default');
+  Object.assign(an.tune, M.TUNE);
+  try { Object.assign(an.tune, JSON.parse(localStorage.getItem(tuneKey) || '{}')); } catch (e) {}
+  tuneShow();
+  setText('tunesaved', name && localStorage.getItem(tuneKey) ? 'Using your saved settings for ' + name + '.' : '');
+}
+
+function buildTuners() {
+  const box = $('tuners');
+  for (const [k, label, lo, hi, step, fmt, help] of TUNERS) {
+    const row = document.createElement('label');
+    row.className = 'row';
+    row.title = help;
+    const tag = document.createElement('span');
+    tag.className = 'tn';
+    tag.textContent = label;
+    const inp = document.createElement('input');
+    inp.type = 'range'; inp.min = lo; inp.max = hi; inp.step = step; inp.id = 't_' + k;
+    const out = document.createElement('output');
+    out.id = 'o_' + k;
+    inp.oninput = () => {
+      an.tune[k] = +inp.value;
+      out.textContent = fmt(an.tune[k]);
+      tuneSave();
+    };
+    row.append(tag, inp, out);
+    box.appendChild(row);
+  }
+  $('tunereset').onclick = () => {
+    Object.assign(an.tune, M.TUNE);
+    try { localStorage.removeItem(tuneKey); } catch (e) {}
+    tuneShow();
+    setText('tunesaved', '');
+  };
+  tuneShow();
+}
+
+// What the analyser is seeing, drawn the same width as the sliders above it.
+const fluxTrail = new Float32Array(240), gateTrail = new Float32Array(240), beatTrail = new Uint8Array(240);
+let trailAt = 0, lastBeat = 0;
+
+function drawScope() {
+  const cv2 = $('scope');
+  const w = cv2.clientWidth * devicePixelRatio, h = 150 * devicePixelRatio;
+  if (cv2.width !== w || cv2.height !== h) { cv2.width = w; cv2.height = h; }
+  const c = cv2.getContext('2d');
+  c.clearRect(0, 0, w, h);
+  if (!an.running || !an.freq) return;
+  const specH = h * 0.42, barsY = specH + h * 0.03, barsH = h * 0.2, fluxY = barsY + barsH + h * 0.03, fluxH = h - fluxY;
+  // spectrum on a log axis, 30 Hz to 12 kHz
+  const hz = an.ctx.sampleRate / 2 / an.freq.length;
+  const xOf = (f) => Math.log(f / 30) / Math.log(400) * w;
+  c.fillStyle = '#d9a35c';
+  for (let i = 1; i < an.freq.length; i++) {
+    const f = i * hz;
+    if (f < 30 || f > 12000) continue;
+    const x0 = xOf(f), x1 = xOf(f + hz), v = an.freq[i] / 255 * specH;
+    c.fillRect(x0, specH - v, Math.max(1, x1 - x0), v);
+  }
+  c.strokeStyle = '#46c0aa';
+  c.lineWidth = devicePixelRatio;
+  for (const f of [an.tune.bassTop, an.tune.highFrom]) {
+    c.beginPath(); c.moveTo(xOf(f), 0); c.lineTo(xOf(f), specH); c.stroke();
+  }
+  // the three bands, as the effects get them
+  const shape = (v) => Math.pow(Math.max(v, 0), an.tune.contrast);
+  [['bass', '#e4663a'], ['mid', '#46c0aa'], ['high', '#78aaff']].forEach(([k, col], i) => {
+    const y = barsY + i * barsH / 3;
+    c.fillStyle = '#20252b';
+    c.fillRect(0, y, w, barsH / 3 - 2);
+    c.fillStyle = col;
+    c.fillRect(0, y, w * shape(an.b3[k]), barsH / 3 - 2);
+  });
+  // change, the beat line, and each beat it called
+  if (an.beatAt !== lastBeat) { lastBeat = an.beatAt; beatTrail[trailAt] = 1; }
+  else beatTrail[trailAt] = 0;
+  fluxTrail[trailAt] = an.flux;
+  gateTrail[trailAt] = Math.max(an.fluxMean + an.tune.beatK * an.fluxSd, 0.4);
+  trailAt = (trailAt + 1) % fluxTrail.length;
+  let top = 1;
+  for (let i = 0; i < fluxTrail.length; i++) top = Math.max(top, fluxTrail[i], gateTrail[i]);
+  const px = (k) => k / fluxTrail.length * w, py = (v) => fluxY + fluxH - v / top * fluxH;
+  for (let k = 0; k < fluxTrail.length; k++) {
+    const i = (trailAt + k) % fluxTrail.length;
+    if (beatTrail[i]) { c.fillStyle = '#f2f4f5'; c.fillRect(px(k), fluxY, Math.max(2, devicePixelRatio * 2), fluxH); }
+  }
+  for (const [arr, col] of [[fluxTrail, '#d9a35c'], [gateTrail, '#e4663a']]) {
+    c.strokeStyle = col;
+    c.beginPath();
+    for (let k = 0; k < arr.length; k++) {
+      const v = arr[(trailAt + k) % arr.length];
+      if (k) c.lineTo(px(k), py(v)); else c.moveTo(px(k), py(v));
+    }
+    c.stroke();
+  }
 }
 
 // Titles never match exactly -- a show is named after a file and the
@@ -345,13 +482,16 @@ async function playSong(file, forShow) {
     const el = await an.useFile(file);
     an.setVolume(+$('vol').value / 100);
     audioOn('file');
+    tuneFor(file.name.replace(/\.[a-z0-9]+$/i, ''));
+    listening();
     el.onended = () => { an.stop(); audioOn('none'); stopShow(); };
     if (name) {
       state.showT0 = null;
       const kept = await tracks.put(name, file);
       setText('showat', 'Playing ' + file.name + (kept
         ? '. This browser keeps it, so Start plays it next time.' : '.'));
-      setText('why', 'The show follows the song: pause and scrub and it keeps up.');
+      setText('why', 'This song has its own show, which follows the song on its own, so the '
+              + 'sliders don\'t change it. Pick an effect to tune one to this song.');
     } else {
       setText('why', 'Playing ' + file.name + '. The analysis is live, so the '
               + 'effects follow it.');
@@ -473,9 +613,39 @@ async function startShow() {
     try {
       leaveShow();
       await an.useMic(); audioOn('mic');
+      tuneFor('');
+      listening();
       setText('why', 'Listening: anything this device can hear drives the helmet.');
     } catch (err) { setText('why', String(err.message || err)); }
   };
+  $('atab').onclick = async () => {
+    try {
+      leaveShow();
+      await an.useTab(); audioOn('tab');
+      tuneFor('');
+      listening();
+      setText('why', 'Following what you shared. It keeps playing where it is, and you can change songs there.');
+    } catch (err) {
+      audioOn('none');
+      // Closing the picker is a choice, and it needs no scolding.
+      if (err && err.name === 'NotAllowedError') setText('why', '');
+      else setText('why', String(err.message || err));
+    }
+  };
+  an.onended = () => { audioOn('none'); setText('why', 'Sharing stopped.'); };
+  // A song dropped anywhere on the helmet, from the desktop or a music folder
+  const plate = document.querySelector('.plate');
+  for (const ev of ['dragenter', 'dragover']) {
+    plate.addEventListener(ev, (e) => { e.preventDefault(); plate.classList.add('drop'); });
+  }
+  plate.addEventListener('dragleave', () => plate.classList.remove('drop'));
+  plate.addEventListener('drop', (e) => {
+    e.preventDefault();
+    plate.classList.remove('drop');
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f && (f.type.startsWith('audio/') || /\.(mp3|m4a|aac|ogg|opus|wav|flac)$/i.test(f.name))) playSong(f, '');
+    else setText('why', 'That doesn\'t look like a song file.');
+  });
   $('aoff').onclick = () => { an.stop(); audioOn('none'); setText('why', ''); stopShow(); };
   $('vol').oninput = (e) => an.setVolume(+e.target.value / 100);
   $('bri').oninput = (e) => { state.bri = +e.target.value / 100; };
@@ -490,6 +660,11 @@ async function startShow() {
     $('amic').disabled = true;
     $('amic').title = 'needs a secure page';
   }
+  if (!M.Analyser.tabPossible()) {
+    $('atab').disabled = true;
+    $('atab').title = 'this browser cannot share audio; Chrome or Edge on a computer can';
+  }
+  buildTuners();
   setText('leds', helmet.n);
   setText('budget', D.power.budget_ma);
   setText('npresets', Object.keys(D.presets).length);

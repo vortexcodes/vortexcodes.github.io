@@ -52,7 +52,12 @@ const TICK_MS = 20;                 // 50 Hz analysis, independent of render
 // FALL of the way down, so a drop takes about 150 ms to settle.
 const RISE = 0.7;
 const FALL = 0.12;
-function meter(prev, v) { return prev + (v - prev) * (v > prev ? RISE : FALL); }
+function meter(prev, v, t) { return prev + (v - prev) * (v > prev ? t.rise : t.fall); }
+
+// What a person can tune on the simulator page.  These defaults are the numbers
+// the helmet's page has always used, and it never changes them.
+const TUNE = { rise: RISE, fall: FALL, bassTop: 170, highFrom: 2200, beatK: 1.4,
+               beatGap: 0.16, window: 9, contrast: 1 };
 const PITCH_LO = 120, PITCH_HI = 2000;
 const BAND_LO = 40, BAND_HI = 12000;
 
@@ -77,13 +82,15 @@ class AutoGain {
     this.lo = lo; this.hi = hi; this.init = false;
     this.minWin = minWin === undefined ? 9 : minWin;
   }
-  push(db) {
+  // `win` overrides the window for this reading, for the tuning slider
+  push(db, win) {
+    const minWin = win === undefined ? this.minWin : win;
     if (!this.init) { this.lo = db - 6; this.hi = db + 6; this.init = true; }
     if (db < this.lo) this.lo += (db - this.lo) * 0.25;
     else this.lo += 0.02;                        // creep up when it is quiet
     if (db > this.hi) this.hi += (db - this.hi) * 0.25;
     else this.hi -= 0.05;
-    if (this.hi - this.lo < this.minWin) this.hi = this.lo + this.minWin;   // never amplify noise
+    if (this.hi - this.lo < minWin) this.hi = this.lo + minWin;   // never amplify noise
     return clamp((db - this.lo) / (this.hi - this.lo), 0, 1);
   }
 }
@@ -103,6 +110,11 @@ class Analyser {
     this.kind = 'none';
     this.err = '';
     this.volume = 1.0;
+    this.tune = Object.assign({}, TUNE);
+    // Told when a shared tab or screen stops, so a page can say so.
+    this.onended = null;
+    this.fluxMean = 0;
+    this.fluxSd = 0;
 
     this.freq = null;               // Uint8Array, dB-ish 0..255
     this.time = null;
@@ -210,8 +222,13 @@ class Analyser {
     }
     this.stop();
     const ctx = this._ctx();
+    // No processing, for the same reason as the microphone.  Mine asks a browser
+    // to offer the whole system's sound too, where it can.
     const stream = await navigator.mediaDevices.getDisplayMedia({
-      video: true, audio: true,
+      video: true,
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false,
+               suppressLocalAudioPlayback: false },
+      systemAudio: 'include',
     });
     const audio = stream.getAudioTracks();
     if (!audio.length) {
@@ -229,7 +246,10 @@ class Analyser {
     this.src = ctx.createMediaStreamSource(stream);
     this.src.connect(this.node);
     this.kind = 'tab';
-    audio[0].addEventListener('ended', () => { this.stop(); });
+    audio[0].addEventListener('ended', () => {
+      this.stop();
+      if (this.onended) this.onended();
+    });
     this._start();
   }
 
@@ -341,7 +361,7 @@ class Analyser {
     }
     const rms = Math.sqrt(sum / this.time.length);
     this.rawDb = 20 * Math.log10(rms + 1e-7);
-    this.level = this._gain.push(this.rawDb);
+    this.level = this._gain.push(this.rawDb, this.tune.window);
 
     const sr = ctx.sampleRate, bins = this.freq.length;
     const hz = sr / 2 / bins;
@@ -410,7 +430,8 @@ class Analyser {
   // rose, which is what a hat or a kick is and what an overlay
   // riding a band actually wants.
   _three(hz, bins) {
-    const EDGES = { bass: [30, 170], mid: [170, 2200], high: [2200, 10000] };
+    const T = this.tune;
+    const EDGES = { bass: [30, T.bassTop], mid: [T.bassTop, T.highFrom], high: [T.highFrom, 10000] };
     for (const name of ['bass', 'mid', 'high']) {
       const [lo, hi] = EDGES[name];
       let i0 = 0, i1 = 0;
@@ -421,9 +442,9 @@ class Analyser {
         if (!i0) i0 = i;
         i1 = i + 1;
       }
-      const e = this._b3gain[name].push(i1 > i0 ? this._bandDb(i0, i1) : -140);
+      const e = this._b3gain[name].push(i1 > i0 ? this._bandDb(i0, i1) : -140, T.window);
       // the energy is metered; the punch below is the raw edge, on purpose
-      this.b3[name] = meter(this.b3[name], e);
+      this.b3[name] = meter(this.b3[name], e, T);
       const d = e - this._b3prev[name];
       this._b3prev[name] = e;
       this.p3[name] = Math.max(d > 0 ? d * 6 : 0, this.p3[name] * 0.86);
@@ -445,9 +466,11 @@ class Analyser {
     let varr = 0;
     for (let i = 0; i < n; i++) { const d = h[i] - mean; varr += d * d; }
     const sd = Math.sqrt(varr / Math.max(n, 1));
+    this.fluxMean = mean;
+    this.fluxSd = sd;
 
     const since = now - this.beatAt;
-    if (n > 25 && flux > mean + 1.4 * sd && flux > 0.4 && since > 0.16) {
+    if (n > 25 && flux > mean + this.tune.beatK * sd && flux > 0.4 && since > this.tune.beatGap) {
       this.beatAt = now;
       this.onsets++;
       this._last.push(now);
@@ -540,7 +563,7 @@ class Analyser {
       // otherwise never move -- the same reason band_curves normalises
       // per band on the laptop.
       const v = this._bandGain[nb][b].push(this._bandDb(lo, hi));
-      out[b] = this._bandMeter[nb][b] = meter(this._bandMeter[nb][b], v);
+      out[b] = this._bandMeter[nb][b] = meter(this._bandMeter[nb][b], v, this.tune);
     }
     this._bandVal[nb] = out;
     return out;
@@ -554,17 +577,23 @@ class Analyser {
 // the beat grid uses a clock, and it uses the audio one.
 // ----------------------------------------------------------------------
 function LiveMusic(an) {
+  // Contrast is the one tuning control that isn't part of the analysis: a power
+  // on what it hands the effects.  At 1, the helmet's value, nothing is touched.
+  const shape = (v) => (an.tune.contrast === 1 ? v : Math.pow(Math.max(v, 0), an.tune.contrast));
   return {
     bands: true,
     get bpm() { return an.bpm || 120; },
-    levelAt() { return an.level; },
+    levelAt() { return shape(an.level); },
     pitchAt() { return an.pitch; },
     centroidAt() { return an.centroid; },
-    bandsAt(t, n) { return an.bands(n); },
+    bandsAt(t, n) {
+      const b = an.bands(n);
+      return an.tune.contrast === 1 ? b : b.map(shape);
+    },
     bandAt(t, name, punch) {
       const src = punch ? an.p3 : an.b3;
       const v = src[name];
-      return v === undefined ? an.level : v;
+      return shape(v === undefined ? an.level : v);
     },
     beatPhase() {
       if (!an.ctx) return 0;
@@ -658,7 +687,7 @@ class TrackCache {
   }
 }
 
-const api = { Analyser, LiveMusic, AutoGain, TrackCache };
+const api = { Analyser, LiveMusic, AutoGain, TrackCache, TUNE };
 root.MAU5 = Object.assign(root.MAU5 || {}, api);
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 

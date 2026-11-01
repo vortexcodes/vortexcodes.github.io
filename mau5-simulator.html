@@ -74,6 +74,15 @@
         .why { color: var(--ink-2); }
         .why:empty { display: none; }
         #params:empty { display: none; }
+        .deck a.btnlink { font: 700 var(--step--1)/1.2 var(--body); color: var(--ink); text-align: center;
+            border: 1.5px solid var(--ink); border-radius: 3px; padding: 8px 10px; text-decoration: none; }
+        .deck a.btnlink:hover { background: var(--ink); color: var(--paper); }
+        #scope { width: 100%; height: 150px; display: block; background: #0b0d10; border-radius: 3px; }
+        .row output { min-width: 3.6rem; text-align: right; color: var(--ink); font-variant-numeric: tabular-nums; }
+        .row > span.tn { min-width: 6.4rem; color: var(--muted); }
+        details.how summary { cursor: pointer; color: var(--ink); font-weight: 700; }
+        details.how ol { margin: 6px 0 0; padding-left: 1.2rem; }
+        .plate.drop { outline: 3px dashed var(--accent); outline-offset: -6px; }
     </style>
 </head>
 <body>
@@ -87,9 +96,10 @@
     <div class="wrap page-head">
         <h1>Mau5head simulator</h1>
         <p>All <span id="npresets">37</span> effects from my deadmau5 helmet, on the real
-        <span id="leds">622</span>-LED map inside the helmet's CAD. Play any song and the effects follow it,
-        worked out live in your browser. Your audio stays on this page. There's a
-        <a href="project.html?p=mau5head-v2">write-up</a> on how it all works.</p>
+        <span id="leds">622</span>-LED map inside the helmet's CAD. Drop in a song from your computer, or
+        share Spotify or anything else playing on your computer, and the effects follow it. Everything is
+        worked out live in your browser and your audio stays on this page. Use the sliders to tune how
+        it reacts to your song. There's a <a href="project.html?p=mau5head-v2">write-up</a> on how it all works.</p>
     </div>
 
     <main class="wrap sim">
@@ -102,7 +112,7 @@
             <span>heat <b id="heat">—</b></span>
             <span><b id="fps">0</b> fps</span>
           </span>
-          <span>622 LEDs · CAD: mau5head v2</span>
+          <span>621 LEDs · CAD: mau5head v2</span>
         </figcaption>
       </figure>
 
@@ -111,11 +121,26 @@
           <div class="tb-name">Music</div>
           <div class="tb-body">
             <div class="seg">
-              <button id="afile">Play a song</button>
-              <button id="amic">Listen</button>
+              <button id="afile">Song file</button>
+              <button id="atab">Computer audio</button>
+            </div>
+            <div class="seg">
+              <button id="amic">Microphone</button>
               <button id="aoff" class="on">Silence</button>
             </div>
             <input id="apick" type="file" accept="audio/*" hidden>
+            <p class="note">Or drag a song onto the helmet.</p>
+            <details class="how">
+              <summary>Playing from Spotify</summary>
+              <ol>
+                <li>Open the <a href="https://open.spotify.com" target="_blank" rel="noopener">Spotify web player</a> in another tab and start a song.</li>
+                <li>Click <b>Computer audio</b> here and pick that tab.</li>
+                <li>Leave <b>Also share tab audio</b> switched on, then click Share.</li>
+              </ol>
+              <p class="note">Any tab works the same way, like YouTube or SoundCloud. If your browser offers
+              to share your whole screen with system audio, that also covers apps like the Spotify desktop app.
+              Sharing needs Chrome or Edge on a computer. The picture you share is ignored and nothing gets uploaded.</p>
+            </details>
             <dl class="kv">
               <dt>driving</dt><dd id="asrc">nothing</dd>
               <dt>level</dt><dd><span id="alvl">—</span> · pitch <span id="apitch">—</span> · <span id="abpm">—</span> bpm</dd>
@@ -123,6 +148,18 @@
             <div class="row"><span>volume</span>
               <input id="vol" type="range" min="0" max="100" value="80"></div>
             <p class="why note" id="why"></p>
+          </div>
+        </section>
+
+        <section class="titleblock">
+          <div class="tb-name">Tune it to your song</div>
+          <div class="tb-body">
+            <canvas id="scope"></canvas>
+            <p class="note">Top: the spectrum, split where the sliders split it. Middle: bass, mid and high.
+            Bottom: how much the sound just changed, and the line it has to cross to count as a beat.</p>
+            <div id="tuners"></div>
+            <div class="seg"><button id="tunereset">Back to the helmet's settings</button></div>
+            <p class="note" id="tunesaved"></p>
           </div>
         </section>
 
@@ -186,13 +223,13 @@
     <script src="mau5/data.js?v=924b5de400"></script>
     <script src="mau5/engine.js?v=d1d6aa2bc0"></script>
     <script src="mau5/guard.js?v=11e06a078c"></script>
-    <script src="mau5/audio.js?v=8ca9adf5c2"></script>
+    <script src="mau5/audio.js?v=c8822643cd"></script>
     <script src="mau5/show.js?v=204eac65a2"></script>
     <script type="importmap">
     { "imports": {
         "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
         "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
     </script>
-    <script type="module" src="mau5-simulator.js?v=8793e6b760"></script>
+    <script type="module" src="mau5-simulator.js?v=5ecd636504"></script>
 </body>
 </html>
