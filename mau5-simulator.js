@@ -3,10 +3,9 @@
 //
 // Every LED is drawn in the CAD slot or ear tube it actually occupies,
 // inside the helmet's own CAD, and lit by the same engine, the same
-// power guard and the same show player that drive the real thing.  Not
-// a mock-up: the preset you see here is the preset, to within 0.0003 of
-// a count out of 255, because the browser code and the Python are
-// checked against each other on every commit.
+// power guard and the same show player that drive the real thing.  The
+// tests render them in both languages and compare the results, so a
+// preset here is the preset on the helmet to within rounding.
 //
 // The point of putting it on a web page is the audio.  Play any song
 // and the analyser works on it live -- loudness, bands, pitch, onsets,
@@ -257,7 +256,11 @@ function buildParams(name) {
     row.appendChild(tag);
     let inp;
     const remake = () => { state.inst = M.make(name, state.params, helmet, D.fonts); };
-    if (s.type === 'color') {
+    // `kind`, as Preset.spec() names it and the phone page reads it.
+    // This read `type`, which no spec has, so every parameter fell
+    // through to `continue` and the box stayed empty -- and hidden by
+    // #params:empty -- for all 38 effects.
+    if (s.kind === 'color') {
       inp = document.createElement('input');
       inp.type = 'color';
       const c = s.value || [255, 0, 0];
@@ -268,15 +271,21 @@ function buildParams(name) {
                                 parseInt(h.slice(5,7),16)];
         remake();
       };
-    } else if (s.type === 'number') {
+    } else if (s.kind === 'bool') {
+      inp = document.createElement('input');
+      inp.type = 'checkbox';
+      inp.checked = !!s.value;
+      inp.onchange = () => { state.params[s.name] = inp.checked; remake(); };
+    } else if (s.kind === 'number') {
       inp = document.createElement('input');
       inp.type = 'range';
       inp.min = s.min !== undefined ? s.min : 0;
       inp.max = s.max !== undefined ? s.max : 10;
-      inp.step = (inp.max - inp.min) > 20 ? 1 : 0.05;
+      inp.step = s.step !== undefined ? s.step
+               : ((inp.max - inp.min) > 20 ? 1 : 0.05);
       inp.value = s.value;
       inp.oninput = () => { state.params[s.name] = +inp.value; remake(); };
-    } else if (s.type === 'text') {
+    } else if (s.kind === 'text') {
       inp = document.createElement('input');
       inp.type = 'text';
       inp.value = s.value;

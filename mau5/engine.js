@@ -396,6 +396,9 @@ def('police', { hz: 2.5 },
     }
   });
 
+// How far below its top a bar fades in, in units of the helmet's height.
+const EQ_EDGE = 0.08;
+
 def('eq', { bands: 12, lo: [0, 80, 255], hi: [255, 0, 120] },
   function (h, t, music, out) {
     const nb = this.p.bands, LO = this.p.lo, HI = this.p.hi;
@@ -409,7 +412,8 @@ def('eq', { bands: 12, lo: [0, 80, 255], hi: [255, 0, 120] },
     for (let i = 0; i < h.n; i++) {
       const band = clamp(Math.trunc(h.nfa[i] * nb), 0, nb - 1);
       const e = h.nel[i];
-      const k = e <= amp[band] ? 1 : 0;
+      // a soft top, so a bar rises smoothly instead of a row at a time
+      const k = clamp((amp[band] - e) / EQ_EDGE, 0, 1);
       out[i * 3] = k * (LO[0] * (1 - e) + HI[0] * e);
       out[i * 3 + 1] = k * (LO[1] * (1 - e) + HI[1] * e);
       out[i * 3 + 2] = k * (LO[2] * (1 - e) + HI[2] * e);
@@ -450,19 +454,30 @@ def('text', { text: 'DEADMAU5', color: [255, 160, 0], bg: [0, 0, 0],
     }
   });
 
+// mau5engine.SpriteShow says what dx, dy, vx, vy, wx, wy, wf and rate do.
 def('sprite', { sprite: 'smile', color: [0, 255, 255], bg: [0, 0, 0],
-                y_lo: 20.0, y_hi: 160.0, x_half: 150.0, blink: 0.0 },
+                y_lo: 20.0, y_hi: 160.0, x_half: 150.0, blink: 0.0,
+                dx: 0.0, dy: 0.0, vx: 0.0, vy: 0.0,
+                wx: 0.0, wy: 0.0, wf: 0.0, rate: 0.0 },
   function (h, t, music, out) {
-    const bm = spriteBitmap(this.fonts, this.p.sprite);
+    const names = String(this.p.sprite).split('|');
+    const at = this.p.rate > 0 ? pmod(Math.floor(t * this.p.rate), names.length) : 0;
+    const bm = spriteBitmap(this.fonts, names[at]);
     fill(out, h.n, this.p.bg);
     if (this.p.blink && fract(t * this.p.blink) > 0.5) return;
     const hi = this.p.y_hi, lo = this.p.y_lo, xh = this.p.x_half;
+    let ox = this.p.dx + this.p.vx * t, oy = this.p.dy + this.p.vy * t;
+    if (this.p.wf) {
+      ox = ox + this.p.wx * Math.sin(2 * Math.PI * this.p.wf * t);
+      oy = oy + this.p.wy * Math.cos(2 * Math.PI * this.p.wf * t);
+    }
     const ry = new Float64Array(h.n), rx = new Float64Array(h.n);
     const mask = new Uint8Array(h.n);
     for (let i = 0; i < h.n; i++) {
-      ry[i] = (hi - h.py[i]) / Math.max(hi - lo, 1e-6) * bm.rows;
-      rx[i] = (h.px[i] + xh) / (2 * xh) * bm.cols;
-      mask[i] = h.shell[i] && h.py[i] > 0 ? 1 : 0;
+      ry[i] = (hi - h.py[i] + oy) / Math.max(hi - lo, 1e-6) * bm.rows;
+      rx[i] = (h.px[i] - ox + xh) / (2 * xh) * bm.cols;
+      // The top half, unless y_lo asks for the jaw as well.
+      mask[i] = h.shell[i] && h.py[i] > Math.min(0, lo) ? 1 : 0;
     }
     const lit = paint(bm, ry, rx, mask, h.n, 0);
     const c = this.p.color;
@@ -471,18 +486,23 @@ def('sprite', { sprite: 'smile', color: [0, 255, 255], bg: [0, 0, 0],
     }
   });
 
+// How far inside its edge an eye fades in, in mm: about one LED pitch.
+const EYE_EDGE = 12.0;
+
 def('eyes', { color: [0, 255, 255], period: 5.0, size: 58.0, y: 95.0,
-              spread: 78.0, blink_every: 4.0 },
+              spread: 78.0, blink_every: 4.0, auto: 1.0, lx: 0.0, ly: 0.0 },
   function (h, t, music, out) {
     zero(out);
-    const look = Math.sin(2 * Math.PI * t / this.p.period) * 30.0;
+    const look = Math.sin(2 * Math.PI * t / this.p.period) * 30.0 * this.p.auto + this.p.lx;
     const blink = pmod(t, this.p.blink_every) < 0.18;
-    const c = this.p.color, size = this.p.size, yy = this.p.y;
+    const c = this.p.color, size = this.p.size, yy = this.p.y + this.p.ly;
     for (const side of [-1, 1]) {
       const cx = side * this.p.spread + look;
       for (let i = 0; i < h.n; i++) {
         const d = Math.hypot(h.px[i] - cx, (h.py[i] - yy) * 1.25);
-        let k = Math.pow(clamp(1 - d / size, 0, 1), 0.6);
+        // the rim fades in over about one LED pitch (mau5engine.Eyes)
+        const e = clamp((size - d) / EYE_EDGE, 0, 1);
+        let k = Math.pow(clamp(1 - d / size, 0, 1), 0.6) * e * e * (3 - 2 * e);
         if (blink) k *= clamp(1 - Math.abs(h.py[i] - yy) / 10.0, 0, 1);
         out[i * 3] += k * c[0]; out[i * 3 + 1] += k * c[1]; out[i * 3 + 2] += k * c[2];
       }
@@ -784,6 +804,42 @@ function accepts(name, kw) {
   return out;
 }
 
+// mau5engine.POSITIVE: parameters divided by, or counting something,
+// which a slider pulled to zero turned into NaN on every pixel -- and one
+// NaN frame used to switch the power guard's governor off for good.
+// COUNTS are the ones whose Python defaults are ints; JavaScript cannot
+// tell 12 from 12.0, so they are named.  test_mau5 holds both lists to
+// the Python's.
+const POSITIVE = new Set(['period', 'width', 'soft', 'tail', 'fade', 'length',
+                          'size', 'cell', 'every', 'blink_every', 'decay',
+                          'step', 'rise', 'x_half', 'cycle', 'bands',
+                          'columns', 'rings']);
+const COUNTS = new Set(['arms', 'bands', 'columns', 'cycle', 'from', 'gap',
+                        'rings', 'sectors']);
+// A POSITIVE float is held to a twentieth of its default, its slider's
+// left end: a period of a millisecond is a strobe, not an animation, and
+// restore() brings back whatever was saved, zeros from before included.
+const LEAST = 0.05, MIN_POSITIVE = 1e-3, RISE_MAX = 0.95;
+
+// mau5engine._sane: hold numeric parameters where a preset can render
+// them, whatever a slider or a saved setting asks for.
+function sane(defaults, p) {
+  for (const k of Object.keys(defaults)) {
+    const d = defaults[k];
+    if (typeof d !== 'number') continue;
+    let v = p[k];
+    if (typeof v === 'boolean') v = v ? 1 : 0;
+    if (typeof v !== 'number' || !Number.isFinite(v)) p[k] = d;
+    else if (COUNTS.has(k)) p[k] = Math.max(Math.floor(v + 0.5), POSITIVE.has(k) ? 1 : 0);
+    else if (POSITIVE.has(k) && d > 0) {
+      const least = Math.max(d * LEAST, MIN_POSITIVE);
+      if (v < least) p[k] = least;
+      else if (k === 'rise' && v > RISE_MAX) p[k] = RISE_MAX;
+    }
+  }
+  return p;
+}
+
 function make(name, params, h, fonts) {
   const spec = REGISTRY[name];
   if (!spec) throw new Error('no preset ' + name);
@@ -792,6 +848,7 @@ function make(name, params, h, fonts) {
     if (!(k in p)) throw new Error(name + ' has no parameter ' + k);
     p[k] = params[k];
   }
+  sane(spec.params, p);
   const inst = { name: name, p: p, fonts: fonts, s: null };
   inst.s = spec.init ? spec.init(h, p, fonts) : null;
   inst.render = spec.render;
@@ -908,7 +965,8 @@ def('blades', { color: [0, 170, 255], tip: [255, 255, 255], bed: [0, 8, 18],
   });
 
 const api = { hsv, hashSin, paint, makeHelmet, make, accepts, REGISTRY,
-              textBitmap, glyphBitmap, digitBitmap, spriteBitmap, fract, pmod };
+              textBitmap, glyphBitmap, digitBitmap, spriteBitmap, fract, pmod,
+              POSITIVE, COUNTS };
 root.MAU5 = Object.assign(root.MAU5 || {}, api);
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 

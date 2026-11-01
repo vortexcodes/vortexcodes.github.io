@@ -190,6 +190,12 @@ section + section { margin-top: 72px; }
 .prose ul { padding-left: 1.2em; max-width: 68ch; }
 .prose li { margin-bottom: 6px; }
 .prose li::marker { color: var(--brass); }
+.prose video { width: 100%; margin: 12px 0 18px; border-radius: 3px; background: #000; }
+.prose table.data { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: var(--step--1); line-height: 1.4; }
+.prose table.data th { text-align: left; font-weight: 700; border-bottom: 1.5px solid var(--ink); padding: 6px 10px 6px 0; }
+.prose table.data td { vertical-align: top; border-bottom: 1px solid var(--rule); padding: 7px 10px 7px 0; }
+.prose table.data td:first-child { font-weight: 700; }
+@media (max-width: 640px) { .prose table.data, .prose table.data tbody, .prose table.data tr, .prose table.data td { display: block; width: 100%; } .prose table.data th { display: none; } .prose table.data tr { border-bottom: 1px solid var(--rule); padding: 8px 0; } .prose table.data td { border: 0; padding: 2px 0; } }
 .note { color: var(--muted); font-size: var(--step--1); }
 
 .proj-nav { display: flex; justify-content: space-between; gap: 16px; margin-top: 64px; padding-top: 20px; border-top: 1.5px solid var(--ink); flex-wrap: wrap; }

@@ -22,7 +22,26 @@
 const MA_PER_LED_FULL_WHITE = 19.0;   // WS2815 at 12 V
 const MA_PER_LED_STANDBY = 1.0;       // drawn whenever the rail is live
 
+// How fast the governor may give light back, as a factor on its scale
+// per second; see PowerGuard.apply in mau5power.py for the measurements.
+// Taking light away is never slowed: that is what keeps it inside the
+// budget.  GOV_MIN_DT is the step a call counts as when the clock does
+// not move -- mau5ctl's preview holds it still on purpose -- and
+// GOV_FROM the lowest scale the ramp starts from, so a governor driven
+// to zero can still climb out.
+const GOV_RISE = 1.0;
+const GOV_MIN_DT = 1.0 / 40.0;
+const GOV_FROM = 0.01;
+
 function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+
+// 0..255, with anything that is not a number at all taken as dark.
+// clamp() lets NaN straight through -- both comparisons are false --
+// and one NaN frame then made the frame's current NaN, which no budget
+// compares greater than, and the thermal level NaN for good: the
+// governor and the thermal ramp were off for the rest of the page's
+// life.  A period slider pulled to zero was enough to do it.
+function sane(v) { return v > 0 ? (v < 255 ? v : 255) : 0; }
 
 class ThermalBudget {
   constructor(o) {
@@ -45,6 +64,10 @@ class ThermalBudget {
   }
 
   update(ledWatts, now) {
+    // NaN + anything is NaN, and clamp() keeps it, so one bad reading
+    // used to switch the ramp off for good.  A reading that is not a
+    // number is not a reading: skip it and keep the level we had.
+    if (!Number.isFinite(ledWatts) || !Number.isFinite(now)) return this.allowanceW();
     if (this._last === null) { this._last = now; return this.allowanceW(); }
     const dt = Math.max(0.0, Math.min(now - this._last, 5.0));
     this._last = now;
@@ -75,11 +98,22 @@ class PowerGuard {
         this.floor[i] = Math.min(r.floor, r.ceiling);
       }
     }
+    // Where each LED's soft ceiling starts to bend, and how much room
+    // is left above that; mau5power.PowerGuard has the reasoning.
+    this.kneeLo = new Float64Array(n);
+    this.kneeW = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+      const c = this.ceil[i];
+      this.kneeLo[i] = Math.min(Math.max((4.0 * c - 255.0) / 3.0, 0.0), c);
+      this.kneeW[i] = c - this.kneeLo[i];
+    }
     const th = cfg.thermal;
     this.thermal = th ? new ThermalBudget(th) : null;
     this._per = new Float64Array(n);
     this._fs = new Float64Array(n);
     this._omx = new Float64Array(n);
+    this._govS = 1.0;          // the governor's scale on the last frame
+    this._govT = null;         // and when that was
   }
 
   frameMa(buf) {
@@ -102,16 +136,33 @@ class PowerGuard {
   // gain (at most 1) is applied after every limit -- the beat pulse; see
   // PowerGuard.apply in mau5power.py for why it cannot go in the frame
   apply(asked, out, now, gain) {
-    const n = this.count;
+    // Only the LEDs both the frame and the profile have.  A profile
+    // counting more LEDs than the frame used to read past its end:
+    // undefined, so NaN in the governor's sum, which then never found
+    // the frame over budget -- 1950 mA sent against 1000 on full white,
+    // with power.json at 622 and the map at 621.  An LED the profile
+    // does not describe has no limits to apply, so it is sent dark.
+    const n = Math.min(this.count, Math.floor(asked.length / 3),
+                       Math.floor(out.length / 3));
     if (out !== asked) out.set(asked.subarray(0, n * 3));
-    for (let i = 0; i < n * 3; i++) out[i] = clamp(out[i], 0, 255);
+    for (let i = 0; i < n * 3; i++) out[i] = sane(out[i]);
+    for (let i = n * 3; i < out.length; i++) out[i] = 0;
     const askedMa = this.frameMa(out);
 
+    // The ceiling is a soft knee, not a clip.  min(v, c) turned every
+    // shape brighter than the ceiling into a flat disc -- the eyes
+    // rendered a gradient and 80% of their lit LEDs came out at 90% of
+    // the frame maximum or more, so as they moved the edge LEDs popped
+    // on and off instead of fading.  Below kneeLo nothing changes;
+    // above it the value bends towards the ceiling with slope one at
+    // the bend.  It never exceeds the ceiling or the value asked for,
+    // so it can only take current away.
     for (let i = 0; i < n; i++) {
-      const c = this.ceil[i];
-      if (out[i * 3] > c) out[i * 3] = c;
-      if (out[i * 3 + 1] > c) out[i * 3 + 1] = c;
-      if (out[i * 3 + 2] > c) out[i * 3 + 2] = c;
+      const lo = this.kneeLo[i], w = this.kneeW[i];
+      for (let j = i * 3; j < i * 3 + 3; j++) {
+        const v = out[j];
+        if (v > lo) out[j] = w > 0 ? lo - w * Math.expm1(-(v - lo) / w) : lo;
+      }
     }
     const afterCeiling = this.frameMa(out);
 
@@ -137,35 +188,55 @@ class PowerGuard {
       budget = Math.min(budget, Math.max(this.thermal.allowanceW() / 12.0 * 1000.0, 0.0));
     }
 
-    let governed = false, floored = false;
-    if (afterRegion > budget && afterRegion > 0) {
+    // The governor gives light back slowly and takes it away at once
+    // (mau5power.PowerGuard.apply explains why).  `cap` is the most it
+    // may give back this frame; the scale used is never above the one
+    // solved for, so the frame is never over budget.
+    let cap = 1.0;
+    if (this._govS < 1.0) {
+      const dt = (this._govT !== null && Number.isFinite(now)) ? now - this._govT : 0.0;
+      cap = Math.min(1.0, Math.max(this._govS, GOV_FROM)
+                          * Math.exp(GOV_RISE * Math.min(Math.max(dt, GOV_MIN_DT), 5.0)));
+    }
+    const over = afterRegion > budget && afterRegion > 0;
+    let governed = false, floored = false, scale = 1.0;
+    if (over || cap < 1.0) {
       const per = this._per, fs = this._fs, omx = this._omx;
       for (let i = 0; i < n; i++) {
         const r = out[i * 3], g = out[i * 3 + 1], b = out[i * 3 + 2];
         per[i] = (r + g + b) / (3.0 * 255.0) * MA_PER_LED_FULL_WHITE;
         omx[i] = Math.max(r, Math.max(g, b));
-        const amx = Math.max(asked[i * 3],
-                             Math.max(asked[i * 3 + 1], asked[i * 3 + 2]));
+        const amx = Math.max(sane(asked[i * 3]),
+                             Math.max(sane(asked[i * 3 + 1]), sane(asked[i * 3 + 2])));
         fs[i] = (amx > 0 && omx[i] > 1e-6) ? clamp(this.floor[i] / omx[i], 0, 1) : 0;
       }
       let floorMa = 0;
       for (let i = 0; i < n; i++) floorMa += per[i] * fs[i];
       if (floorMa > budget) fs.fill(0);
-      let loS = 0.0, hiS = 1.0;
-      for (let it = 0; it < 40; it++) {
-        const mid = (loS + hiS) / 2.0;
-        let s = 0;
-        for (let i = 0; i < n; i++) s += per[i] * Math.max(Math.pow(mid, this.shed[i]), fs[i]);
-        if (s > budget) hiS = mid; else loS = mid;
+      let loS = 1.0;
+      if (over) {
+        loS = 0.0;
+        let hiS = 1.0;
+        for (let it = 0; it < 40; it++) {
+          const mid = (loS + hiS) / 2.0;
+          let s = 0;
+          for (let i = 0; i < n; i++) s += per[i] * Math.max(Math.pow(mid, this.shed[i]), fs[i]);
+          if (s > budget) hiS = mid; else loS = mid;
+        }
       }
-      for (let i = 0; i < n; i++) {
-        const base = Math.pow(loS, this.shed[i]);
-        const k = Math.max(base, fs[i]);
-        if (fs[i] > base) floored = true;
-        out[i * 3] *= k; out[i * 3 + 1] *= k; out[i * 3 + 2] *= k;
+      scale = Math.min(loS, cap);
+      if (scale < 1.0) {
+        for (let i = 0; i < n; i++) {
+          const base = Math.pow(scale, this.shed[i]);
+          const k = Math.max(base, fs[i]);
+          if (fs[i] > base) floored = true;
+          out[i * 3] *= k; out[i * 3 + 1] *= k; out[i * 3 + 2] *= k;
+        }
+        governed = afterRegion > 0;
       }
-      governed = true;
     }
+    this._govS = scale;
+    if (Number.isFinite(now)) this._govT = now;
 
     const g = gain === undefined ? 1.0 : Math.min(Math.max(gain, 0.0), 1.0);
     if (g < 1.0) for (let i = 0; i < n * 3; i++) out[i] *= g;
@@ -187,6 +258,8 @@ class PowerGuard {
       budget_ma: budget,
       thermal: this.thermal ? {
         level_j: this.thermal.level, burst_j: this.thermal.burst_j,
+        top_w: this.thermal.max_w ? this.thermal.max_w - this.thermal.standby_w
+                                  : this.thermal.sustained_w - this.thermal.standby_w,
         full_pct: 100.0 * this.thermal.level / Math.max(this.thermal.burst_j, 1e-6),
         allowance_w: this.thermal.allowanceW(),
       } : null,
