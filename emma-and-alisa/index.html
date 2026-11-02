@@ -2,60 +2,45 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Emma &amp; Alisa</title>
-<meta name="description" content="Emma and Alisa's website.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Initiative · Emma &amp; Alisa</title>
+<meta name="description" content="A home base for getting schoolwork done: a smart to-do list, your classes, a focus timer and pixel pets that cheer you on.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
-<style>
-  /* Starter page. Emma and Alisa: change anything here, or ask Claude to replace it all. */
-  :root {
-    --bg: #fff6f0;
-    --bg-2: #f3ecff;
-    --ink: #2b2233;
-    --muted: #6d6177;
-    --accent: #d6336c;
-    color-scheme: light;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #1b1520; --bg-2: #141a2a; --ink: #f4eef8; --muted: #b3a8bd; --accent: #ff7aa8;
-      color-scheme: dark;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #1b1520; --bg-2: #141a2a; --ink: #f4eef8; --muted: #b3a8bd; --accent: #ff7aa8;
-    color-scheme: dark;
-  }
-
-  *, *::before, *::after { box-sizing: border-box; }
-  body {
-    margin: 0;
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 32px 16px;
-    background: linear-gradient(135deg, var(--bg), var(--bg-2));
-    color: var(--ink);
-    font: 400 1.125rem/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
-    text-align: center;
-  }
-  h1 {
-    margin: 0 0 12px;
-    font-size: clamp(3rem, 14vw, 7rem);
-    line-height: 1;
-    letter-spacing: -0.03em;
-  }
-  h1 span { color: var(--accent); }
-  p { margin: 0 auto; max-width: 32ch; color: var(--muted); }
-  footer { margin-top: 48px; font-size: 0.875rem; color: var(--muted); }
-  a { color: var(--accent); }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap">
+<link rel="stylesheet" href="app.css?v=1">
 </head>
 <body>
-<main>
-  <h1>Emma <span>&amp;</span> Alisa</h1>
-  <p>Our site is on its way. We're building it right now, so check back soon.</p>
-  <footer>Hosted on <a href="/">vortex1.dev</a></footer>
+<div id="wall" aria-hidden="true"></div>
+
+<div class="corner tl">
+  <button class="round" id="btn-settings" aria-label="Settings" title="Settings"></button>
+  <button class="round" id="btn-clock" aria-label="Clock and timer" title="Clock"><span class="clock-badge" hidden></span></button>
+</div>
+<div class="corner tr">
+  <button class="reward-bar" id="btn-rewards" title="Rewards"></button>
+  <button class="round" id="btn-lock"></button>
+</div>
+<div class="corner br">
+  <button class="round" id="btn-pen" aria-label="Customize wallpaper and colors" title="Customize"></button>
+</div>
+
+<main id="home">
+  <section class="widget todo-widget" id="w-todo" data-widget="todo" tabindex="0" aria-label="To-do list. Press Enter to open it"></section>
+  <div class="widget folder-widget" id="w-folder" data-widget="folder" role="button" tabindex="0" aria-label="Open your classes"></div>
 </main>
+
+<div id="pets"></div>
+<div id="lock-pill" hidden></div>
+<div id="layers"></div>
+<div id="nudges"></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script src="store.js?v=1"></script>
+<script src="tasks.js?v=1"></script>
+<script src="pets.js?v=1"></script>
+<script src="timer.js?v=1"></script>
+<script src="app.js?v=1"></script>
 </body>
 </html>
