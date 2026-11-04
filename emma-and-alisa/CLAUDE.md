@@ -9,9 +9,9 @@ Emma and Alisa are friends of Jones (who owns this repo). They're vibe coding th
 - **Keep it self-contained.** Don't use `../site.css`, `../site.js`, `/data/...` or other files from Jones's site; they change without warning. Link files with relative paths (`style.css`, `images/cat.jpg`) or with `/emma-and-alisa/...`, never a bare `/` path.
 - A missing page under `/emma-and-alisa/` sends visitors back to their home page (handled by the repo's `404.html`).
 
-## The app (Initiative)
+## The app (Work in Progress)
 
-Their home page is a study app: movable to-do and folder widgets, a clock with timer and Pomodoro modes, settings, wallpaper and colors, a focus lock, and pixel pets as rewards. Plain JS, no build step. Each file says at the top what it does:
+The whole site is called **Work in Progress** (admins can rename it from the admin panel; the name lives in `data/site.json`). Their home page is a study app: movable to-do and folder widgets, a clock with timer and Pomodoro modes, settings, wallpaper and colors, a focus lock, and pixel pets as rewards. Plain JS, no build step. Each file says at the top what it does:
 
 - `index.html` is the page shell. `app.css` has every style, with colors as CSS variables.
 - `store.js` holds the saved data (shape in `defaultData()`) and date helpers.
@@ -19,6 +19,9 @@ Their home page is a study app: movable to-do and folder widgets, a clock with t
 - `pets.js` holds the pixel sprites (16x16 letter grids), reward goals and odds, and the pets walking on screen.
 - `timer.js` runs the clock. `app.js` is all the UI: buttons use `data-act="name"` and the matching function is in `Actions`.
 - `sw.js` only exists so notifications work on phones. Keep it from caching anything.
+- `admin.js` loads the website settings everyone sees (`data/site.json`: name, welcome message, announcement banner, starting look) and runs the admin sign-in and panel. It loads last and adds its own `Actions` and `Forms`.
+
+Admins: `data/admins.json` lists them (name, role `owner` or `admin`). Each password locks that admin's own copy of one shared GitHub key from Jones (PBKDF2 + AES-GCM), so the file is public but useless without a password. Owners add and remove admins in the panel. Every save there is a direct commit to `main` (no PR). Don't edit `admins.json` by hand except to remove someone, and never put a GitHub key or password in any file.
 
 Rules for changing it:
 
