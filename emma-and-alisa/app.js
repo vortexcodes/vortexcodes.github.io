@@ -114,14 +114,23 @@ function toast(msg) {
 /* ---------- Looks: wallpaper and colors ---------- */
 
 const Look = {
+  // Your look once you've picked one, otherwise the website's starting look (set by admins)
+  current() { return Store.data.look.custom ? Store.data.look : Site.data.look; },
+  pick(k, v) {
+    const l = Store.data.look;
+    if (!l.custom) Object.assign(l, Site.data.look, { custom: true });
+    l[k] = v;
+    Store.save();
+    Look.apply();
+  },
   apply() {
-    const l = Store.data.look, root = document.documentElement;
+    const l = Look.current(), root = document.documentElement;
     root.style.setProperty('--accent', THEMES[l.theme] || THEMES.pink);
     const [icon, ink] = ICON_COLORS[l.icon] || ICON_COLORS.sunny;
     root.style.setProperty('--icon', icon);
     root.style.setProperty('--icon-ink', ink);
     root.dataset.mode = l.mode;
-    const photo = l.wall === 'photo' ? Store.wallpaper() : '';
+    const photo = l.wall === 'photo' && Store.data.look.custom ? Store.wallpaper() : '';
     $('#wall').style.background = photo ? `center / cover no-repeat url("${photo}")` : (WALLS[l.wall] || WALLS.sunset);
   },
   // Shrinks a photo so it fits in browser storage
@@ -177,6 +186,7 @@ const Home = {
     $('#w-folder').innerHTML = `${ICONS.folder}<span class="label">Classes</span>${classes ? `<span class="folder-count">${classes}</span>` : ''}`;
     Home.rewardBar();
     Home.clockBadge();
+    $('#btn-admin').hidden = !Admin.session();
   },
   rewardBar() {
     const st = Rewards.status();
@@ -699,6 +709,10 @@ const Settings = {
       ${sw('settings.tips', 'Tips for getting started', 'Advice for your next task when you open the list')}
       ${sw('settings.sound', 'Sounds', 'Timer chime and check-off pop')}
 
+      <h3 data-section="admin">🛠️ Admin</h3>
+      ${Admin.session() ? `<p>Signed in as <b>${esc(Admin.session().name)}</b>. <button class="btn sm primary" data-act="adminOpen">Open admin panel</button></p>`
+        : '<p class="note" style="margin-top:0">Admins can change the website\'s name, welcome message, announcement and starting look.</p><p><button class="btn sm" data-act="adminOpen">Admin sign-in</button></p>'}
+
       <h3>🧹 Data</h3>
       <p>${Sample.has() ? '<button class="btn sm" data-act="sampleRemove">Remove pretend classes</button>' : '<button class="btn sm" data-act="sampleAdd">Try pretend classes</button>'}
         <button class="btn sm ghost" data-act="resetAll">Start over</button></p>`;
@@ -736,7 +750,7 @@ async function importIcs(file) {
 
 const Customize = {
   render() {
-    const l = Store.data.look, photo = Store.wallpaper();
+    const l = Look.current(), photo = Store.wallpaper();
     return `<button class="x" data-act="close" aria-label="Close">×</button>
       <h2>Customize</h2>
       <h3>Wallpaper</h3>
@@ -793,8 +807,8 @@ const Onboard = {
   render(L) {
     const s = L.state;
     const dots = `<div class="dots">${[0, 1, 2, 3].map(i => `<i class="${i === s.step ? 'on' : ''}"></i>`).join('')}</div>`;
-    if (s.step === 0) return `<h2>Welcome! 👋</h2>
-      <p class="sub">This is your home base for getting stuff done: a to-do list, your classes, a focus timer, and a pet buddy who cheers you on. First, pick your buddy.</p>
+    if (s.step === 0) return `<h2>Welcome to ${esc(Site.data.name)}! 👋</h2>
+      <p class="sub">${esc(Site.data.welcome)} First, pick your buddy.</p>
       <div class="choice-grid">
         <button class="choice" data-act="ob" data-k="species" data-v="cat">${Pets.img('cat-tabby', 64)}Cat</button>
         <button class="choice" data-act="ob" data-k="species" data-v="dog">${Pets.img('dog-golden', 64)}Dog</button>
@@ -1022,13 +1036,8 @@ const Actions = {
     Store.reset();
     location.reload();
   },
-  look(el) {
-    Store.data.look[el.dataset.k] = el.dataset.v;
-    Store.save();
-    Look.apply();
-    App.refresh();
-  },
-  wallRemove() { Store.setWallpaper(''); if (Store.data.look.wall === 'photo') Store.data.look.wall = 'sunset'; Store.save(); Look.apply(); App.refresh(); },
+  look(el) { Look.pick(el.dataset.k, el.dataset.v); App.refresh(); },
+  wallRemove() { Store.setWallpaper(''); if (Store.data.look.wall === 'photo') Look.pick('wall', Site.data.look.wall); App.refresh(); },
   resetLayout() { Store.data.layout = {}; Store.save(); Home.place(); },
   findPet(el) {
     Layer.close(Layer.of(el));
@@ -1084,7 +1093,8 @@ const Forms = {
 const App = {
   init() {
     Store.load();
-    Look.apply();
+    Site.apply();
+    Site.load();
     $('#btn-settings').innerHTML = ICONS.gear;
     $('#btn-clock').insertAdjacentHTML('afterbegin', ICONS.clock);
     $('#btn-pen').innerHTML = ICONS.pen;
@@ -1106,6 +1116,7 @@ const App = {
     setInterval(App.tick, 1000);
     setTimeout(Reminders.check, 3000);
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+    if (location.hash === '#admin') { history.replaceState(null, '', location.pathname); AdminUI.open(); }
   },
   tick() {
     Timer.tick();
@@ -1200,9 +1211,7 @@ const App = {
         try {
           const data = await Look.photo(el.files[0]);
           if (!Store.setWallpaper(data)) { toast('That photo is too big to save. Try a smaller one.'); return; }
-          Store.data.look.wall = 'photo';
-          Store.save();
-          Look.apply();
+          Look.pick('wall', 'photo');
           App.refresh();
         } catch (err) { toast('Couldn\'t open that photo. Try a JPG or PNG.'); }
       }
@@ -1220,4 +1229,5 @@ const App = {
   },
 };
 
-App.init();
+// admin.js loads after this file and adds its own actions, so start once every script is in
+document.addEventListener('DOMContentLoaded', App.init);

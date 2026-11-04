@@ -21,7 +21,7 @@ function defaultData() {
       tips: true,
       sound: true,
     },
-    look: { wall: 'sunset', theme: 'pink', icon: 'sunny', mode: 'auto' },
+    look: { wall: 'sunset', theme: 'pink', icon: 'sunny', mode: 'auto', custom: false }, // custom: false = use the website's starting look
     layout: {},
     colors: {},  // class name -> color, handed out in order so classes don't share one
     goal: { type: 'login', level: 'medium' },
@@ -49,7 +49,14 @@ const Store = {
   load() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
-      if (saved) Store.data = mergeDefaults(defaultData(), saved);
+      if (saved) {
+        // Saved before the website had a starting look: anything but the old default counts as picked
+        if (saved.look && saved.look.custom === undefined) {
+          const l = saved.look;
+          saved.look.custom = !(l.wall === 'sunset' && l.theme === 'pink' && l.icon === 'sunny' && l.mode === 'auto');
+        }
+        Store.data = mergeDefaults(defaultData(), saved);
+      }
     } catch (e) { /* private window or broken data: start fresh */ }
   },
   save() {

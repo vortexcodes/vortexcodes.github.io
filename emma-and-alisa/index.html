@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Initiative · Emma &amp; Alisa</title>
+<title>Work in Progress</title>
 <meta name="description" content="A home base for getting schoolwork done: a smart to-do list, your classes, a focus timer and pixel pets that cheer you on.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap">
-<link rel="stylesheet" href="app.css?v=1">
+<link rel="stylesheet" href="app.css?v=2">
 </head>
 <body>
 <div id="wall" aria-hidden="true"></div>
@@ -22,7 +22,10 @@
   <button class="reward-bar" id="btn-rewards" title="Rewards"></button>
   <button class="round" id="btn-lock"></button>
 </div>
+<div id="wordmark" class="wordmark">Work in Progress</div>
+<div id="banner" hidden role="status"></div>
 <div class="corner br">
+  <button class="admin-chip" id="btn-admin" data-act="adminOpen" hidden>🛠️ Admin</button>
   <button class="round" id="btn-pen" aria-label="Customize wallpaper and colors" title="Customize"></button>
 </div>
 
@@ -37,10 +40,11 @@
 <div id="nudges"></div>
 <div id="toasts" aria-live="polite"></div>
 
-<script src="store.js?v=1"></script>
-<script src="tasks.js?v=1"></script>
-<script src="pets.js?v=1"></script>
-<script src="timer.js?v=1"></script>
-<script src="app.js?v=1"></script>
+<script src="store.js?v=2"></script>
+<script src="tasks.js?v=2"></script>
+<script src="pets.js?v=2"></script>
+<script src="timer.js?v=2"></script>
+<script src="app.js?v=2"></script>
+<script src="admin.js?v=2"></script>
 </body>
 </html>

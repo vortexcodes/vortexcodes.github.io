@@ -1,0 +1,11 @@
+{
+  "name": "Work in Progress",
+  "welcome": "This is your home base for getting stuff done: a to-do list, your classes, a focus timer, and a pet buddy who cheers you on.",
+  "announcement": "",
+  "look": {
+    "wall": "sunset",
+    "theme": "pink",
+    "icon": "sunny",
+    "mode": "auto"
+  }
+}
