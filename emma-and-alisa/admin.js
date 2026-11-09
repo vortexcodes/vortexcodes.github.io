@@ -83,7 +83,7 @@ const Admin = {
       body: body ? JSON.stringify(body) : undefined,
     });
     if (!res.ok) {
-      const err = new Error(res.status === 401 ? 'GitHub rejected the key. It may have expired; ask Jones for a new one.'
+      const err = new Error(res.status === 401 ? 'GitHub doesn\'t recognize this key. It may be copied wrong, expired or deleted.'
         : res.status === 403 || res.status === 404 ? 'This key can\'t change the website.'
         : res.status === 409 ? 'Someone else saved at the same time. Try again.' : `GitHub error ${res.status}.`);
       err.status = res.status;
@@ -100,10 +100,15 @@ const Admin = {
       throw e;
     }
   },
-  write(path, data, message, sha) {
+  async write(path, data, message, sha) {
     const body = { message, branch: GH.branch, content: b64(new TextEncoder().encode(JSON.stringify(data, null, 2) + '\n')) };
     if (sha) body.sha = sha;
-    return Admin.api(`/contents/${GH.dir}${path}`, { method: 'PUT', body });
+    try {
+      return await Admin.api(`/contents/${GH.dir}${path}`, { method: 'PUT', body });
+    } catch (e) {
+      if (e.status === 403 || e.status === 404) throw new Error(await Admin.whyNoWrite(Admin.session().token));
+      throw e;
+    }
   },
   // Read the newest copy, change it, save it (once more if someone saved in between)
   async change(path, fn, message) {
@@ -120,8 +125,18 @@ const Admin = {
     return d && Array.isArray(d.admins) ? d.admins : [];
   },
   async checkKey(token) {
-    const repo = await Admin.api(GH_API, { token });
-    if (!repo.permissions || !repo.permissions.push) throw new Error('That key can read the website but not change it. Set Contents to "Read and write".');
+    let repo;
+    try { repo = await Admin.api(GH_API, { token }); } catch (e) { if (e.status === 401) throw e; throw new Error(await Admin.whyNoWrite(token)); }
+    if (!repo.permissions || !repo.permissions.push) throw new Error(await Admin.whyNoWrite(token));
+  },
+  // GitHub refused a save: work out which key setting is wrong, so the fix is clear
+  async whyNoWrite(token) {
+    let who = '';
+    try { who = (await Admin.api('https://api.github.com/user', { token })).login || ''; } catch (e) {}
+    if (who && who.toLowerCase() !== GH.owner) {
+      return `This key was made on the GitHub account "${who}", but the website belongs to "${GH.owner}" (Jones). Jones has to make the key while signed in to his account.`;
+    }
+    return 'GitHub won\'t let this key save. Make a new one and, before clicking Generate, check: Repository access is "Only select repositories" with vortexcodes.github.io picked, and Permissions → Contents is "Read and write".';
   },
 
   async derive(pw, salt, iter) {
@@ -218,7 +233,9 @@ const AdminUI = {
       <p class="sub">${list.length ? 'Sign in with a GitHub key, then reset passwords from the admin panel.' : 'No admins yet. Set up the first one (that\'s you, as an owner).'}</p>
       <form class="add-form" data-form="${list.length ? 'adminKey' : 'adminSetup'}">
         <label class="field">GitHub key<input name="token" type="password" required autocomplete="off" placeholder="github_pat_…"></label>
-        <p class="note" style="margin:0">Jones makes this on GitHub (<a href="${KEY_URL}" target="_blank" rel="noopener">pre-filled form</a>: this repository only, Contents: read and write). It's never shown to anyone after this.</p>
+        <div class="note" style="margin:0">Jones makes this on his GitHub account with the <a href="${KEY_URL}" target="_blank" rel="noopener">pre-filled form</a>. Before clicking Generate, check:
+          <ol class="steps" style="margin:4px 0"><li>Repository access: <b>Only select repositories</b>, then pick <b>vortexcodes.github.io</b></li><li>Permissions → Repository permissions → Contents: <b>Read and write</b></li></ol>
+          The key is locked with the password and never shown again.</div>
         <label class="field">Your name<input name="name" required maxlength="20" placeholder="First name or nickname" autocomplete="off"></label>
         ${list.length ? '' : `<div class="row"><label class="field">Password<input name="pw" type="password" required autocomplete="new-password"></label>
         <label class="field">Same password again<input name="pw2" type="password" required autocomplete="new-password"></label></div>`}
